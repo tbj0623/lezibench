@@ -1,9 +1,9 @@
 {
   "runId": "run-demo-lezibench-fixed",
   "seed": "lezi-demo-2026",
-  "startedAt": "2026-10-29T19:56:25.301Z",
-  "finishedAt": "2026-10-29T19:56:25.741Z",
-  "durationMs": 440,
+  "startedAt": "2026-01-01T00:00:00.000Z",
+  "finishedAt": "2026-01-01T00:00:00.000Z",
+  "durationMs": 0,
   "environment": "node v24.20.0 · win32/x64",
   "demo": true,
   "summary": {

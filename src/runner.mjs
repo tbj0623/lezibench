@@ -23,8 +23,20 @@ export function environmentInfo() {
   return `node ${process.version} · ${process.platform}/${process.arch}`;
 }
 
-function nowIso() {
-  return new Date().toISOString();
+/**
+ * 固定时间戳（仅 DEMO 用）。
+ *
+ * 为什么需要：`website/build/build-site.mjs` 每次构建都会现场跑一局 DEMO 来生成
+ * 演示报告。如果时间戳取真实墙钟，产出的 demo-report.* 每次都不同 →
+ * 构建不幂等、git 永远 dirty、也没法用 --check 判断产物是否漂移。
+ *
+ * DEMO 报告本来就带 `demo: true` 标记，用固定时间戳不会让人误以为是真实运行。
+ * 真实运行（非 demo）完全不受影响，仍然用墙钟。
+ */
+const DEMO_FIXED_ISO = '2026-01-01T00:00:00.000Z';
+
+function nowIso(demo = false) {
+  return demo ? DEMO_FIXED_ISO : new Date().toISOString();
 }
 
 function runPaths(root, runId) {
@@ -95,8 +107,8 @@ export async function startRun(opts = {}) {
     graderVersion: GRADER_VERSION,
     contractVersion: SCORING_CONTRACT_VERSION,
     catalogFingerprint: catalogFingerprint(),
-    createdAt: nowIso(),
-    updatedAt: nowIso(),
+    createdAt: nowIso(opts.demo === true),
+    updatedAt: nowIso(opts.demo === true),
     status: 'in_progress',
     currentBatch: 1,
     gradedItems: [],
@@ -219,7 +231,7 @@ export async function submitBatch(opts = {}) {
     await atomicWriteJson(path.join(paths.answers, `${batch}-${item.id}.json`), {
       itemId: item.id,
       batch,
-      submittedAt: nowIso(),
+      submittedAt: nowIso(state.demo === true),
       rawAnswerSha256: sha256Hex(typeof raw === 'string' ? raw : JSON.stringify(raw ?? null)),
       rawAnswer: raw,
     });
@@ -228,7 +240,7 @@ export async function submitBatch(opts = {}) {
   state.gradedItems = state.gradedItems.filter((it) => !expectedIds.includes(it.id)).concat(results);
   state.batches[batch] = {
     status: 'graded',
-    submittedAt: nowIso(),
+    submittedAt: nowIso(state.demo === true),
     payloadHash,
     itemIds: expectedIds,
     missingIds: missing,
@@ -238,7 +250,7 @@ export async function submitBatch(opts = {}) {
   const allDone = BATCHES.every((b) => state.batches[b]?.status === 'graded');
   state.currentBatch = allDone ? 4 : Math.min(...BATCHES.filter((b) => state.batches[b]?.status !== 'graded'));
   state.status = allDone ? 'completed' : 'in_progress';
-  state.updatedAt = nowIso();
+  state.updatedAt = nowIso(state.demo === true);
   await atomicWriteJson(paths.state, state);
 
   const next = allDone ? null : publicBatchView(state, state.currentBatch);
@@ -375,7 +387,7 @@ export async function regradeRun(opts = {}) {
   }
   state.gradedItems = newResults;
   state.graderVersion = graderVersion;
-  state.updatedAt = nowIso();
+  state.updatedAt = nowIso(state.demo === true);
   await atomicWriteJson(paths.state, state);
   const after = newResults.map((g) => ({ id: g.id, awarded: g.awarded }));
   const diffs = before
