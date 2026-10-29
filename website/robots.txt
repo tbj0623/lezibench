@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+
+# 演示报告页（demo.html / assets/demo-report.html）自带 meta robots=noindex，
+# 因为那是人造答卷，不希望被搜索引擎当成真实成绩收录。
+
+Sitemap: https://tbj0623.github.io/lezibench/sitemap.xml

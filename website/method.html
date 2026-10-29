@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>评分方法论与逐题规则 — 乐子跑分 LeziBench</title>
+<meta name="description" content="LeziBench 的评分方法论：为什么用原子条件打分、为什么不用 LLM 当裁判、等价答案怎么归一、NEEDS_REVIEW 何时触发、版本化规则；以及 16 道题逐条公开的评分条件与分值。">
+<link rel="canonical" href="./method.html">
+<meta property="og:type" content="article">
+<meta property="og:title" content="评分方法论与逐题规则 — 乐子跑分 LeziBench">
+<meta property="og:description" content="原子条件、确定性判分、等价答案归一、NEEDS_REVIEW 与版本化；16 题 44 条评分条件逐条公开。">
+<meta property="og:image" content="./assets/screenshot-home.png">
+<meta name="theme-color" content="#0b0c0e">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='4' fill='%230b0c0e'/%3E%3Cpath d='M8 22V10h3.4v9.2H20V22z' fill='%23ffb84d'/%3E%3Cpath d='M22 10h3.2v5.6H22z' fill='%23ffb84d' opacity='.55'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="assets/site.css">
+<script>
+  (function () {
+    try {
+      var t = localStorage.getItem('lezi-theme');
+      if (t === 'light') document.documentElement.setAttribute('data-theme', 'light');
+    } catch (e) {}
+  })();
+</script>
+</head>
+<body>
+<a class="skip" href="#main">跳到正文</a>
+
+<header class="site-head">
+  <div class="shell bar">
+    <a class="wordmark" href="index.html"><span class="mark">LB</span> 乐子跑分 <span class="en">LeziBench</span></a>
+    <nav class="nav" aria-label="主导航">
+      <a href="index.html">首页</a>
+      <a href="method.html" aria-current="page">评分方法</a>
+      <a href="install.html">安装与开考</a>
+      <a href="demo.html">演示报告</a>
+      <a href="limits.html">局限</a>
+      <a href="faq.html">FAQ</a>
+    </nav>
+    <div class="head-tools">
+      <button class="theme-btn" type="button" data-theme-toggle aria-label="切换明暗主题">THEME</button>
+    </div>
+  </div>
+</header>
+
+<main id="main">
+
+  <div class="page-head">
+    <div class="shell">
+      <h1>评分方法论，以及十六道题的每一条条件</h1>
+      <p class="lede">
+        LeziBench 的判分器是一段确定性代码，不是一次模型调用。这一页解释它为什么这样设计，
+        然后把 16 道题、44 条评分条件原样列出来 —— 和源码里的 <code>publicCriteria</code> 逐字一致。
+      </p>
+    </div>
+  </div>
+
+  <div class="shell">
+    <div class="doc-layout">
+
+      <nav class="toc" aria-label="本页目录">
+        <h2>目录</h2>
+        <ol>
+          <li><a href="#flow">一局是怎么跑的</a></li>
+          <li><a href="#atomic">为什么用原子条件</a></li>
+          <li><a href="#no-judge">为什么不用 LLM 当裁判</a></li>
+          <li><a href="#equivalence">等价答案怎么归一</a></li>
+          <li><a href="#review">NEEDS_REVIEW 什么时候触发</a></li>
+          <li><a href="#versioning">版本化：exam / grader / contract</a></li>
+          <li><a href="#criteria">逐题评分规则（16 题）</a></li>
+        </ol>
+      </nav>
+
+      <div class="doc-body">
+
+        <section id="flow">
+          <h2>一局是怎么跑的</h2>
+          <p>
+            题库固定 16 题，分 4 批、每批 4 题。一次 <code>start</code> 只会把第 1 批的 4 道题交给你，
+            提交后才会拿到第 2 批。这个顺序由题库自检强制：<code>assertCatalogIntegrity()</code> 要求每批恰好 4 题，
+            不满足就不允许开考。
+          </p>
+          <p>
+            状态机是 <code>created → awaiting_batch_N → … → completed</code>。每次提交做四件事：
+            校验题目 id 属于本批 → 逐题判分 → 原子落盘（同目录临时文件 → fsync → rename）→ 返回下一批或最终结果。
+          </p>
+
+          <h3>提交是幂等的</h3>
+          <p>
+            每次提交会对「批次号 + 排序后的整批答案」算一个 SHA-256 payload 哈希。
+            <strong>哈希相同</strong>：返回 <code>idempotent: true</code>，不重复计分、不推进题目，你拿到的是同一个结果。
+            <strong>哈希不同</strong>：直接报错「该批已经提交并判分，拒绝用不同答案覆盖」。
+          </p>
+          <p>
+            这一条不是可选的健壮性优化。任何带自动重试的客户端，如果重复提交会静默跳题，
+            总分就会被无端压低而没有任何提示。同一批提交两次必须等价于提交一次。
+          </p>
+
+          <h3>缺答按 0 分，但整局不出「完整成绩」</h3>
+          <p>
+            允许某批少答几题（比如模型输出被截断），缺的题记为 <code>MISSING_ANSWER</code>、按 0 分处理，
+            理由会写进报告。但只要没答满 16 题，报告状态就降级为 <code>PARTIAL</code>，
+            <strong>不给段位、不给完整总分</strong>，避免拿一份残缺试卷的成绩去跟别人比。
+          </p>
+        </section>
+
+        <section id="atomic">
+          <h2>为什么用原子条件打分</h2>
+          <p>
+            每道题由若干条「原子条件」（criterion）组成，每条有自己的 id、分值和一句可核对的条件文本。
+            判分器对每条条件独立返回 <code>passed</code> 与 <code>reason</code>，题目得分就是通过的条件分值之和。
+          </p>
+          <p>这样做有三个直接后果：</p>
+          <ul>
+            <li>
+              <strong>没有「差不多对」的模糊地带。</strong>「截止时间正确」和「附件要求正确」是两条独立条件（1 分 + 3 分），
+              答对一个就是拿一条的分，不存在「整体印象给 2 分」。
+            </li>
+            <li>
+              <strong>扣分可以被反驳。</strong>每条失败条件都带具体理由，比如
+              <code>应付款应为 65，实际为 70</code>。你可以打开源码对一遍，确认是判分器错了还是答案错了。
+            </li>
+            <li>
+              <strong>分值能反映难度，而不用改口径。</strong>基础题通常 4 分、两条条件（1 + 3）；
+              挑战题 9 分、三条条件（3 + 3 + 3），且每条都要求「全部正确」才给分。
+            </li>
+          </ul>
+
+          <h3>结构性自检</h3>
+          <p>开考前会逐条校验，任何一条不成立就拒绝出题：</p>
+          <ul>
+            <li>恰好 16 题，ID 不重复；总分恰好 100。</li>
+            <li>四个维度各恰好 25 分，每维的分值结构必须是 <code>[4, 6, 6, 9]</code>。</li>
+            <li>每批恰好 4 题；难度分布恰好 4 基础 / 8 标准 / 4 挑战。</li>
+            <li>每题的子条件分值之和必须等于该题满分，且每个子分都是正整数。</li>
+            <li>0 到 100 之间每一个整数分都必须可达 —— 用子条件分值做可达性枚举，取不到的分直接判为命题缺陷。</li>
+          </ul>
+          <blockquote>
+            <p>
+              最后一条容易被当成形式主义，其实很实用：如果某道题的子条件分值组合有缺口，
+              就会出现「无论怎么答都拿不到某个分数」的情况，分数分布会莫名其妙地跳过一段。
+              枚举一遍就能在命题阶段把这类问题挡住。
+            </p>
+          </blockquote>
+
+          <h3>判分器结构校验</h3>
+          <p>
+            每道题的 <code>grade()</code> 返回的条件必须与题目的 <code>publicCriteria</code> 一一对应，
+            且分值完全相同。少一条、多一条、分值对不上，判分器立即抛错 —— 不会静默按错的口径给分。
+          </p>
+        </section>
+
+        <section id="no-judge">
+          <h2>为什么不用 LLM 当裁判</h2>
+          <p>
+            用另一个模型给答案打分，会引入四种难以消除的问题：同一份答案重判可能得分不同；评分口径随模型版本漂移；
+            判分过程本身不可审计；以及最要命的一条 —— 你不知道它是因为答案错了扣分，还是因为它看错了答案。
+          </p>
+          <p>LeziBench 的选择是完全确定性的判分：</p>
+          <ul>
+            <li>
+              <strong>同一份答案，任何时候重判都是同一个分数。</strong>
+              想验证的话：<code>regrade --run &lt;ID&gt;</code> 会从落盘的原始答案重新判一遍，改动只体现在 grader 版本升级时。
+            </li>
+            <li>
+              <strong>重判不碰原答案。</strong>原始答案写入时带 SHA-256 指纹，重判前会比对指纹；
+              指纹对不上就拒绝重判（说明文件被外部改过）。旧轨迹归档到 <code>evidence/</code>。
+            </li>
+            <li>
+              <strong>没有网络调用。</strong>判分器里没有任何 HTTP 客户端，也没有 API key 的概念。断网照样出分。
+            </li>
+          </ul>
+          <p class="muted small">
+            代价是：题目必须是「答案可以被形式化判定」的那一类。开放式写作、审美、长文论证这类任务，
+            这套判分器测不了，我们也不假装能测 —— 见<a href="limits.html">局限</a>。
+          </p>
+        </section>
+
+        <section id="equivalence">
+          <h2>等价答案怎么归一</h2>
+          <p>
+            判分只在<strong>格式层面</strong>做归一化，绝不做语义猜测。识别不出就返回空，让这道题进入待复核，
+            而不是猜一个「大概是想说 X」然后扣分。
+          </p>
+
+          <h3>文本</h3>
+          <ul>
+            <li>Unicode NFKC 归一（全角转半角）、折叠连续空白、去首尾引号与尾部标点。</li>
+            <li><strong>不删除否定词、不删除数字</strong>：「不需要预算表」里的「不」必须保留，否则语义就反了。</li>
+            <li>中文直引号、直角引号、弯引号视为等价包裹符。</li>
+          </ul>
+
+          <h3>数字</h3>
+          <ul>
+            <li>支持千分位（<code>1,234</code>）、货币符号（<code>￥52元</code>）、中文数字（<code>五十二</code>）。</li>
+            <li>整数精确相等；小数按 1e-6 的相对容差比较，避免浮点误差误判。</li>
+            <li>拒绝 <code>NaN</code>、<code>Infinity</code>、空串、以及「52 和 57」这种含多段数字的混杂串 —— 不猜你指哪个。</li>
+          </ul>
+
+          <h3>布尔</h3>
+          <ul>
+            <li><code>true / 是 / 需要 / 附上</code> 视为真；<code>false / 否 / 不需要 / 不附</code> 视为假。</li>
+            <li>先匹配更长的否定形式，防止「不需要」被「需要」抢先匹配成真。</li>
+            <li><code>也许吧</code> 这类含糊措辞解析为 null，不猜真假。</li>
+          </ul>
+
+          <h3>列表与集合</h3>
+          <ul>
+            <li>JSON 数组、逗号分隔、顿号分隔、编号列表，都能识别成同一个字符串数组。</li>
+            <li>题目说「顺序不限」的用集合比较；说「按序排列」的用序列比较。两种比较是分开实现的，不会混用。</li>
+            <li>商品编码大小写、空格不敏感（<code>s1</code> 与 <code>S01</code> 等价）。</li>
+          </ul>
+
+          <h3>同义表述</h3>
+          <p>
+            少数题目的答案字段带一张<strong>显式别名表</strong>，例如审批结论里「部分通过 / 按比例批准」等价于「部分批准」。
+            别名表写在题目源码里，可以逐条查；没有写进表的表述不会被当作等价。
+          </p>
+
+          <h3>JSON 抽取</h3>
+          <ul>
+            <li>先找整段 JSON，再找 ```json 代码块，最后才做括号配平扫描。</li>
+            <li>同时出现多个互相冲突的 JSON 片段时，判为不可解析 —— 绝不擅自挑一个当答案。</li>
+            <li>字段名大小写、下划线、空格不敏感（<code>budget_attached</code> 与 <code>budgetAttached</code> 等价）。</li>
+            <li>字段在对象不同层级出现且值不同时，标记为冲突而不是取第一个。</li>
+          </ul>
+          <p class="muted small">
+            判分器<strong>不执行</strong>被测答案里的任何内容：没有 <code>eval</code>、没有 <code>new Function</code>、没有动态 <code>import</code>。
+            传进来的字符串一律当文本处理。
+          </p>
+        </section>
+
+        <section id="review">
+          <h2>NEEDS_REVIEW 什么时候触发</h2>
+          <p>
+            这里有一个重要的设计取舍：<strong>「答错了」和「看不懂你在答什么」是两回事</strong>。
+            前者是能力问题，照常扣分；后者是解析故障，不能算成知识错误 —— 否则格式不对就会被误判成不会做。
+          </p>
+          <p>判分结果有四种状态：</p>
+          <ul>
+            <li><code>GRADED</code> —— 正常判分。哪怕全错，也是这个状态，分数为 0，理由是「答案不对」。</li>
+            <li><code>MISSING_ANSWER</code> —— 这道题没交任何内容。按事先公告的缺答 0 分处理。</li>
+            <li><code>UNPARSEABLE</code> —— <strong>有内容，但一个可用字段都识别不出来</strong>。标记待复核，不计为知识错误。</li>
+            <li><code>SCORER_ERROR</code> —— 判分器内部异常。同样标记，等修复后 <code>regrade</code> 重判。</li>
+          </ul>
+          <p>
+            判定门槛很低也很明确：<strong>只要有任意一个字段被成功识别</strong>，就按正常路径判分（缺的字段对应的条件不通过）；
+            <strong>只有零个可用字段</strong>才进入待复核。这个界限保证「漏写字段」不会变成「系统故障」，
+            而「答非所问」不会被强行打成分数。
+          </p>
+          <p>
+            任何一道题处于待复核或评分器错误状态，整份报告的状态就是 <code>PARTIAL</code>：
+            不给段位、不给完整总分，报告里会列出是哪几题、什么原因。
+          </p>
+          <blockquote>
+            <p>
+              换句话说：<strong>拿不到分</strong>和<strong>这份卷子下不了结论</strong>是两种不同的事。
+              前者照实扣分，后者拒绝下结论。
+            </p>
+          </blockquote>
+        </section>
+
+        <section id="versioning">
+          <h2>版本化：exam / grader / contract</h2>
+          <p>三个版本号分别管三件不同的事，都写进每一局的 <code>state.json</code> 和每一份报告：</p>
+          <div class="anatomy" style="margin:1rem 0">
+            <table class="grid">
+              <caption class="visually-hidden">三个版本号的含义</caption>
+              <thead>
+                <tr><th scope="col">字段</th><th scope="col">变更含义</th><th scope="col">当前值</th></tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <th scope="row"><code>examVersion</code></th>
+                  <td>题目内容可能变化。跨版本继续运行会被拒绝，必须重新 <code>start</code>。</td>
+                  <td class="num">1.0.0</td>
+                </tr>
+                <tr>
+                  <th scope="row"><code>graderVersion</code></th>
+                  <td>判分规则可能变化。可以用 <code>regrade --grader &lt;ver&gt;</code> 在新版本下重判旧答案。</td>
+                  <td class="num">1.0.0</td>
+                </tr>
+                <tr>
+                  <th scope="row"><code>contractVersion</code></th>
+                  <td>评分合同的整体约定变化（字段语义、状态机、报告结构）。</td>
+                  <td class="num">1.0.0</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <h3>题库指纹</h3>
+          <p>
+            每局还会记录一个 <code>catalogFingerprint</code>：由 16 道题的 id、维度、难度、分值、批次，
+            以及每条子条件的 id / 分值 / 文本共同算出的 SHA-256。当前值以
+            <code>doctor</code> 输出为准（本仓库 v1.0.0 的前 12 位是 <code>1b665890f294</code>）。
+          </p>
+          <p>
+            指纹的作用很直接：两份报告如果 exam / grader 版本都相同、但指纹不同，
+            说明其中一份的题库被改过，两者的分数不可比。
+          </p>
+
+          <h3>比较成绩的唯一合法条件</h3>
+          <blockquote>
+            <p>
+              <strong>只有 <code>examVersion</code> 与 <code>graderVersion</code> 都相同的两次运行才能比较分数。</strong>
+              版本不同就不是同一份试卷，横比没有意义。
+            </p>
+          </blockquote>
+        </section>
+
+        <section id="criteria">
+          <h2>逐题评分规则（16 题，44 条条件）</h2>
+          <p>
+            下面是每一道题的题号、维度、难度、满分，以及全部公开评分条件 ——
+            id、分值、条件文本三样都与源码逐字一致。这些文本也是答题时 <code>start</code> 会打印给你的
+            「评分条件（公开）」，答题方和判分器看的是同一份。
+          </p>
+          <p class="muted small">
+            注意：条件是<strong>判分口径</strong>，不是答案。题目实例的日期、金额、姓名等具体数据由 seed 随机生成，
+            每次开考都不同；条件文本描述的是「什么样的答案算对」，不泄露具体答案。
+          </p>
+          <!--CRITERIA:START-->
+<div class="crit-group" id="crit-instruction">
+          <div class="crit-group-head">
+            <h3>指令理解 <span class="k">INSTRUCTION</span></h3>
+            <span class="crit-group-sum">4 题 · 25 分</span>
+          </div>
+          <div class="items">
+            <article class="item">
+              <div class="item-head">
+                <span class="item-id">I01</span>
+                <span class="item-title">最后一条有效通知覆盖原计划</span>
+                <span class="item-meta"><span>基础</span><span>第 1 批</span><span class="p">4 分</span></span>
+              </div>
+              <ul class="crit">
+                <li><span class="cid">I01.C1</span><span class="cp">1 分</span><span class="ct">截止时间与第2条通知给出的最终日期和时段完全一致（不得沿用第1条的原始日期或中午12点）</span></li>
+                <li><span class="cid">I01.C2</span><span class="cp">3 分</span><span class="ct">明确表示不附预算表（budgetAttached=false）</span></li>
+              </ul>
+            </article>
+            <article class="item">
+              <div class="item-head">
+                <span class="item-id">I02</span>
+                <span class="item-title">白名单 + 例外 + 状态过滤</span>
+                <span class="item-meta"><span>标准</span><span>第 2 批</span><span class="p">6 分</span></span>
+              </div>
+              <ul class="crit">
+                <li><span class="cid">I02.C1</span><span class="cp">2 分</span><span class="ct">「上架」组包含全部应上架商品（无遗漏）</span></li>
+                <li><span class="cid">I02.C2</span><span class="cp">2 分</span><span class="ct">「上架」组不含任何不应上架商品（无多余）</span></li>
+                <li><span class="cid">I02.C3</span><span class="cp">2 分</span><span class="ct">「不上架」组与补集完全一致</span></li>
+              </ul>
+            </article>
+            <article class="item">
+              <div class="item-head">
+                <span class="item-id">I03</span>
+                <span class="item-title">多条件优先级与例外</span>
+                <span class="item-meta"><span>标准</span><span>第 3 批</span><span class="p">6 分</span></span>
+              </div>
+              <ul class="crit">
+                <li><span class="cid">I03.C1</span><span class="cp">2 分</span><span class="ct">rule 字段命中正确的规则编号</span></li>
+                <li><span class="cid">I03.C2</span><span class="cp">2 分</span><span class="ct">decision 字段命中正确的审批结论</span></li>
+                <li><span class="cid">I03.C3</span><span class="cp">2 分</span><span class="ct">escalate 字段正确</span></li>
+              </ul>
+            </article>
+            <article class="item">
+              <div class="item-head">
+                <span class="item-id">I04</span>
+                <span class="item-title">四步指令更新后的一致状态</span>
+                <span class="item-meta"><span>挑战</span><span>第 4 批</span><span class="p">9 分</span></span>
+              </div>
+              <ul class="crit">
+                <li><span class="cid">I04.C1</span><span class="cp">3 分</span><span class="ct">最终状态 = 已通过</span></li>
+                <li><span class="cid">I04.C2</span><span class="cp">3 分</span><span class="ct">最终负责人 = 第3条指定的负责人</span></li>
+                <li><span class="cid">I04.C3</span><span class="cp">3 分</span><span class="ct">最终截止时间 = 恢复后的初始日期</span></li>
+              </ul>
+            </article>
+          </div>
+        </div>
+
+        <div class="crit-group" id="crit-reasoning">
+          <div class="crit-group-head">
+            <h3>逻辑推理 <span class="k">REASONING</span></h3>
+            <span class="crit-group-sum">4 题 · 25 分</span>
+          </div>
+          <div class="items">
+            <article class="item">
+              <div class="item-head">
+                <span class="item-id">R01</span>
+                <span class="item-title">购物小票的真实合计</span>
+                <span class="item-meta"><span>基础</span><span>第 1 批</span><span class="p">4 分</span></span>
+              </div>
+              <ul class="crit">
+                <li><span class="cid">R01.C1</span><span class="cp">1 分</span><span class="ct">原价合计正确（活动前）</span></li>
+                <li><span class="cid">R01.C2</span><span class="cp">3 分</span><span class="ct">应付款正确（已扣满减）</span></li>
+              </ul>
+            </article>
+            <article class="item">
+              <div class="item-head">
+                <span class="item-id">R02</span>
+                <span class="item-title">依赖关系与可行顺序</span>
+                <span class="item-meta"><span>标准</span><span>第 2 批</span><span class="p">6 分</span></span>
+              </div>
+              <ul class="crit">
+                <li><span class="cid">R02.C1</span><span class="cp">2 分</span><span class="ct">顺序包含 A–E 五步各一次，且以 A（收货入库）开始</span></li>
+                <li><span class="cid">R02.C2</span><span class="cp">2 分</span><span class="ct">满足全部先后依赖约束</span></li>
+                <li><span class="cid">R02.C3</span><span class="cp">2 分</span><span class="ct">以 E（开放销售）收尾，且 first/last 字段与 order 首末一致</span></li>
+              </ul>
+            </article>
+            <article class="item">
+              <div class="item-head">
+                <span class="item-id">R03</span>
+                <span class="item-title">满足多条件的最低成本方案</span>
+                <span class="item-meta"><span>标准</span><span>第 3 批</span><span class="p">6 分</span></span>
+              </div>
+              <ul class="crit">
+                <li><span class="cid">R03.C1</span><span class="cp">2 分</span><span class="ct">方案满足份数与蛋白质两个下限</span></li>
+                <li><span class="cid">R03.C2</span><span class="cp">2 分</span><span class="ct">未超过每种餐盒的份数上限</span></li>
+                <li><span class="cid">R03.C3</span><span class="cp">2 分</span><span class="ct">总价达到理论最低（与穷举结果一致）</span></li>
+              </ul>
+            </article>
+            <article class="item">
+              <div class="item-head">
+                <span class="item-id">R04</span>
+                <span class="item-title">六线索排除推理（唯一解）</span>
+                <span class="item-meta"><span>挑战</span><span>第 4 批</span><span class="p">9 分</span></span>
+              </div>
+              <ul class="crit">
+                <li><span class="cid">R04.C1</span><span class="cp">3 分</span><span class="ct">四个人的位置全部正确</span></li>
+                <li><span class="cid">R04.C2</span><span class="cp">3 分</span><span class="ct">四个人的卡片颜色全部正确</span></li>
+                <li><span class="cid">R04.C3</span><span class="cp">3 分</span><span class="ct">位置与颜色的一一对应关系全部正确</span></li>
+              </ul>
+            </article>
+          </div>
+        </div>
+
+        <div class="crit-group" id="crit-data">
+          <div class="crit-group-head">
+            <h3>信息整理 <span class="k">DATA</span></h3>
+            <span class="crit-group-sum">4 题 · 25 分</span>
+          </div>
+          <div class="items">
+            <article class="item">
+              <div class="item-head">
+                <span class="item-id">D01</span>
+                <span class="item-title">去重并按规定排序</span>
+                <span class="item-meta"><span>基础</span><span>第 1 批</span><span class="p">4 分</span></span>
+              </div>
+              <ul class="crit">
+                <li><span class="cid">D01.C1</span><span class="cp">1 分</span><span class="ct">重复项已去掉，且没有漏掉任何不同名称</span></li>
+                <li><span class="cid">D01.C2</span><span class="cp">3 分</span><span class="ct">顺序与给定的摊位序号升序完全一致</span></li>
+              </ul>
+            </article>
+            <article class="item">
+              <div class="item-head">
+                <span class="item-id">D02</span>
+                <span class="item-title">区分事实、推断与信息不足</span>
+                <span class="item-meta"><span>标准</span><span>第 2 批</span><span class="p">6 分</span></span>
+              </div>
+              <ul class="crit">
+                <li><span class="cid">D02.C1</span><span class="cp">2 分</span><span class="ct">答案选择 C（信息不足，无法确定）</span></li>
+                <li><span class="cid">D02.C2</span><span class="cp">2 分</span><span class="ct">理由指出「甲项目的最终支出缺失」或「预算不等于最终支出」</span></li>
+                <li><span class="cid">D02.C3</span><span class="cp">2 分</span><span class="ct">没有把预算数字当作最终实际支出进行比较</span></li>
+              </ul>
+            </article>
+            <article class="item">
+              <div class="item-head">
+                <span class="item-id">D03</span>
+                <span class="item-title">两表合并与冲突检测</span>
+                <span class="item-meta"><span>标准</span><span>第 3 批</span><span class="p">6 分</span></span>
+              </div>
+              <ul class="crit">
+                <li><span class="cid">D03.C1</span><span class="cp">2 分</span><span class="ct">亏本销售 SKU 清单完全正确</span></li>
+                <li><span class="cid">D03.C2</span><span class="cp">2 分</span><span class="ct">仅门店有 SKU 清单完全正确</span></li>
+                <li><span class="cid">D03.C3</span><span class="cp">2 分</span><span class="ct">两表共同的 SKU 数量正确</span></li>
+              </ul>
+            </article>
+            <article class="item">
+              <div class="item-head">
+                <span class="item-id">D04</span>
+                <span class="item-title">规则化条件匹配与例外</span>
+                <span class="item-meta"><span>挑战</span><span>第 4 批</span><span class="p">9 分</span></span>
+              </div>
+              <ul class="crit">
+                <li><span class="cid">D04.C1</span><span class="cp">3 分</span><span class="ct">每个人的等级判定全部正确</span></li>
+                <li><span class="cid">D04.C2</span><span class="cp">3 分</span><span class="ct">金牌与银牌人数统计正确</span></li>
+                <li><span class="cid">D04.C3</span><span class="cp">3 分</span><span class="ct">普通人数统计正确（即总人数与前三项自洽）</span></li>
+              </ul>
+            </article>
+          </div>
+        </div>
+
+        <div class="crit-group" id="crit-correction">
+          <div class="crit-group-head">
+            <h3>状态追踪与纠错 <span class="k">CORRECTION</span></h3>
+            <span class="crit-group-sum">4 题 · 25 分</span>
+          </div>
+          <div class="items">
+            <article class="item">
+              <div class="item-head">
+                <span class="item-id">C01</span>
+                <span class="item-title">指出算式中的错误并纠正</span>
+                <span class="item-meta"><span>基础</span><span>第 1 批</span><span class="p">4 分</span></span>
+              </div>
+              <ul class="crit">
+                <li><span class="cid">C01.C1</span><span class="cp">1 分</span><span class="ct">明确判定原等式错误（isCorrect=false）</span></li>
+                <li><span class="cid">C01.C2</span><span class="cp">3 分</span><span class="ct">给出正确的和</span></li>
+              </ul>
+            </article>
+            <article class="item">
+              <div class="item-head">
+                <span class="item-id">C02</span>
+                <span class="item-title">四步修改后的最新库存状态</span>
+                <span class="item-meta"><span>标准</span><span>第 2 批</span><span class="p">6 分</span></span>
+              </div>
+              <ul class="crit">
+                <li><span class="cid">C02.C1</span><span class="cp">2 分</span><span class="ct">前三步处理后的库存（撤回前）正确</span></li>
+                <li><span class="cid">C02.C2</span><span class="cp">2 分</span><span class="ct">正确理解「撤回第2步」＝把那笔出库加回来</span></li>
+                <li><span class="cid">C02.C3</span><span class="cp">2 分</span><span class="ct">最终库存数值正确</span></li>
+              </ul>
+            </article>
+            <article class="item">
+              <div class="item-head">
+                <span class="item-id">C03</span>
+                <span class="item-title">新旧规则更迭后的合法操作</span>
+                <span class="item-meta"><span>标准</span><span>第 3 批</span><span class="p">6 分</span></span>
+              </div>
+              <ul class="crit">
+                <li><span class="cid">C03.C1</span><span class="cp">2 分</span><span class="ct">四笔申请适用的规则版本（旧/新）全部正确</span></li>
+                <li><span class="cid">C03.C2</span><span class="cp">2 分</span><span class="ct">四笔申请是否需要人工审批全部正确</span></li>
+                <li><span class="cid">C03.C3</span><span class="cp">2 分</span><span class="ct">第2笔（3 月提交）按新规则门槛判定，未误用旧规则门槛</span></li>
+              </ul>
+            </article>
+            <article class="item">
+              <div class="item-head">
+                <span class="item-id">C04</span>
+                <span class="item-title">找出错误根源、修复并算最终结果</span>
+                <span class="item-meta"><span>挑战</span><span>第 4 批</span><span class="p">9 分</span></span>
+              </div>
+              <ul class="crit">
+                <li><span class="cid">C04.C1</span><span class="cp">3 分</span><span class="ct">错误根源指出「数量用错」</span></li>
+                <li><span class="cid">C04.C2</span><span class="cp">3 分</span><span class="ct">修复后小计正确</span></li>
+                <li><span class="cid">C04.C3</span><span class="cp">3 分</span><span class="ct">修复后应付总额正确（已乘折扣）</span></li>
+              </ul>
+            </article>
+          </div>
+        </div>
+        <!--CRITERIA:END-->
+        </section>
+
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<footer class="site-foot">
+  <div class="shell">
+    <div class="foot-grid">
+      <div class="foot-brand">
+        <a class="wordmark" href="index.html"><span class="mark">LB</span> 乐子跑分 <span class="en">LeziBench</span></a>
+        <p>名字轻松，成绩认真。本地离线、零依赖的 Agent 能力自测。MIT 协议，题库与判分器公开可审计。</p>
+      </div>
+      <div class="foot-col">
+        <h4>文档</h4>
+        <ul>
+          <li><a href="method.html">评分方法论</a></li>
+          <li><a href="method.html#criteria">逐题评分规则</a></li>
+          <li><a href="install.html">安装与开考</a></li>
+          <li><a href="faq.html">常见问题</a></li>
+        </ul>
+      </div>
+      <div class="foot-col">
+        <h4>诚实边界</h4>
+        <ul>
+          <li><a href="limits.html">局限与不适用场景</a></li>
+          <li><a href="privacy.html">隐私说明</a></li>
+          <li><a href="demo.html">演示报告（DEMO）</a></li>
+        </ul>
+      </div>
+      <div class="foot-col">
+        <h4>仓库</h4>
+        <ul>
+          <li><a href="https://github.com/tbj0623/lezibench" rel="noopener">源码</a></li>
+          <li><a href="https://github.com/tbj0623/lezibench/blob/main/CONTRIBUTING.md" rel="noopener">贡献指南</a></li>
+          <li><a href="https://github.com/tbj0623/lezibench/blob/main/SECURITY.md" rel="noopener">安全问题</a></li>
+          <li><a href="https://github.com/tbj0623/lezibench/blob/main/LICENSE" rel="noopener">MIT License</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="foot-legal">
+      <span>© 2026 LeziBench contributors</span>
+      <span>exam v1.0.0 · grader v1.0.0</span>
+      <span>本站无 Cookie、无分析脚本、无外部字体</span>
+      <span class="spacer">本地规则核验 · 非认证成绩</span>
+    </div>
+  </div>
+</footer>
+
+<script src="assets/site.js" defer></script>
+</body>
+</html>

@@ -1,0 +1,14 @@
+# 依赖与构建产物
+node_modules/
+*.log
+.DS_Store
+Thumbs.db
+
+# 本地运行数据（绝不提交真实用户成绩）
+runs/
+data/
+*.local.json
+
+# 临时文件
+*.tmp
+.lezi-probe-*

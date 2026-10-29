@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>安装与开考 — 乐子跑分 LeziBench</title>
+<meta name="description" content="LeziBench 的三种安装方式（其中两种在 DSH 上真机验证过），完整的开考命令序列，以及各宿主的真实验证状态表。npm link / npx 安装方式未实测。">
+<link rel="canonical" href="./install.html">
+<meta property="og:type" content="article">
+<meta property="og:title" content="安装与开考 — 乐子跑分 LeziBench">
+<meta property="og:description" content="三种安装方式与标注（VERIFIED / 结构验证 / 未实测），完整开考命令序列。">
+<meta property="og:image" content="./assets/screenshot-home.png">
+<meta name="theme-color" content="#0b0c0e">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='4' fill='%230b0c0e'/%3E%3Cpath d='M8 22V10h3.4v9.2H20V22z' fill='%23ffb84d'/%3E%3Cpath d='M22 10h3.2v5.6H22z' fill='%23ffb84d' opacity='.55'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="assets/site.css">
+<script>
+  (function () {
+    try {
+      var t = localStorage.getItem('lezi-theme');
+      if (t === 'light') document.documentElement.setAttribute('data-theme', 'light');
+    } catch (e) {}
+  })();
+</script>
+</head>
+<body>
+<a class="skip" href="#main">跳到正文</a>
+
+<header class="site-head">
+  <div class="shell bar">
+    <a class="wordmark" href="index.html"><span class="mark">LB</span> 乐子跑分 <span class="en">LeziBench</span></a>
+    <nav class="nav" aria-label="主导航">
+      <a href="index.html">首页</a>
+      <a href="method.html">评分方法</a>
+      <a href="install.html" aria-current="page">安装与开考</a>
+      <a href="demo.html">演示报告</a>
+      <a href="limits.html">局限</a>
+      <a href="faq.html">FAQ</a>
+    </nav>
+    <div class="head-tools">
+      <button class="theme-btn" type="button" data-theme-toggle aria-label="切换明暗主题">THEME</button>
+    </div>
+  </div>
+</header>
+
+<main id="main">
+
+  <div class="page-head">
+    <div class="shell">
+      <h1>怎么装，怎么跑完一场</h1>
+      <p class="lede">
+        唯一的前置条件是 Node.js ≥ 18.17。没有 <code>npm install</code>，没有运行时依赖，
+        也不需要联网。下面三种安装方式分别标了我们<strong>实际验证到哪一步</strong> —— 没验证的部分会直接写「未实测」。
+      </p>
+    </div>
+  </div>
+
+  <div class="shell">
+    <div class="doc-layout">
+
+      <nav class="toc" aria-label="本页目录">
+        <h2>目录</h2>
+        <ol>
+          <li><a href="#prereq">前置条件</a></li>
+          <li><a href="#install">三种安装方式</a></li>
+          <li><a href="#run">完整开考流程</a></li>
+          <li><a href="#data">数据目录在哪</a></li>
+          <li><a href="#platforms">支持环境与验证状态</a></li>
+          <li><a href="#trouble">常见故障</a></li>
+        </ol>
+      </nav>
+
+      <div class="doc-body">
+
+        <section id="prereq">
+          <h2>前置条件</h2>
+          <div class="anatomy">
+            <table class="grid">
+              <caption class="visually-hidden">运行前置条件</caption>
+              <thead><tr><th scope="col">项目</th><th scope="col">要求</th><th scope="col">说明</th></tr></thead>
+              <tbody>
+                <tr><th scope="row">Node.js</th><td class="num">≥ 18.17.0</td><td>仓库里没有运行时依赖，不执行 <code>npm install</code>。</td></tr>
+                <tr><th scope="row">操作系统</th><td>Windows / macOS / Linux</td><td>Windows 全流程实测通过；另两个平台有实现分支，未真机跑完整局。</td></tr>
+                <tr><th scope="row">网络</th><td>不需要</td><td>判分、出报告全程零网络请求。安装本身需要能拿到仓库。</td></tr>
+                <tr><th scope="row">磁盘</th><td>几百 KB</td><td>一局运行的答案、状态和报告通常不到 1 MB。</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <p class="small muted" style="margin-top:1rem">
+            先确认一下版本：<code>node --version</code>。低于 18.17 会在启动时报错，<code>doctor</code> 也会明确标出这一项。
+          </p>
+        </section>
+
+        <section id="install">
+          <h2>三种安装方式</h2>
+
+          <h3 id="install-user">方式 A · 用户级 Skill 目录 <span class="tag-inline tag-inline--amber">VERIFIED</span></h3>
+          <p>
+            装到 <code>~/.agents/skills/lezi-bench/</code>。这是本次<strong>唯一被证实「DSH 真的扫描到了」</strong>的安装方式：
+            装完后本会话的 skill 目录里直接出现了 <code>lezi-bench</code> 这一条，可以像其他 Skill 一样被触发。
+          </p>
+          <pre><code><span class="c"># 1. 拿到仓库</span>
+git clone https://github.com/tbj0623/lezibench.git
+cd lezibench
+
+<span class="c"># 2. 同步成一个可安装的 Skill 包，并做全量哈希校验</span>
+node scripts/sync-skill.mjs --target ~/.agents/skills/lezi-bench</code></pre>
+          <div class="callout">
+            <h4>目录名必须是 lezi-bench，不是 lezibench</h4>
+            <p>
+              Agent Skills 规范要求 frontmatter 的 <code>name</code> 与父目录名<strong>完全一致</strong>，
+              本 Skill 的 <code>name</code> 是 <code>lezi-bench</code>。装成 <code>lezibench/</code> 目录会被静默跳过，
+              而且模型端<strong>无法区分「不存在」和「存在但非法」</strong> —— 只会看到目录里少了这一条。
+            </p>
+          </div>
+          <p class="small muted">
+            验证安装是否成功：新开一个会话，确认 skill 目录里有 <code>lezi-bench</code>；
+            或者直接在装好的目录里跑一次 <code>node scripts/cli.mjs doctor</code>，五项全 ✔ 就说明包是完整的。
+          </p>
+
+          <h3 id="install-workspace">方式 B · 工作区级 Skill 目录 <span class="tag-inline">结构与可执行已验证</span></h3>
+          <p>
+            装到 <code>&lt;projectRoot&gt;/.agents/skills/lezi-bench/</code>。DSH 的扫描根里项目级排在用户级前面
+            （rank 200 vs rank 500），适合「跟着仓库走、不想污染用户目录」的场景。
+          </p>
+          <pre><code>node scripts/sync-skill.mjs --target .agents/skills/lezi-bench</code></pre>
+          <p>
+            <strong>验证到哪一步：</strong>这个路径结构合规、安装后的包能通过 <code>doctor</code>；
+            但我们没有做「只留工作区级、删掉用户级」的隔离实验，所以无法单独证明是这一条被加载。
+            优先级规则本身见 <a href="https://github.com/tbj0623/lezibench/blob/main/research/PLATFORM_NOTES.md">PLATFORM_NOTES §2.2</a>。
+          </p>
+          <p class="small muted">
+            注意：<code>projectRoot</code> 取的是最近的含 <code>.git</code> 的祖先目录；没有 <code>.git</code> 时退回当前工作目录。
+          </p>
+
+          <h3 id="install-direct">方式 C · 不安装，直接在仓库里跑 <span class="tag-inline tag-inline--amber">VERIFIED</span></h3>
+          <p>
+            不需要任何安装步骤。克隆下来，直接在仓库根目录执行 <code>node scripts/cli.mjs …</code> 即可。
+            没有 Skill 触发的便利，但完全不依赖宿主的 skill 扫描机制 —— 也是本次实测里最省事的一条。
+          </p>
+          <pre><code>git clone https://github.com/tbj0623/lezibench.git
+cd lezibench
+node scripts/cli.mjs doctor
+node scripts/cli.mjs start --mode standard --json</code></pre>
+
+          <h3 id="install-npm">方式 D · npm bin / npx <span class="tag-inline">未实测</span></h3>
+          <div class="callout callout--warn">
+            <h4>未实测 — 请勿照抄</h4>
+            <p>
+              <code>package.json</code> 里确实声明了 <code>"bin": { "lezi-bench": "scripts/cli.mjs" }</code>，
+              但 <code>npm install</code>、<code>npm link</code>、<code>npx</code> 这三种调用方式
+              <strong>本次一次都没有执行过</strong>，wrapper 在 Windows 下的行为也没有验证。
+            </p>
+            <p>
+              所以我们<strong>不写</strong><code>npx lezi-bench</code> 可用。等有人真的跑通了，再补进这一节。
+              在此之前，请用上面的 A / B / C。
+            </p>
+          </div>
+        </section>
+
+        <section id="run">
+          <h2>完整开考流程</h2>
+          <p>
+            所有命令都在 <strong><code>SKILL.md</code> 所在目录</strong>执行（也就是安装出来的 <code>lezi-bench/</code> 目录）。
+            下文用 <code>node scripts/cli.mjs</code>；如果你的宿主要求绝对路径，就用该目录拼接。
+          </p>
+
+          <ol class="steps">
+            <li>
+              <div>
+                <h3>环境自检</h3>
+                <pre><code>node scripts/cli.mjs doctor</code></pre>
+                <p>
+                  期望五项全 ✔，最后一行是「全部通过，可以开考。」。
+                  有任何一项 ✘ 就停下来，把具体缺什么如实告诉用户 —— 不要带着坏环境硬跑。
+                </p>
+              </div>
+            </li>
+
+            <li>
+              <div>
+                <h3>开始一局，拿第 1 批题目</h3>
+                <pre><code>node scripts/cli.mjs start --mode standard --seed demo-2026 --json</code></pre>
+                <p>
+                  <code>--seed</code> 可省略，省略时用当前时间戳。指定 seed 的价值是<strong>可复现</strong>：
+                  同 seed 生成同一套题面，方便对照排查。
+                </p>
+                <p>返回的 JSON 里，记下 <code>runId</code>（后面每条命令都要用），并注意这几项：</p>
+                <ul>
+                  <li><code>batch</code> = 1，<code>totalBatches</code> = 4，<code>totalQuestions</code> = 16</li>
+                  <li><code>items[]</code>：本批 4 道题，每题带 <code>id</code> / <code>points</code> / <code>prompt</code> / <code>criteria</code></li>
+                  <li><code>progress</code>：形如「第 1/4 批 · 已完成 0/16 题」</li>
+                </ul>
+              </div>
+            </li>
+
+            <li>
+              <div>
+                <h3>作答，写进一个 JSON 文件</h3>
+                <p>按 <code>prompt</code> 的要求作答；题面说「只输出一个 JSON 对象」时，答案就是那个对象。</p>
+                <pre><code>{
+  "answers": {
+    "I01": { "deadline": "周三下午2点", "budgetAttached": false },
+    "R01": { "subtotal": 70, "total": 65 },
+    "D01": { "list": ["南京", "苏州", "杭州"] },
+    "C01": { "isCorrect": false, "correctTotal": 55 }
+  }
+}</code></pre>
+                <p class="small muted">
+                  上面是格式示意，<strong>数值不是答案</strong> —— 每局的日期、金额、名单都由 seed 生成，照抄必定错。
+                </p>
+                <ul>
+                  <li>外层 <code>answers</code> 可省，直接写 <code>{"I01": …}</code> 也可以。</li>
+                  <li>键必须是本批题目的真实 <code>id</code>，写别的批次会直接报错。</li>
+                  <li>值可以是 JSON 对象，也可以是 JSON 字符串；判分器会做等价归一。</li>
+                  <li>答案文件上限 256 KB。</li>
+                </ul>
+              </div>
+            </li>
+
+            <li>
+              <div>
+                <h3>提交本批</h3>
+                <pre><code>node scripts/cli.mjs submit --run &lt;RUN_ID&gt; --batch 1 --answers-file answers-batch1.json</code></pre>
+                <p>输出会给出本批得分、逐题得分与失败条件的理由，以及下一批的 4 道题。</p>
+                <ul>
+                  <li>看到 <code>finished: true</code>（文本模式下会直接打印总分摘要）说明四批都完了。</li>
+                  <li>看到 <code>idempotent</code> 说明这批用相同答案提交过，本次不重复计分，属正常。</li>
+                  <li>看到「拒绝用不同答案覆盖」说明这批已经判分了 —— 继续下一批或新开一局，不要尝试绕过。</li>
+                </ul>
+              </div>
+            </li>
+
+            <li>
+              <div>
+                <h3>重复三次</h3>
+                <pre><code>node scripts/cli.mjs submit --run &lt;RUN_ID&gt; --batch 2 --answers-file answers-batch2.json
+node scripts/cli.mjs submit --run &lt;RUN_ID&gt; --batch 3 --answers-file answers-batch3.json
+node scripts/cli.mjs submit --run &lt;RUN_ID&gt; --batch 4 --answers-file answers-batch4.json</code></pre>
+                <p>每条命令带同一个 <code>RUN_ID</code>，<code>--batch</code> 依次 2 / 3 / 4。每批的题目 id 见上一批返回的 <code>items[].id</code>。</p>
+              </div>
+            </li>
+
+            <li>
+              <div>
+                <h3>出报告</h3>
+                <pre><code>node scripts/cli.mjs report --run &lt;RUN_ID&gt; --format html
+node scripts/cli.mjs report --run &lt;RUN_ID&gt; --format summary
+
+<span class="c"># 想自己指定输出位置：</span>
+node scripts/cli.mjs report --run &lt;RUN_ID&gt; --format html --out ./report.html
+
+<span class="c"># 需要完整机器可读证据（含逐题 checks）：</span>
+node scripts/cli.mjs report --run &lt;RUN_ID&gt; --format json</code></pre>
+                <p>
+                  HTML 是自包含文件，命令会打印绝对路径，双击即可打开、断网也能看。
+                  summary 是纯文本，适合直接贴进对话。
+                </p>
+              </div>
+            </li>
+          </ol>
+
+          <h3 id="resume">中途断了怎么办</h3>
+          <p>状态全部落在磁盘上，不会因为上下文丢失而作废：</p>
+          <pre><code><span class="c"># 不知道做到哪了</span>
+node scripts/cli.mjs status --run &lt;RUN_ID&gt;
+
+<span class="c"># 继续跑，它会直接给出下一批题目</span>
+node scripts/cli.mjs resume --run &lt;RUN_ID&gt;
+
+<span class="c"># 怀疑判分器有问题：只重判，不碰原答案</span>
+node scripts/cli.mjs regrade --run &lt;RUN_ID&gt;
+
+<span class="c"># 历史运行 / 版本</span>
+node scripts/cli.mjs list
+node scripts/cli.mjs version</code></pre>
+        </section>
+
+        <section id="data">
+          <h2>数据目录在哪</h2>
+          <p>默认按平台选择，可用环境变量 <code>LEZIBENCH_HOME</code> 覆盖。</p>
+          <div class="anatomy">
+            <table class="grid">
+              <caption class="visually-hidden">各平台默认数据目录</caption>
+              <thead><tr><th scope="col">平台</th><th scope="col">默认路径</th><th scope="col">覆盖方式</th></tr></thead>
+              <tbody>
+                <tr>
+                  <th scope="row">Windows</th>
+                  <td><code>%LOCALAPPDATA%\LeziBench</code></td>
+                  <td rowspan="3"><code>LEZIBENCH_HOME</code></td>
+                </tr>
+                <tr><th scope="row">macOS</th><td><code>~/Library/Application Support/LeziBench</code></td></tr>
+                <tr><th scope="row">Linux</th><td><code>$XDG_DATA_HOME/lezibench</code>，未设置时 <code>~/.local/share/lezibench</code></td></tr>
+              </tbody>
+            </table>
+          </div>
+          <p>临时指定一个数据目录（不影响已有运行）：</p>
+          <pre><code><span class="c"># macOS / Linux</span>
+LEZIBENCH_HOME=/tmp/lezi node scripts/cli.mjs doctor
+
+<span class="c"># Windows PowerShell</span>
+$env:LEZIBENCH_HOME="D:\lezi"; node scripts/cli.mjs doctor</code></pre>
+          <p class="small muted">目录里会生成 <code>runs/&lt;runId&gt;/</code>，下面分 <code>answers/</code>、<code>reports/</code>、<code>evidence/</code> 与 <code>state.json</code>。详见<a href="privacy.html">隐私说明</a>。</p>
+        </section>
+
+        <section id="platforms">
+          <h2>支持环境与验证状态</h2>
+          <p>
+            这张表按「有没有第一手证据」标注，而不是按「理论上能不能跑」。
+            <strong>NOT_TESTED 的意思只是我们没验证过</strong>，不是断言它不能用。
+          </p>
+          <div class="plat">
+            <table class="grid">
+              <caption class="visually-hidden">各宿主支持状态</caption>
+              <thead>
+                <tr><th scope="col">宿主 / 平台</th><th scope="col">状态</th><th scope="col">证据或说明</th></tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <th scope="row">DSH（DeepSeek​ Harness）</th>
+                  <td><span class="badge badge--ok">VERIFIED</span></td>
+                  <td>用户级 <code>~/.agents/skills/lezi-bench/</code> 安装后，skill 目录里确实出现该条目；完整走完 4 批 16 题并生成三种格式报告，全部 exit 0。</td>
+                </tr>
+                <tr>
+                  <th scope="row">Node.js 运行时</th>
+                  <td><span class="badge badge--ok">VERIFIED</span></td>
+                  <td>实测 Node v24 通过。<code>doctor</code> 要求 ≥ 18.17；CI 矩阵覆盖 18 / 20 / 22。</td>
+                </tr>
+                <tr>
+                  <th scope="row">Windows</th>
+                  <td><span class="badge badge--part">PARTIAL</span></td>
+                  <td>全流程在本机 Windows 跑通。路径、编码、原子写的 Windows 分支都有实现，但未做广泛环境矩阵。</td>
+                </tr>
+                <tr>
+                  <th scope="row">macOS / Linux</th>
+                  <td><span class="badge badge--part">PARTIAL</span></td>
+                  <td>数据目录与路径分支有实现，<code>doctor</code> 逻辑一致；没有真机跑完整局的记录。</td>
+                </tr>
+                <tr>
+                  <th scope="row">OpenClaw</th>
+                  <td><span class="badge badge--no">NOT_TESTED</span></td>
+                  <td>
+                    <code>docs.openclaw.ai</code> 本次出口被封（DNS 可达、TCP 443 连续超时），
+                    <code>web_search</code> 也没有命中 skills 目录或 frontmatter 的一手材料。
+                    安装命令、目录位置、优先级三项我们<strong>都不给结论</strong>。
+                  </td>
+                </tr>
+                <tr>
+                  <th scope="row">Codex</th>
+                  <td><span class="badge badge--no">NOT_TESTED</span></td>
+                  <td>未取得任何一手证据。不写「Codex 读某个目录」这类没有验证过的说法。</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <p class="small muted" style="margin-top:1rem">
+            核实记录：<a href="https://github.com/tbj0623/lezibench/blob/main/research/PLATFORM_NOTES.md">research/PLATFORM_NOTES.md</a>（Agent Skills 规范与 DSH 发现规则均已核实；
+            OpenClaw / Codex 明确标为未核实）。
+          </p>
+        </section>
+
+        <section id="trouble">
+          <h2>常见故障</h2>
+          <div class="anatomy">
+            <table class="grid">
+              <caption class="visually-hidden">故障现象与处理</caption>
+              <thead><tr><th scope="col">现象</th><th scope="col">原因与处理</th></tr></thead>
+              <tbody>
+                <tr>
+                  <th scope="row">skill 目录里看不到 <code>lezi-bench</code></th>
+                  <td>目录名与 <code>name</code> 不一致，或目录层级超过一层。DSH 只扫一层，且坏掉的包会被<strong>静默跳过</strong>。确认目录是 <code>&lt;root&gt;/lezi-bench/SKILL.md</code>。</td>
+                </tr>
+                <tr>
+                  <th scope="row">「批次不包含这些题目」</th>
+                  <td>答案文件的键写错了批次。按当前批返回的 <code>items[].id</code> 修正后重交。</td>
+                </tr>
+                <tr>
+                  <th scope="row">「已提交并判分，拒绝覆盖」</th>
+                  <td>该批已判分且答案不同。这是设计上的保护，不要绕过；继续下一批或新开一局。</td>
+                </tr>
+                <tr>
+                  <th scope="row">报告里出现「待复核」</th>
+                  <td>有题目答案无法解析成任何标准字段，或判分器内部异常。此时整局状态为 PARTIAL，<strong>不给段位</strong>。用 <code>status</code> 看是哪几题，改规范格式后新开一局。</td>
+                </tr>
+                <tr>
+                  <th scope="row">Node 版本过低</th>
+                  <td><code>doctor</code> 第一项会标 ✘。升到 18.17 或更高；本仓库没有 polyfill。</td>
+                </tr>
+                <tr>
+                  <th scope="row">数据目录不可写</th>
+                  <td><code>doctor</code> 第四项会给出具体错误码。换一个可写目录：<code>LEZIBENCH_HOME=&lt;可写路径&gt;</code>。</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <p style="margin-top:1.4rem">
+            更多问题见 <a href="faq.html">FAQ</a>；不适用场景见 <a href="limits.html">局限</a>。
+          </p>
+        </section>
+
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<footer class="site-foot">
+  <div class="shell">
+    <div class="foot-grid">
+      <div class="foot-brand">
+        <a class="wordmark" href="index.html"><span class="mark">LB</span> 乐子跑分 <span class="en">LeziBench</span></a>
+        <p>名字轻松，成绩认真。本地离线、零依赖的 Agent 能力自测。MIT 协议，题库与判分器公开可审计。</p>
+      </div>
+      <div class="foot-col">
+        <h4>文档</h4>
+        <ul>
+          <li><a href="method.html">评分方法论</a></li>
+          <li><a href="method.html#criteria">逐题评分规则</a></li>
+          <li><a href="install.html">安装与开考</a></li>
+          <li><a href="faq.html">常见问题</a></li>
+        </ul>
+      </div>
+      <div class="foot-col">
+        <h4>诚实边界</h4>
+        <ul>
+          <li><a href="limits.html">局限与不适用场景</a></li>
+          <li><a href="privacy.html">隐私说明</a></li>
+          <li><a href="demo.html">演示报告（DEMO）</a></li>
+        </ul>
+      </div>
+      <div class="foot-col">
+        <h4>仓库</h4>
+        <ul>
+          <li><a href="https://github.com/tbj0623/lezibench" rel="noopener">源码</a></li>
+          <li><a href="https://github.com/tbj0623/lezibench/blob/main/CONTRIBUTING.md" rel="noopener">贡献指南</a></li>
+          <li><a href="https://github.com/tbj0623/lezibench/blob/main/SECURITY.md" rel="noopener">安全问题</a></li>
+          <li><a href="https://github.com/tbj0623/lezibench/blob/main/LICENSE" rel="noopener">MIT License</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="foot-legal">
+      <span>© 2026 LeziBench contributors</span>
+      <span>exam v1.0.0 · grader v1.0.0</span>
+      <span>本站无 Cookie、无分析脚本、无外部字体</span>
+      <span class="spacer">本地规则核验 · 非认证成绩</span>
+    </div>
+  </div>
+</footer>
+
+<script src="assets/site.js" defer></script>
+</body>
+</html>

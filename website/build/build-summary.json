@@ -1,0 +1,148 @@
+{
+  "examVersion": "1.0.0",
+  "graderVersion": "1.0.0",
+  "criteriaInjected": {
+    "items": 16,
+    "criteria": 44
+  },
+  "demo": {
+    "runId": "run-20261029-161417-f8130d",
+    "seed": "lezi-demo-2026",
+    "total": 74,
+    "level": "良好",
+    "status": "COMPLETED",
+    "durationMs": 834,
+    "dims": [
+      {
+        "key": "instruction",
+        "label": "指令理解",
+        "awarded": 22,
+        "max": 25
+      },
+      {
+        "key": "reasoning",
+        "label": "逻辑推理",
+        "awarded": 16,
+        "max": 25
+      },
+      {
+        "key": "data",
+        "label": "信息整理",
+        "awarded": 19,
+        "max": 25
+      },
+      {
+        "key": "correction",
+        "label": "状态追踪与纠错",
+        "awarded": 17,
+        "max": 25
+      }
+    ],
+    "lost": [
+      {
+        "id": "I01",
+        "title": "最后一条有效通知覆盖原计划",
+        "awarded": 1,
+        "max": 4
+      },
+      {
+        "id": "R01",
+        "title": "购物小票的真实合计",
+        "awarded": 1,
+        "max": 4
+      },
+      {
+        "id": "R04",
+        "title": "六线索排除推理（唯一解）",
+        "awarded": 3,
+        "max": 9
+      },
+      {
+        "id": "D02",
+        "title": "区分事实、推断与信息不足",
+        "awarded": 0,
+        "max": 6
+      },
+      {
+        "id": "C02",
+        "title": "四步修改后的最新库存状态",
+        "awarded": 2,
+        "max": 6
+      },
+      {
+        "id": "C03",
+        "title": "新旧规则更迭后的合法操作",
+        "awarded": 2,
+        "max": 6
+      }
+    ],
+    "fails": [
+      {
+        "item": "I01",
+        "crit": "I01.C2",
+        "pts": 3,
+        "reason": "错误地表示仍要附预算表"
+      },
+      {
+        "item": "R01",
+        "crit": "R01.C2",
+        "pts": 3,
+        "reason": "应付款应为 65，实际为 70"
+      },
+      {
+        "item": "R04",
+        "crit": "R04.C2",
+        "pts": 3,
+        "reason": "3/4 人颜色正确"
+      },
+      {
+        "item": "R04",
+        "crit": "R04.C3",
+        "pts": 3,
+        "reason": "3/4 人的位置与颜色同时正确"
+      },
+      {
+        "item": "D02",
+        "crit": "D02.C1",
+        "pts": 2,
+        "reason": "答案应为 C（信息不足），实际为「A」"
+      },
+      {
+        "item": "D02",
+        "crit": "D02.C2",
+        "pts": 2,
+        "reason": "理由没有指出「信息缺失 / 预算≠最终支出」这一关键点"
+      },
+      {
+        "item": "D02",
+        "crit": "D02.C3",
+        "pts": 2,
+        "reason": "结论本身错误，无法通过此项"
+      },
+      {
+        "item": "C02",
+        "crit": "C02.C2",
+        "pts": 2,
+        "reason": "撤回后应比撤回前多 3 件，实际差 0 件"
+      },
+      {
+        "item": "C02",
+        "crit": "C02.C3",
+        "pts": 2,
+        "reason": "最终库存应为 84，实际为 81"
+      },
+      {
+        "item": "C03",
+        "crit": "C03.C2",
+        "pts": 2,
+        "reason": "3/4 笔人工审批判断正确"
+      },
+      {
+        "item": "C03",
+        "crit": "C03.C3",
+        "pts": 2,
+        "reason": "第2笔应按新规则判定（金额 3645，门槛 5655，需人工=false），实际为 新/true"
+      }
+    ]
+  }
+}

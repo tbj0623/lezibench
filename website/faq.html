@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>常见问题 — 乐子跑分 LeziBench</title>
+<meta name="description" content="LeziBench FAQ：它会不会联网、要不要装依赖、分数能不能比、为什么出现待复核、能不能改题、和虾跑分有什么区别。每条回答都指向代码或实测证据。">
+<link rel="canonical" href="./faq.html">
+<meta property="og:type" content="article">
+<meta property="og:title" content="常见问题 — 乐子跑分 LeziBench">
+<meta property="og:description" content="联网、依赖、分数可比性、待复核、改题、与竞品的区别。">
+<meta property="og:image" content="./assets/screenshot-home.png">
+<meta name="theme-color" content="#0b0c0e">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='4' fill='%230b0c0e'/%3E%3Cpath d='M8 22V10h3.4v9.2H20V22z' fill='%23ffb84d'/%3E%3Cpath d='M22 10h3.2v5.6H22z' fill='%23ffb84d' opacity='.55'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="assets/site.css">
+<script>
+  (function () {
+    try {
+      var t = localStorage.getItem('lezi-theme');
+      if (t === 'light') document.documentElement.setAttribute('data-theme', 'light');
+    } catch (e) {}
+  })();
+</script>
+</head>
+<body>
+<a class="skip" href="#main">跳到正文</a>
+
+<header class="site-head">
+  <div class="shell bar">
+    <a class="wordmark" href="index.html"><span class="mark">LB</span> 乐子跑分 <span class="en">LeziBench</span></a>
+    <nav class="nav" aria-label="主导航">
+      <a href="index.html">首页</a>
+      <a href="method.html">评分方法</a>
+      <a href="install.html">安装与开考</a>
+      <a href="demo.html">演示报告</a>
+      <a href="limits.html">局限</a>
+      <a href="faq.html" aria-current="page">FAQ</a>
+    </nav>
+    <div class="head-tools">
+      <button class="theme-btn" type="button" data-theme-toggle aria-label="切换明暗主题">THEME</button>
+    </div>
+  </div>
+</header>
+
+<main id="main">
+
+  <div class="page-head">
+    <div class="shell">
+      <h1>常见问题</h1>
+      <p class="lede">
+        按「最容易被误解的排前面」排序。每个回答都尽量指到具体代码或实测记录，
+        而不是给一句听着舒服的结论。
+      </p>
+    </div>
+  </div>
+
+  <div class="shell">
+    <div class="doc-layout">
+
+      <nav class="toc" aria-label="本页目录">
+        <h2>问题分类</h2>
+        <ol>
+          <li><a href="#network">它到底会不会联网</a></li>
+          <li><a href="#what">它测的到底是什么</a></li>
+          <li><a href="#score">关于分数与比较</a></li>
+          <li><a href="#run">关于运行与报错</a></li>
+          <li><a href="#trust">关于可信度</a></li>
+          <li><a href="#diff">和虾跑分的区别</a></li>
+        </ol>
+      </nav>
+
+      <div class="doc-body">
+
+        <section id="network">
+          <h2>它到底会不会联网</h2>
+          <div class="faq">
+
+            <details>
+              <summary>跑分过程需要联网吗？</summary>
+              <div class="a">
+                <p>
+                  不需要。判分、写状态、生成报告全部走本地文件系统。代码里没有任何 HTTP 客户端，
+                  也没有 API key 的概念 —— 不是「默认不联网」，是<strong>根本没有联网的代码路径</strong>。
+                </p>
+                <p>验证方法：断网后跑 <code>doctor</code>，五项仍然全 ✔；再跑完整一局，报告照样生成。</p>
+              </div>
+            </details>
+
+            <details>
+              <summary>我的答案会被上传到哪里吗？</summary>
+              <div class="a">
+                <p>
+                  不会。答案写到本机数据目录下的 <code>runs/&lt;runId&gt;/answers/</code>，
+                  报告写在同目录的 <code>reports/</code>。除此之外没有第二个副本。
+                </p>
+                <p>具体路径见<a href="privacy.html">隐私说明</a>。</p>
+              </div>
+            </details>
+
+            <details>
+              <summary>为什么不需要 API key？</summary>
+              <div class="a">
+                <p>
+                  因为判分不调用任何模型。LeziBench 的判分器是一段确定性 JavaScript 代码，
+                  它对照题目的 <code>publicCriteria</code> 逐条判定。没有模型参与，自然不需要凭据。
+                </p>
+                <p>这也是它能在断网环境里出分的原因。</p>
+              </div>
+            </details>
+
+            <details>
+              <summary>网站本身有追踪吗？</summary>
+              <div class="a">
+                <p>
+                  没有。这个站点是纯静态页面：没有 Cookie、没有分析脚本、没有外部字体、没有 CDN。
+                  唯一的浏览器存储是一个 <code>localStorage</code> 键，用来记住你选的明暗主题。
+                  关掉 Cookie 或不选主题，功能完全不受影响。
+                </p>
+              </div>
+            </details>
+
+          </div>
+        </section>
+
+        <section id="what">
+          <h2>它测的到底是什么</h2>
+          <div class="faq">
+
+            <details>
+              <summary>它测的是「聪明程度」吗？</summary>
+              <div class="a">
+                <p>
+                  不是。它测的是「在给定材料、给定规则、要求输出结构化答案」这一类任务上，
+                  这一次做得怎么样。四个维度分别是：
+                </p>
+                <ul>
+                  <li><strong>指令理解</strong>：多条通知里哪条最终有效、规则有例外时怎么处理。</li>
+                  <li><strong>逻辑推理</strong>：算账、排顺序、满足多个约束的最优解、排除法求解。</li>
+                  <li><strong>信息整理</strong>：去重排序、区分事实与推断、两表合并且找冲突、按规则分类。</li>
+                  <li><strong>状态追踪与纠错</strong>：改来改去之后的最新状态、发现算式错误、新旧规则更迭、定位 bug 根因。</li>
+                </ul>
+                <p>完整的边界见<a href="limits.html#coverage">测不到什么</a>。</p>
+              </div>
+            </details>
+
+            <details>
+              <summary>为什么只有 16 题？会不会太少？</summary>
+              <div class="a">
+                <p>
+                  16 题确实不多，这是一个明确的权衡：题少才能保证每一题都被认真设计成「有区分度」，
+                  且每一条评分条件都能被人工复核。
+                </p>
+                <p>
+                  但也正因为题少，单次运行的方差不可忽略。<strong>要看水平就多跑几局看分布</strong>，
+                  而不是盯一次分数。
+                </p>
+              </div>
+            </details>
+
+            <details>
+              <summary>为什么分 4 批，不能一次把 16 题都给我吗？</summary>
+              <div class="a">
+                <p>
+                  可以，但当前版本不提供。分批是刻意的：一次只看 4 道题，注意力会集中在「把条件读清楚」，
+                  而不是「扫一遍挑容易的做」。这也是真实任务的形态 —— 你不会一次拿到 16 个任务再统一交卷。
+                </p>
+                <p>
+                  另外，分批也让「提交幂等」「断点续跑」这两件事变得简单可靠：
+                  每一批是一个原子单元。
+                </p>
+              </div>
+            </details>
+
+            <details>
+              <summary>题目每次都不一样吗？</summary>
+              <div class="a">
+                <p>
+                  题目的<strong>结构</strong>固定（16 道、4 批、分值不变），但<strong>数据</strong>由 seed 生成：
+                  日期、金额、人名、商品编号、名单都不同。所以同一道题连跑两次，看到的题面是不一样的。
+                </p>
+                <p>
+                  传 <code>--seed &lt;值&gt;</code> 可以复现同一套题面 —— 排查问题或者对比时有用。
+                </p>
+              </div>
+            </details>
+
+          </div>
+        </section>
+
+        <section id="score">
+          <h2>关于分数与比较</h2>
+          <div class="faq">
+
+            <details>
+              <summary>80 分算好吗？</summary>
+              <div class="a">
+                <p>
+                  段位表是这样切的：90+ 卓越、80–89 优秀、65–79 良好、50–64 基础、0–49 需要提升。
+                  所以 80 分落在「优秀」。
+                </p>
+                <p>
+                  但比段位更有用的是看<strong>哪几条条件没过</strong>。一个 80 分里有 20 分是怎么丢的，
+                  比「80 分算不算好」这个问题重要得多。
+                </p>
+              </div>
+            </details>
+
+            <details>
+              <summary>我能拿这个分数跟别人的比吗？</summary>
+              <div class="a">
+                <p>只有在下面条件<strong>全部满足</strong>时才有意义：</p>
+                <ul>
+                  <li>两次运行的 <code>examVersion</code> 相同；</li>
+                  <li><code>graderVersion</code> 相同；</li>
+                  <li>采样参数（temperature 等）相同；</li>
+                  <li>工具配置与系统提示相同；</li>
+                  <li>各自跑了多局，比的是分布而不是单次结果。</li>
+                </ul>
+                <p>少任何一条，这个比较就不成立。展开见<a href="limits.html#compare">什么样的比较没有意义</a>。</p>
+              </div>
+            </details>
+
+            <details>
+              <summary>为什么同一份答案重判，分数可能变？</summary>
+              <div class="a">
+                <p>
+                  正常情况下不会变 —— 判分是确定性的。分数变化只有一种合法来源：
+                  <strong>grader 版本升级了</strong>，判分口径变了。
+                </p>
+                <p>
+                  <code>regrade</code> 会把重判前后的分数差异逐题列出来，并把旧轨迹归档到 <code>evidence/</code>。
+                  它不会修改你的原始答案；如果原始答案文件的 SHA-256 指纹对不上，会直接拒绝重判。
+                </p>
+              </div>
+            </details>
+
+            <details>
+              <summary>0 分是不是说明我的 Agent 很差？</summary>
+              <div class="a">
+                <p>
+                  先分清两件事：<strong>0 分</strong>说明 16 道题一条条件都没过；
+                  <strong>PARTIAL / 待复核</strong>说明有题目根本没法判分，这时候连总分都不该看。
+                </p>
+                <p>
+                  如果确实是 0 分，先看报告里逐条的理由 —— 很可能是格式问题（比如整段散文而不是 JSON），
+                  而不是「什么都不会」。这种情况下你应该先解决格式，再谈能力。
+                </p>
+              </div>
+            </details>
+
+            <details>
+              <summary>为什么报告里没有百分位、没有「超过 95% 的用户」？</summary>
+              <div class="a">
+                <p>
+                  因为没有可信的整体样本。要算百分位，需要一个中心化收集来的、覆盖真实用户的分数分布 ——
+                  而这个工具<strong>根本不上传数据</strong>，所以公司手里没有这样一份数据。
+                </p>
+                <p>
+                  任何声称「超过 X% 的用户」的本地工具，要么在偷偷上传，要么在编一个分布。
+                  我们两个都不做。
+                </p>
+              </div>
+            </details>
+
+          </div>
+        </section>
+
+        <section id="run">
+          <h2>关于运行与报错</h2>
+          <div class="faq">
+
+            <details>
+              <summary>提交时报「批次不包含这些题目」怎么办？</summary>
+              <div class="a">
+                <p>
+                  答案文件的键写错了批次。每一批只接受本批的 4 个题目 id，
+                  具体是哪 4 个，看上一批输出里的 <code>items[].id</code>，或者 <code>resume</code> 一下。
+                </p>
+                <p>按正确的 id 改好文件重交即可，这一批还没有被判分。</p>
+              </div>
+            </details>
+
+            <details>
+              <summary>提交时报「已提交并判分，拒绝覆盖」怎么办？</summary>
+              <div class="a">
+                <p>
+                  这一批已经用<strong>另一份答案</strong>判过分了。这是设计上的保护：
+                  不允许用新答案覆盖已判分的结果，否则「先看答案再改」就成立了。
+                </p>
+                <p>
+                  两条路：继续下一批（接受这一批的结果），或者新开一局重来（<code>start</code> 拿新 runId）。
+                  不要试图改 state.json 绕过 —— 那会让整份报告失去意义。
+                </p>
+              </div>
+            </details>
+
+            <details>
+              <summary>为什么某道题显示「待复核」？</summary>
+              <div class="a">
+                <p>
+                  说明这道题的答案<strong>有内容，但一个可用字段都没识别出来</strong>。
+                  判分器宁可不下结论，也不把它当成「知识错误」扣 0 分。
+                </p>
+                <p>
+                  处理：<code>status --run &lt;ID&gt;</code> 看是哪几题 → 改成规范的 JSON 格式 → 新开一局。
+                  已判分的批次不能覆盖，所以没法原地修。
+                </p>
+                <p>机制细节见<a href="method.html#review">NEEDS_REVIEW 什么时候触发</a>。</p>
+              </div>
+            </details>
+
+            <details>
+              <summary>中途上下文丢了 / 进程被杀了，之前的算白跑吗？</summary>
+              <div class="a">
+                <p>
+                  不算。状态全部落在磁盘上，每次提交都是原子写（临时文件 → fsync → rename），
+                  不会写一半坏掉。
+                </p>
+                <pre><code>node scripts/cli.mjs status --run &lt;RUN_ID&gt;
+node scripts/cli.mjs resume --run &lt;RUN_ID&gt;</code></pre>
+                <p><code>resume</code> 会直接给出下一批题目，接着跑就行。</p>
+              </div>
+            </details>
+
+            <details>
+              <summary>装了半天，skill 目录里没有 lezi-bench 这一条？</summary>
+              <div class="a">
+                <p>最常见的原因是目录名不对。必须同时满足：</p>
+                <ul>
+                  <li>目录名是 <code>lezi-bench</code>（带连字符），不是 <code>lezibench</code>；</li>
+                  <li>结构与 <code>name</code> 字段一致；</li>
+                  <li>只嵌一层：<code>&lt;root&gt;/lezi-bench/SKILL.md</code>，不能再往下一层。</li>
+                </ul>
+                <p>
+                  满足不了这些条件的包会被<strong>静默跳过</strong>，只留一条 warning ——
+                  模型端看不出「不存在」和「存在但非法」的区别。
+                </p>
+              </div>
+            </details>
+
+          </div>
+        </section>
+
+        <section id="trust">
+          <h2>关于可信度</h2>
+          <div class="faq">
+
+            <details>
+              <summary>题目和判分器都在源码里，那不就能作弊了？</summary>
+              <div class="a">
+                <p>
+                  能。改题、改判分器、改答案文件，都能拿到 100 分。我们<strong>不做</strong>任何防作弊机制，
+                  也不宣称有。
+                </p>
+                <p>
+                  这是一个明确的产品选择：既然做不到真正的防篡改（客户端天然可改），
+                  就不该用「防作弊」这种词给自己贴金。改出来的 100 分只对改的人有意义 ——
+                  而这个工具的目标用户，是那些想知道真实水平的人。
+                </p>
+              </div>
+            </details>
+
+            <details>
+              <summary>那它凭什么可信？</summary>
+              <div class="a">
+                <p>可信度来自「可核对」，而不是来自「不可见」：</p>
+                <ul>
+                  <li>每条扣分都对应一条带编号的条件，条件文本在源码里能查到；</li>
+                  <li>判分是确定性的，同一份答案重判结果相同；</li>
+                  <li>报告里印着 exam / grader 版本与题库指纹，改过就露馅；</li>
+                  <li>原始答案带 SHA-256 指纹，重判时比对，被改过就拒绝。</li>
+                </ul>
+                <p>它不保证你诚实，只保证你没法在不被发现的情况下不诚实。</p>
+              </div>
+            </details>
+
+            <details>
+              <summary>它会不会偷偷把分数上报？</summary>
+              <div class="a">
+                <p>
+                  不会，也不可能 —— 代码里没有网络调用。你可以自己搜一遍：
+                  整个 <code>src/</code> 和 <code>scripts/</code> 里没有 <code>fetch</code>、
+                  没有 <code>http</code> / <code>https</code> 模块引用、没有 websocket。
+                </p>
+                <p>不用相信我们的承诺，直接读代码就行。</p>
+              </div>
+            </details>
+
+          </div>
+        </section>
+
+        <section id="diff">
+          <h2>和虾跑分的区别</h2>
+          <div class="faq">
+
+            <details>
+              <summary>你们跟虾跑分（paofen.cocoloop.cn）是什么关系？</summary>
+              <div class="a">
+                <p>
+                  没有关系。我们是独立实现，题库、判分器、交互模型都是自己写的。
+                  2026-10-29 我们对它做过一次匿名黑盒实测，目的是搞清楚「哪些设计值得学、哪些坑必须避开」，
+                  不是为了做竞品分析报告。
+                </p>
+                <p>实测记录：<a href="https://github.com/tbj0623/lezibench/blob/main/research/COMPETITOR_TRIAL.md">research/COMPETITOR_TRIAL.md</a>。</p>
+              </div>
+            </details>
+
+            <details>
+              <summary>最关键的差别是什么？</summary>
+              <div class="a">
+                <p>一句话：<strong>交付物的位置</strong>。</p>
+                <p>
+                  虾跑分把报告放在一个在线页面上，<code>finish</code> 返回 <code>reportUrl</code>。
+                  实测于 2026-10-29，那个页面连试三次都打不开（502 / 超时 / 502），
+                  而同一域名下 <code>/api/*</code> 和首页都正常 —— 说明跑分算完了，但用户看不到结果。
+                </p>
+                <p>
+                  LeziBench 的报告是本地文件，路径打印出来，双击就能看，断网也能看。
+                  只要磁盘还在，报告就还在。
+                </p>
+                <p>
+                  证据：<a href="https://github.com/tbj0623/lezibench/blob/main/research/COMPETITOR_TRIAL.md#L215-L220">COMPETITOR_TRIAL.md §5 P1</a>。
+                </p>
+              </div>
+            </details>
+
+            <details>
+              <summary>还改掉了哪些具体问题？</summary>
+              <div class="a">
+                <p>三条有实测证据的：</p>
+                <ul>
+                  <li>
+                    <strong>重复提交会静默跳题。</strong>实测于 2026-10-29：重复提交 q04 后，下一题直接变成 q06，
+                    q05 被永久跳过且无提示。LeziBench 用 payload 哈希做幂等，重复提交返回同一结果。
+                  </li>
+                  <li>
+                    <strong>文档与实现不一致。</strong>首页 FAQ 说「8 批 × 2 题」，但 API 全程逐题下发、无任何 batch 字段。
+                    LeziBench 的批次是硬约束，写错批次直接报错。
+                  </li>
+                  <li>
+                    <strong>段位口径三处打架。</strong>8 级 / 6 档 / 93+ / 90+ 四种说法并存。
+                    LeziBench 只有一套 <code>LEVELS</code> 常量，报告、网站、终端引用同一份。
+                  </li>
+                </ul>
+                <p>
+                  证据：<a href="https://github.com/tbj0623/lezibench/blob/main/research/COMPETITOR_TRIAL.md#L239-L245">P4</a>、
+                  <a href="https://github.com/tbj0623/lezibench/blob/main/research/COMPETITOR_TRIAL.md#L222-L227">P2</a>、
+                  <a href="https://github.com/tbj0623/lezibench/blob/main/research/COMPETITOR_TRIAL.md#L229-L237">P3</a>。
+                </p>
+              </div>
+            </details>
+
+            <details>
+              <summary>有没有什么是你们学它的？</summary>
+              <div class="a">
+                <p>有，而且不止一处：</p>
+                <ul>
+                  <li><strong>逐题给 <code>details</code> 的思路</strong>是对的，我们保留了，并且把它从「只有模型能看到」改成「直接写进报告给用户看」。</li>
+                  <li><strong>统一的中文错误文案</strong>（<code>{"error": string}</code>）比一堆错误码友好，我们借鉴了形态（但 CLI 场景下用退出码区分类型）。</li>
+                  <li><strong>skill 驱动的交互模型</strong>本身成立且足够简单，这一点在实测里得到了验证。</li>
+                </ul>
+                <p>我们明确<strong>不学</strong>的：用提示词强制 Agent「必须展示链接」的做法。</p>
+              </div>
+            </details>
+
+          </div>
+        </section>
+
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<footer class="site-foot">
+  <div class="shell">
+    <div class="foot-grid">
+      <div class="foot-brand">
+        <a class="wordmark" href="index.html"><span class="mark">LB</span> 乐子跑分 <span class="en">LeziBench</span></a>
+        <p>名字轻松，成绩认真。本地离线、零依赖的 Agent 能力自测。MIT 协议，题库与判分器公开可审计。</p>
+      </div>
+      <div class="foot-col">
+        <h4>文档</h4>
+        <ul>
+          <li><a href="method.html">评分方法论</a></li>
+          <li><a href="method.html#criteria">逐题评分规则</a></li>
+          <li><a href="install.html">安装与开考</a></li>
+          <li><a href="faq.html">常见问题</a></li>
+        </ul>
+      </div>
+      <div class="foot-col">
+        <h4>诚实边界</h4>
+        <ul>
+          <li><a href="limits.html">局限与不适用场景</a></li>
+          <li><a href="privacy.html">隐私说明</a></li>
+          <li><a href="demo.html">演示报告（DEMO）</a></li>
+        </ul>
+      </div>
+      <div class="foot-col">
+        <h4>仓库</h4>
+        <ul>
+          <li><a href="https://github.com/tbj0623/lezibench" rel="noopener">源码</a></li>
+          <li><a href="https://github.com/tbj0623/lezibench/blob/main/CONTRIBUTING.md" rel="noopener">贡献指南</a></li>
+          <li><a href="https://github.com/tbj0623/lezibench/blob/main/SECURITY.md" rel="noopener">安全问题</a></li>
+          <li><a href="https://github.com/tbj0623/lezibench/blob/main/LICENSE" rel="noopener">MIT License</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="foot-legal">
+      <span>© 2026 LeziBench contributors</span>
+      <span>exam v1.0.0 · grader v1.0.0</span>
+      <span>本站无 Cookie、无分析脚本、无外部字体</span>
+      <span class="spacer">本地规则核验 · 非认证成绩</span>
+    </div>
+  </div>
+</footer>
+
+<script src="assets/site.js" defer></script>
+</body>
+</html>

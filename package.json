@@ -1,0 +1,42 @@
+{
+  "name": "lezi-bench",
+  "version": "0.1.0",
+  "description": "乐子跑分 LeziBench — 本地、可解释、零依赖的 AI Agent 能力自测 Skill。名字轻松，成绩认真。",
+  "type": "module",
+  "license": "MIT",
+  "bin": {
+    "lezi-bench": "scripts/cli.mjs"
+  },
+  "engines": {
+    "node": ">=18.17.0"
+  },
+  "scripts": {
+    "test": "node --test \"tests/*.test.mjs\"",
+    "doctor": "node scripts/cli.mjs doctor",
+    "demo": "node scripts/demo.mjs",
+    "verify:contract": "node tests/contract.test.mjs",
+    "test:e2e": "node tests/e2e-run.mjs",
+    "test:mutation": "node tests/mutation.mjs",
+    "test:all": "node --test \"tests/*.test.mjs\" && node tests/e2e-run.mjs && node tests/mutation.mjs",
+    "sync:skill": "node scripts/sync-skill.mjs"
+  },
+  "files": [
+    "SKILL.md",
+    "scripts/",
+    "src/",
+    "assets/",
+    "README.md",
+    "LICENSE"
+  ],
+  "keywords": [
+    "agent-skill",
+    "benchmark",
+    "self-test",
+    "llm",
+    "lezi"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/tbj0623/lezibench.git"
+  }
+}

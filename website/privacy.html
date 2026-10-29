@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>隐私说明 — 乐子跑分 LeziBench</title>
+<meta name="description" content="LeziBench 不联网、不上传、不建账号。数据默认写在本机数据目录，可用 LEZIBENCH_HOME 覆盖；本文列出各平台路径与完整删除方法。">
+<link rel="canonical" href="./privacy.html">
+<meta property="og:type" content="article">
+<meta property="og:title" content="隐私说明 — 乐子跑分 LeziBench">
+<meta property="og:description" content="不联网、不上传、不建账号；各平台数据路径与删除方法。">
+<meta property="og:image" content="./assets/screenshot-home.png">
+<meta name="theme-color" content="#0b0c0e">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='4' fill='%230b0c0e'/%3E%3Cpath d='M8 22V10h3.4v9.2H20V22z' fill='%23ffb84d'/%3E%3Cpath d='M22 10h3.2v5.6H22z' fill='%23ffb84d' opacity='.55'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="assets/site.css">
+<script>
+  (function () {
+    try {
+      var t = localStorage.getItem('lezi-theme');
+      if (t === 'light') document.documentElement.setAttribute('data-theme', 'light');
+    } catch (e) {}
+  })();
+</script>
+</head>
+<body>
+<a class="skip" href="#main">跳到正文</a>
+
+<header class="site-head">
+  <div class="shell bar">
+    <a class="wordmark" href="index.html"><span class="mark">LB</span> 乐子跑分 <span class="en">LeziBench</span></a>
+    <nav class="nav" aria-label="主导航">
+      <a href="index.html">首页</a>
+      <a href="method.html">评分方法</a>
+      <a href="install.html">安装与开考</a>
+      <a href="demo.html">演示报告</a>
+      <a href="limits.html">局限</a>
+      <a href="faq.html">FAQ</a>
+    </nav>
+    <div class="head-tools">
+      <button class="theme-btn" type="button" data-theme-toggle aria-label="切换明暗主题">THEME</button>
+    </div>
+  </div>
+</header>
+
+<main id="main">
+
+  <div class="page-head">
+    <div class="shell">
+      <h1>隐私说明</h1>
+      <p class="lede">
+        一句话：没有服务器，所以没有上传；没有账号，所以没有身份。
+        剩下的问题只有一个 —— <strong>数据存在你机器的哪个位置，怎么删干净</strong>。
+      </p>
+    </div>
+  </div>
+
+  <div class="shell">
+    <div class="doc-layout">
+
+      <nav class="toc" aria-label="本页目录">
+        <h2>目录</h2>
+        <ol>
+          <li><a href="#collect">收集什么</a></li>
+          <li><a href="#where">数据存在哪</a></li>
+          <li><a href="#files">目录里到底有什么</a></li>
+          <li><a href="#delete">怎么删</a></li>
+          <li><a href="#site">这个网站本身</a></li>
+          <li><a href="#limits">做不到的保证</a></li>
+        </ol>
+      </nav>
+
+      <div class="doc-body">
+
+        <section id="collect">
+          <h2>收集什么</h2>
+          <div class="anatomy">
+            <table class="grid">
+              <caption class="visually-hidden">数据收集情况</caption>
+              <thead><tr><th scope="col">项目</th><th scope="col">是否收集</th><th scope="col">说明</th></tr></thead>
+              <tbody>
+                <tr><th scope="row">你的答案</th><td>只存本地</td><td>写到本机数据目录，不上传。</td></tr>
+                <tr><th scope="row">账号 / 邮箱 / 手机号</th><td>不收集</td><td>没有登录，没有账号体系。</td></tr>
+                <tr><th scope="row">设备指纹 / IP</th><td>不收集</td><td>没有网络调用，拿不到也不需要。</td></tr>
+                <tr><th scope="row">使用统计 / 埋点</th><td>不收集</td><td>代码里没有分析 SDK，网站也没有。</td></tr>
+                <tr><th scope="row">崩溃日志</th><td>不收集</td><td>错误只打印到你的终端。</td></tr>
+                <tr><th scope="row">模型名 / Agent 名</th><td>不采集</td><td>当前版本不记录任何自报身份字段。</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <p class="small muted" style="margin-top:1rem">
+            可以自己验证：在仓库里搜 <code>fetch</code>、<code>http</code>、<code>https</code>、<code>net</code>、<code>dgram</code>，
+            在 <code>src/</code> 与 <code>scripts/</code> 下都搜不到网络调用。
+          </p>
+        </section>
+
+        <section id="where">
+          <h2>数据存在哪</h2>
+          <p>
+            默认按平台选标准位置，可以用环境变量 <code>LEZIBENCH_HOME</code> 覆盖。
+            解析逻辑在 <code>src/storage/store.mjs</code> 的 <code>resolveDataRoot()</code>。
+          </p>
+          <div class="anatomy">
+            <table class="grid">
+              <caption class="visually-hidden">各平台数据目录</caption>
+              <thead><tr><th scope="col">平台</th><th scope="col">默认路径</th></tr></thead>
+              <tbody>
+                <tr><th scope="row">Windows</th><td><code>%LOCALAPPDATA%\LeziBench</code><br><span class="muted small">通常是 <code>C:\Users\&lt;你&gt;\AppData\Local\LeziBench</code></span></td></tr>
+                <tr><th scope="row">macOS</th><td><code>~/Library/Application Support/LeziBench</code></td></tr>
+                <tr><th scope="row">Linux</th><td><code>$XDG_DATA_HOME/lezibench</code><br><span class="muted small">未设置 <code>XDG_DATA_HOME</code> 时是 <code>~/.local/share/lezibench</code></span></td></tr>
+                <tr><th scope="row">任意平台（覆盖）</th><td><code>LEZIBENCH_HOME=&lt;你想要的路径&gt;</code></td></tr>
+              </tbody>
+            </table>
+          </div>
+          <p>
+            不确定的话，直接问 CLI —— <code>doctor</code>、<code>status</code>、<code>list</code> 都会把当前数据目录打印出来：
+          </p>
+          <pre><code>node scripts/cli.mjs doctor
+<span class="c"># LeziBench 环境自检（数据目录：……）</span></code></pre>
+        </section>
+
+        <section id="files">
+          <h2>目录里到底有什么</h2>
+          <p>每次运行会在 <code>&lt;数据目录&gt;/runs/&lt;runId&gt;/</code> 下建立这些内容：</p>
+          <pre><code>&lt;数据目录&gt;/
+└── runs/
+    └── run-20261029-161417-f8130d/
+        ├── state.json          <span class="c"># 运行状态、版本号、种子、逐题得分</span>
+        ├── answers/
+        │   ├── 1-I01.json      <span class="c"># 原始答案 + SHA-256 指纹</span>
+        │   ├── 1-R01.json
+        │   └── …
+        ├── reports/
+        │   ├── report.html     <span class="c"># 自包含报告（生成后才有）</span>
+        │   ├── report.json
+        │   └── report.txt
+        └── evidence/
+            └── regrade-…/      <span class="c"># 只有跑过 regrade 才会有</span>
+                └── before.json</code></pre>
+          <p>每一项的用途：</p>
+          <ul>
+            <li><strong><code>state.json</code></strong> —— 状态机、已完成批次、逐题得分与 checks、引擎版本、题库指纹。断点续跑靠它。</li>
+            <li><strong><code>answers/</code></strong> —— 你交上来的原始答案，逐题一个文件（避免整批重写时丢失），带 SHA-256 指纹供重判时比对。</li>
+            <li><strong><code>reports/</code></strong> —— 生成的报告。HTML 是自包含的，可以单独拷走，拷走后与原目录无关。</li>
+            <li><strong><code>evidence/</code></strong> —— 只在你跑过 <code>regrade</code> 时出现，保存重判前的旧判分轨迹，用于事后对照。</li>
+          </ul>
+          <p class="small muted">
+            注意：报告里<strong>不会回显整段原始答案</strong>，只保留解析后的结构化字段（字符串截断到 200 字符），
+            这样分享报告时不会顺带把长篇输入暴露出去。
+          </p>
+        </section>
+
+        <section id="delete">
+          <h2>怎么删</h2>
+          <h3>删掉全部运行记录</h3>
+          <p>直接删数据目录即可，没有注册表项、没有后台服务、没有需要「卸载」的东西。</p>
+          <pre><code><span class="c"># Windows PowerShell</span>
+Remove-Item -Recurse -Force "$env:LOCALAPPDATA\LeziBench"
+
+<span class="c"># macOS</span>
+rm -rf ~/Library/Application\ Support/LeziBench
+
+<span class="c"># Linux</span>
+rm -rf "${XDG_DATA_HOME:-$HOME/.local/share}/lezibench"</code></pre>
+
+          <h3>只删某一次运行</h3>
+          <pre><code>node scripts/cli.mjs list          <span class="c"># 先看有哪些 runId</span>
+<span class="c"># 然后删对应目录（示例）</span>
+rm -rf "&lt;数据目录&gt;/runs/run-20261029-161417-f8130d"</code></pre>
+          <p class="small muted">删掉之后 <code>list</code> 里就不会再出现这一局，其他运行不受影响。</p>
+
+          <h3>删掉答案但保留分数</h3>
+          <p>
+            想留报告但不想留原始答案：可以只删 <code>answers/</code> 目录。
+            报告和 <code>state.json</code> 里的得分不受影响，但<strong>之后就不能再 <code>regrade</code> 了</strong> ——
+            重判需要从原始答案重算。
+          </p>
+
+          <h3>这个网站</h3>
+          <p>
+            站点只在你的浏览器里存一个 <code>localStorage</code> 键（<code>lezi-theme</code>），记录明暗主题偏好。
+            清除站点数据即可；不选主题也能正常使用全部功能。
+          </p>
+        </section>
+
+        <section id="site">
+          <h2>这个网站本身</h2>
+          <div class="anatomy">
+            <table class="grid">
+              <caption class="visually-hidden">网站的技术构成</caption>
+              <thead><tr><th scope="col">项目</th><th scope="col">情况</th></tr></thead>
+              <tbody>
+                <tr><th scope="row">托管</th><td>GitHub Pages 静态托管，纯 HTML / CSS / 一个 JS 文件。</td></tr>
+                <tr><th scope="row">外部资源</th><td>零。没有 CDN、没有外部字体、没有图标库、没有分析脚本。</td></tr>
+                <tr><th scope="row">Cookie</th><td>零。</td></tr>
+                <tr><th scope="row">浏览器存储</th><td>仅 <code>localStorage['lezi-theme']</code>，值为 <code>light</code> 或 <code>dark</code>。</td></tr>
+                <tr><th scope="row">服务端逻辑</th><td>无。没有表单提交，没有 API 调用。</td></tr>
+                <tr><th scope="row">GitHub 侧</th><td>访问日志由 GitHub 按其隐私政策处理，与本站代码无关。</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <p class="small muted" style="margin-top:1rem">
+            字体用的是系统字体栈（PingFang SC / Microsoft YaHei / Noto Sans CJK 等），
+            不下载任何字体文件 —— 所以页面在你的机器上长什么样，取决于你装了什么字体。
+          </p>
+        </section>
+
+        <section id="limits">
+          <h2>做不到的保证</h2>
+          <p>把话说全，免得产生错误预期：</p>
+          <ul>
+            <li>
+              <strong>我们不控制你的宿主机。</strong>你在这台机器上跑的 Agent、编辑器、终端记录、
+              系统备份、云同步盘，都可能各自留有副本。LeziBench 只保证自己写什么、写到哪。
+            </li>
+            <li>
+              <strong>报告一旦分享出去就收不回。</strong>HTML 是普通文件，转发、截图、上传都由你决定。
+              分享前请自己看一眼内容。
+            </li>
+            <li>
+              <strong>没有加密。</strong>数据目录里的文件是明文 JSON。如果你的机器本身需要加密，请用磁盘加密。
+            </li>
+            <li>
+              <strong>报告会记录运行环境。</strong>例如 <code>node v24.20.0 · win32/x64</code>。
+              这是为了让不同环境下的结果可追溯，不含主机名、用户名或路径。
+            </li>
+          </ul>
+          <div class="honest" style="margin-top:1.6rem">
+            <h3>一句话总结</h3>
+            <p>
+              这套东西的隐私模型非常简单：<strong>没有服务器，就没有上传；数据在你自己的盘上，删目录就删干净了。</strong>
+              代价是没有云端备份、没有跨设备同步、也没有「登录后找回历史成绩」——
+              这些都需要一个中心服务器，而我们选择不要。
+            </p>
+          </div>
+        </section>
+
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<footer class="site-foot">
+  <div class="shell">
+    <div class="foot-grid">
+      <div class="foot-brand">
+        <a class="wordmark" href="index.html"><span class="mark">LB</span> 乐子跑分 <span class="en">LeziBench</span></a>
+        <p>名字轻松，成绩认真。本地离线、零依赖的 Agent 能力自测。MIT 协议，题库与判分器公开可审计。</p>
+      </div>
+      <div class="foot-col">
+        <h4>文档</h4>
+        <ul>
+          <li><a href="method.html">评分方法论</a></li>
+          <li><a href="method.html#criteria">逐题评分规则</a></li>
+          <li><a href="install.html">安装与开考</a></li>
+          <li><a href="faq.html">常见问题</a></li>
+        </ul>
+      </div>
+      <div class="foot-col">
+        <h4>诚实边界</h4>
+        <ul>
+          <li><a href="limits.html">局限与不适用场景</a></li>
+          <li><a href="privacy.html">隐私说明</a></li>
+          <li><a href="demo.html">演示报告（DEMO）</a></li>
+        </ul>
+      </div>
+      <div class="foot-col">
+        <h4>仓库</h4>
+        <ul>
+          <li><a href="https://github.com/tbj0623/lezibench" rel="noopener">源码</a></li>
+          <li><a href="https://github.com/tbj0623/lezibench/blob/main/CONTRIBUTING.md" rel="noopener">贡献指南</a></li>
+          <li><a href="https://github.com/tbj0623/lezibench/blob/main/SECURITY.md" rel="noopener">安全问题</a></li>
+          <li><a href="https://github.com/tbj0623/lezibench/blob/main/LICENSE" rel="noopener">MIT License</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="foot-legal">
+      <span>© 2026 LeziBench contributors</span>
+      <span>exam v1.0.0 · grader v1.0.0</span>
+      <span>本站无 Cookie、无分析脚本、无外部字体</span>
+      <span class="spacer">本地规则核验 · 非认证成绩</span>
+    </div>
+  </div>
+</footer>
+
+<script src="assets/site.js" defer></script>
+</body>
+</html>

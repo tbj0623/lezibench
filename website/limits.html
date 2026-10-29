@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>局限与不适用场景 — 乐子跑分 LeziBench</title>
+<meta name="description" content="LeziBench 测不了什么：公开题库可被读取、不是认证、16 题的覆盖面边界、温度与工具配置不可比、耗时受宿主影响。写清楚边界比多拿两分重要。">
+<link rel="canonical" href="./limits.html">
+<meta property="og:type" content="article">
+<meta property="og:title" content="局限与不适用场景 — 乐子跑分 LeziBench">
+<meta property="og:description" content="公开题库、非认证、16 题覆盖边界、跨配置不可比、耗时受宿主影响。">
+<meta property="og:image" content="./assets/screenshot-home.png">
+<meta name="theme-color" content="#0b0c0e">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='4' fill='%230b0c0e'/%3E%3Cpath d='M8 22V10h3.4v9.2H20V22z' fill='%23ffb84d'/%3E%3Cpath d='M22 10h3.2v5.6H22z' fill='%23ffb84d' opacity='.55'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="assets/site.css">
+<script>
+  (function () {
+    try {
+      var t = localStorage.getItem('lezi-theme');
+      if (t === 'light') document.documentElement.setAttribute('data-theme', 'light');
+    } catch (e) {}
+  })();
+</script>
+</head>
+<body>
+<a class="skip" href="#main">跳到正文</a>
+
+<header class="site-head">
+  <div class="shell bar">
+    <a class="wordmark" href="index.html"><span class="mark">LB</span> 乐子跑分 <span class="en">LeziBench</span></a>
+    <nav class="nav" aria-label="主导航">
+      <a href="index.html">首页</a>
+      <a href="method.html">评分方法</a>
+      <a href="install.html">安装与开考</a>
+      <a href="demo.html">演示报告</a>
+      <a href="limits.html" aria-current="page">局限</a>
+      <a href="faq.html">FAQ</a>
+    </nav>
+    <div class="head-tools">
+      <button class="theme-btn" type="button" data-theme-toggle aria-label="切换明暗主题">THEME</button>
+    </div>
+  </div>
+</header>
+
+<main id="main">
+
+  <div class="page-head">
+    <div class="shell">
+      <h1>这份工具测不了什么</h1>
+      <p class="lede">
+        一个评测最该说清楚的不是它能测什么，而是它测不了什么。
+        下面每一条都是这套设计的直接后果，不是「以后会改进」的客套话 ——
+        有些是权衡，有些是永久边界。
+      </p>
+    </div>
+  </div>
+
+  <div class="shell">
+    <div class="doc-layout">
+
+      <nav class="toc" aria-label="本页目录">
+        <h2>目录</h2>
+        <ol>
+          <li><a href="#open">题库是公开的，可以被读</a></li>
+          <li><a href="#not-cert">不是认证，不防作弊</a></li>
+          <li><a href="#coverage">16 题覆盖不到的东西</a></li>
+          <li><a href="#compare">什么样的比较没有意义</a></li>
+          <li><a href="#timing">耗时不是能力指标</a></li>
+          <li><a href="#judge">确定性判分的代价</a></li>
+          <li><a href="#v1">V1 版本的具体边界</a></li>
+        </ol>
+      </nav>
+
+      <div class="doc-body">
+
+        <section id="open">
+          <h2>题库是公开的，可以被读</h2>
+          <p>
+            16 道题的题面生成逻辑、评分条件、判分器、甚至标准答案的推导方式，全都在 <code>src/</code> 目录里，
+            用任何一个文本编辑器就能读。
+          </p>
+          <p>
+            这不是疏忽，是有意的选择。理由很直接：一个不能看的评测，你没法判断它到底在测什么，
+            也没法在你觉得判错的时候去核对。闭源评测的「权威感」来自不透明，而不是来自正确。
+          </p>
+          <p><strong>但代价必须说清楚：</strong></p>
+          <ul>
+            <li>模型如果读过这个仓库，可能对某些题面有「记忆优势」，分数会偏高。</li>
+            <li>任何人都可以改题、改判分器、改答案文件；改了当然能拿高分，但那份分数只对改的人有意义。</li>
+            <li>所以这里<strong>没有</strong>「防作弊」这个概念。我们不做，也不宣称做。</li>
+          </ul>
+          <blockquote>
+            <p>
+              换句话说：LeziBench 的分数可信度，建立在「你没改它」这个前提上。
+              这是一个<strong>自测工具</strong>的合理前提，但不是一个认证机构能接受的前提。
+            </p>
+          </blockquote>
+        </section>
+
+        <section id="not-cert">
+          <h2>不是认证，不防作弊</h2>
+          <p>每一份报告自己就印着 <code>本地规则核验 · 非认证成绩（LOCAL_SELF_TEST）</code>。具体地说：</p>
+          <ul>
+            <li><strong>没有第三方见证。</strong>判分发生在你自己的机器上，没有可信第三方能证明这份成绩是真跑出来的。</li>
+            <li><strong>没有身份核验。</strong>没有登录、没有账号、没有签名。谁都能跑，也谁都能声称某个分数是自己的。</li>
+            <li><strong>没有被测对象锁定。</strong>报告不记录「是谁在答题」，也不验证答案是否由被测模型产生。</li>
+            <li><strong>没有排行榜。</strong>没有中心服务器就没有共同基准，做了排行榜也只是一个可以被随意提交的列表。</li>
+          </ul>
+          <p>
+            如果你需要的是「可用于对外宣称的能力认证」，这个工具解决不了你的问题 ——
+            它给出的是一份可以自己核对的能力体检报告。
+          </p>
+        </section>
+
+        <section id="coverage">
+          <h2>16 题覆盖不到的东西</h2>
+          <p>
+            四个维度、十六道题，覆盖面是<strong>刻意收窄</strong>的：只测「给定材料、给定规则、要求产出结构化答案」
+            这一类任务。下面这些它完全测不出来：
+          </p>
+
+          <div class="anatomy">
+            <table class="grid">
+              <caption class="visually-hidden">测不到的能力维度</caption>
+              <thead><tr><th scope="col">能力</th><th scope="col">为什么测不到</th></tr></thead>
+              <tbody>
+                <tr>
+                  <th scope="row">长上下文</th>
+                  <td>单题材料最长不过两三百字。真实场景里「两万字文档里找一处矛盾」这类能力，这里没有对应题目。</td>
+                </tr>
+                <tr>
+                  <th scope="row">多轮工具调用</th>
+                  <td>整套题是「一次作答、一次判分」，没有需要连续调用工具、根据返回值调整策略的任务。</td>
+                </tr>
+                <tr>
+                  <th scope="row">代码工程能力</th>
+                  <td>没有需要读仓库、改代码、跑测试的题。C04 只是看一段十行的伪代码，不是工程任务。</td>
+                </tr>
+                <tr>
+                  <th scope="row">开放式写作与审美</th>
+                  <td>判分是确定性代码，只能判「可形式化的对错」。文风、结构、说服力没有判据。</td>
+                </tr>
+                <tr>
+                  <th scope="row">事实准确性 / 幻觉率</th>
+                  <td>题目自带全部事实，不需要模型调用外部知识。所以它不测「知不知道」，只测「给了材料用得对不对」。</td>
+                </tr>
+                <tr>
+                  <th scope="row">安全性与拒答</th>
+                  <td>没有对抗性输入、没有越狱尝试、没有需要拒绝的请求。</td>
+                </tr>
+                <tr>
+                  <th scope="row">多语言能力</th>
+                  <td>题库全部为中文。非中文能力不在覆盖范围内。</td>
+                </tr>
+                <tr>
+                  <th scope="row">推理深度上限</th>
+                  <td>最难的一题是四元素排列约束求解，规模很小。它不区分「能做」和「能做得很深」。</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <h3>还有一个更隐蔽的边界</h3>
+          <p>
+            因为题目是<strong>模板化生成</strong>的（同一道题每次只换数字和名字），
+            所以它测的是「在同一类任务上稳不稳定」，而不是「面对陌生任务时能不能迁移」。
+            一个模型可能把 16 种题型都练熟，但在没见过的任务形态上完全失灵 —— 这份试卷看不出来。
+          </p>
+        </section>
+
+        <section id="compare">
+          <h2>什么样的比较没有意义</h2>
+          <p>下面这些比较，做了也是白做，甚至会得出错误结论：</p>
+
+          <h3>跨版本比较 ✗</h3>
+          <p>
+            只有 <code>examVersion</code> 与 <code>graderVersion</code> 都相同的两次运行才能比。
+            版本不同意味着题目或判分口径变了，分数不可比。报告里两个版本号都印着，对一下就知道。
+          </p>
+
+          <h3>不同温度 / top_p / 采样参数之间比较 ✗</h3>
+          <p>
+            同一模型在 <code>temperature=0</code> 和 <code>temperature=1</code> 下是两种不同的行为模式。
+            前者稳定但可能错过需要探索的路径，后者方差大。把两次运行的分差直接归因于「模型能力」是错的。
+            要比较就先固定采样参数，并且<strong>各跑多次取分布</strong>，而不是比单次结果。
+          </p>
+
+          <h3>不同工具配置 / 系统提示之间比较 ✗</h3>
+          <p>
+            有没有联网、有没有代码执行、系统提示怎么写、上下文里塞了什么，都会影响结果。
+            一个开了工具的 Agent 和一个裸模型跑同一套题，分数不可直接比 —— 这不是同一种被测对象。
+          </p>
+
+          <h3>单次运行之间比较 ✗</h3>
+          <p>
+            每局题目由 seed 生成，题面数据不同。单次运行的分数有随机性，
+            一两分的差距完全可能在噪声范围内。<strong>要比就多跑几局看分布</strong>，而不是比一次。
+          </p>
+
+          <h3>和别的评测的分数换算 ✗</h3>
+          <p>
+            LeziBench 的 80 分和任何其他评测的 80 分没有对应关系。满分 100 不代表它是百分比，
+            也不代表它和某个「通过线」挂钩。
+          </p>
+        </section>
+
+        <section id="timing">
+          <h2>耗时不是能力指标</h2>
+          <p>
+            报告里有一项「实测耗时」，它是从 <code>start</code> 到最后一批评分完成之间的墙上时钟时间。
+            这个数字受以下因素影响，且这些因素<strong>都不是被测模型的能力</strong>：
+          </p>
+          <ul>
+            <li>宿主机性能、当前负载、磁盘速度；</li>
+            <li>模型 API 的网络往返与排队；</li>
+            <li>Agent 框架本身的开销、重试策略、上下文长度；</li>
+            <li>作答时是否先去查了资料、跑了工具。</li>
+          </ul>
+          <p>
+            所以：<strong>不要用耗时给模型排名</strong>，也不要把耗时和分数拼成一个「性价比」指标。
+            这个字段的用途只有一个 —— 让你知道这次跑了多久。
+          </p>
+        </section>
+
+        <section id="judge">
+          <h2>确定性判分的代价</h2>
+          <p>选择用代码判分而不是用模型判分，换来的是可复现和可审计，代价是判分只能覆盖可形式化的部分。</p>
+          <ul>
+            <li>
+              <strong>格式不对可能被判成「待复核」，而不是「错」。</strong>
+              如果答案里有内容但一个字段都识别不出来，这道题会进入 <code>UNPARSEABLE</code>，整局降级为 PARTIAL。
+              这比误判成 0 分更诚实，但也意味着「格式规范」本身成了一道隐性门槛。
+            </li>
+            <li>
+              <strong>同义表述覆盖不全。</strong>别名表是显式列举的，没列进去的等价说法不会被认。
+              这是「不猜」的代价：宁可判待复核，也不猜你的意思。
+            </li>
+            <li>
+              <strong>题目必须能被形式化。</strong>凡是没法写成「通过 / 不通过」的任务，都进不了这个题库。
+              这直接导致了上面「测不了什么」那一整张表。
+            </li>
+          </ul>
+        </section>
+
+        <section id="v1">
+          <h2>V1 版本的具体边界</h2>
+          <p>当前版本 <code>0.1.0</code>（exam v1.0.0 / grader v1.0.0），已知的具体限制：</p>
+          <ul>
+            <li><strong>只有 standard 一种模式。</strong>传入其他模式会明确报错，不会静默降级。</li>
+            <li><strong>客户端可改。</strong>state.json、答案文件、判分器都在本地，没有签名校验。</li>
+            <li><strong>只有中文。</strong>题库、理由、报告都是中文。</li>
+            <li><strong>只有 16 题。</strong>没有题库轮换，跑第三次开始就会有熟悉度。</li>
+            <li><strong>已判分的批次不可覆盖。</strong>答案写错了只能新开一局，不能就地重答。</li>
+            <li><strong>无并发保护。</strong>两个进程同时对同一 <code>runId</code> 提交，行为未定义（原子写保证文件不损坏，但不保证逻辑顺序）。</li>
+            <li><strong>平台验证不完整。</strong>只有 DSH 与 Windows 真机跑通过；macOS / Linux 有实现但未跑完整局；
+                OpenClaw / Codex 完全未核实。详见<a href="install.html#platforms">支持环境表</a>。</li>
+          </ul>
+
+          <div class="honest" style="margin-top:1.6rem">
+            <h3>最后一句</h3>
+            <p>
+              如果你要用这份成绩对外说点什么，请至少带上三件事：
+              <strong>总分</strong>、<strong>exam / grader 版本</strong>、以及<strong>「本地自测，非认证」</strong>这句话。
+              少了任何一项，这份成绩就变成了它本来不是的东西。
+            </p>
+          </div>
+        </section>
+
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<footer class="site-foot">
+  <div class="shell">
+    <div class="foot-grid">
+      <div class="foot-brand">
+        <a class="wordmark" href="index.html"><span class="mark">LB</span> 乐子跑分 <span class="en">LeziBench</span></a>
+        <p>名字轻松，成绩认真。本地离线、零依赖的 Agent 能力自测。MIT 协议，题库与判分器公开可审计。</p>
+      </div>
+      <div class="foot-col">
+        <h4>文档</h4>
+        <ul>
+          <li><a href="method.html">评分方法论</a></li>
+          <li><a href="method.html#criteria">逐题评分规则</a></li>
+          <li><a href="install.html">安装与开考</a></li>
+          <li><a href="faq.html">常见问题</a></li>
+        </ul>
+      </div>
+      <div class="foot-col">
+        <h4>诚实边界</h4>
+        <ul>
+          <li><a href="limits.html">局限与不适用场景</a></li>
+          <li><a href="privacy.html">隐私说明</a></li>
+          <li><a href="demo.html">演示报告（DEMO）</a></li>
+        </ul>
+      </div>
+      <div class="foot-col">
+        <h4>仓库</h4>
+        <ul>
+          <li><a href="https://github.com/tbj0623/lezibench" rel="noopener">源码</a></li>
+          <li><a href="https://github.com/tbj0623/lezibench/blob/main/CONTRIBUTING.md" rel="noopener">贡献指南</a></li>
+          <li><a href="https://github.com/tbj0623/lezibench/blob/main/SECURITY.md" rel="noopener">安全问题</a></li>
+          <li><a href="https://github.com/tbj0623/lezibench/blob/main/LICENSE" rel="noopener">MIT License</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="foot-legal">
+      <span>© 2026 LeziBench contributors</span>
+      <span>exam v1.0.0 · grader v1.0.0</span>
+      <span>本站无 Cookie、无分析脚本、无外部字体</span>
+      <span class="spacer">本地规则核验 · 非认证成绩</span>
+    </div>
+  </div>
+</footer>
+
+<script src="assets/site.js" defer></script>
+</body>
+</html>
