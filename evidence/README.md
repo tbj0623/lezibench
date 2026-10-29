@@ -119,14 +119,16 @@ B 局是同版本下另一次作答，满分。**两局放在一起，说明 98 
 
 ---
 
-## 五、红队测试（项目根 `qa/` 下）
+## 五、红队测试（本目录 `evidence/` 下）
 
 | 文件 | 说明 |
 |---|---|
 | [`equivalence.test.mjs`](equivalence.test.mjs) | 每题 ≥5 个等价答案必须满分 + ≥5 个对抗答案必须失分 |
 | [`seeds.test.mjs`](seeds.test.mjs) | 15 个 seed × 16 题的稳定性 |
 | [`antileak.test.mjs`](antileak.test.mjs) | 反泄漏：示例不得等于答案、答案不得跨 seed 恒定 |
-| [`mutation-check.mjs`](mutation-check.mjs) | 变异检出率 |
+| [`mutation-check.mjs`](mutation-check.mjs) | 变异检出率（64 个变异点，要求 64/64 全部检出） |
+
+这些套件已接入 CI，判据的统计依据见 [七、这些测试的判据说明](#七这些测试的判据说明)。
 
 红队累计报告并推动修复了 **25+ 个真实缺陷**，包括：
 - 题目示例里直接印着正确答案（照抄就白拿分）
