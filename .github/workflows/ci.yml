@@ -66,6 +66,16 @@ jobs:
       - name: 变异测试（证明测试真的会失败）
         run: node tests/mutation.mjs
 
+      # 红队套件只在 Node 20 上跑一次（矩阵里其它版本跑全量单测即可，避免三倍耗时）。
+      # 用 glob 而不是逐个列文件：将来 evidence/ 下新增 *.test.mjs 不用改 workflow。
+      # --test-timeout=300000 必须有：这几个套件要跑几分钟，默认超时会误判成失败。
+      - name: 红队套件（evidence/）
+        if: matrix.node == '20'
+        shell: bash
+        run: |
+          node --test --test-timeout=300000 evidence/*.test.mjs
+          node evidence/mutation-check.mjs
+
       - name: 题库自检（doctor）
         run: node scripts/cli.mjs doctor
 

@@ -146,7 +146,12 @@ test('题面关键名称/数字可在 facts 中找到来源（无隐藏条件）
 });
 
 test('不得存在「照抄题面示例即满分」的题（抽样 120 seed）', () => {
+  // 说明：占位符题（示例形如 {"list":["<应上架的商品编码>"]}）不是合法 JSON，
+  // exampleOf() 返回 null，这个题在本用例里不会被检查 —— 那是**结构性安全**的，
+  // 因为不合法 JSON 根本无法被「照抄」成有效答案。
+  // 但要防止这些题全变成占位符后本用例退化成空转，所以下面显式断言「至少若干题真的被检查到」。
   const offenders = [];
+  const covered = [];
   for (const item of ITEMS) {
     let hits = 0, samples = 0;
     for (let s = 0; s < 120; s++) {
@@ -158,8 +163,13 @@ test('不得存在「照抄题面示例即满分」的题（抽样 120 seed）',
       const r = gradeItem(instantiateInternal(item, seed), JSON.stringify(ex), { seed });
       if (r.awarded === item.points) hits++;
     }
+    if (samples > 0) covered.push(item.id);
     if (hits > 0) offenders.push(`${item.id}: ${hits}/${samples}`);
   }
+  assert.ok(
+    covered.length >= 3,
+    `只有 ${covered.length} 道题的示例可解析，本判据几乎空转（已覆盖：${covered.join(', ') || '无'}）`,
+  );
   assert.deepEqual(
     offenders,
     [],
@@ -206,18 +216,36 @@ test('不同 seed 必须产生不同题目实例（防止题目退化为常量�
 });
 
 test('答案取值必须随 seed 变化（防止 oracle 退化为常量）', () => {
-  const allowedConstant = new Set([]); // 目前不允许任何题答案是常量
+  // 【判据说明：为什么不能简单要求「每题答案在所有 seed 下都不同」】
+  //   有些题的某一部分**设计上就该恒定**，例如 C04 的错误根源永远是「数量用错」
+  //   （题目就是「脚本里 qty 那行写错了」）。对这类题强求答案变化，会逼着实现
+  //   为了满足测试而硬塞四种 bug，反而把一道题拆成四道的拼盘，降低质量。
+  //
+  //   真正要防的是「整题答案完全恒定」——那意味着考生背一个字符串就能通杀。
+  //   因此判据改为：**整份 oracle 输出的序列化结果**必须在 15 个 seed 下出现变化；
+  //   若某题整个答案恒定，则该题只能靠「单字段恒定 + 其余仍需真算」来兜底，
+  //   这种情况必须显式登记在 DESIGN_CONSTANT 白名单里并写明理由。
+  const DESIGN_CONSTANT = new Map([
+    // 目前没有「整题恒定」的题。将来若出现（例如某题答案空间天然只有 1 种），
+    // 在这里登记：DESIGN_CONSTANT.set('题号', '理由')
+  ]);
+  const offenders = [];
   for (const item of ITEMS) {
+    if (DESIGN_CONSTANT.has(item.id)) continue;
     const answers = new Set();
     for (const seed of SEEDS) {
       answers.add(JSON.stringify(perfectAnswers(seed)[item.id]));
     }
-    if (allowedConstant.has(item.id)) continue;
-    assert.ok(
-      answers.size > 1,
-      `${item.id}：15 个 seed 的正确答案完全相同（${[...answers][0]}），考生可背答案`,
-    );
+    if (answers.size === 1) {
+      offenders.push(`${item.id} 恒为 ${[...answers][0]}`);
+    }
   }
+  assert.deepEqual(
+    offenders,
+    [],
+    `以下题目的整份答案在 ${SEEDS.length} 个 seed 下完全恒定（考生可背答案）：\n${offenders.join('\n')}\n` +
+      `若确属设计使然，请登记进 DESIGN_CONSTANT 并写明理由。`,
+  );
 });
 
 test('seed 边界值：空字符串 / 超长 / 特殊字符都不崩', () => {

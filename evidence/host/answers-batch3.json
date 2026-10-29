@@ -1,0 +1,13 @@
+{
+  "answers": {
+    "I03": { "rule": "R3", "decision": "批准", "escalate": false },
+    "R03": { "veg": 6, "chicken": 0, "beef": 0 },
+    "D03": { "lossMaking": ["C-315"], "onlyInStore": [], "commonCount": 5 },
+    "C03": {
+      "a1": { "rule": "旧", "needManual": false },
+      "a2": { "rule": "旧", "needManual": false },
+      "a3": { "rule": "新", "needManual": true },
+      "a4": { "rule": "新", "needManual": false }
+    }
+  }
+}

@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>乐子跑分 LeziBench · run-20261029-171944-3ce70b</title>
+<title>乐子跑分 LeziBench · run-20261029-185817-d153d2</title>
 <style>
 :root{
   --bg:#0f1115; --card:#171a21; --card2:#1e222b; --line:#2a2f3a;
@@ -84,10 +84,10 @@ footer{margin-top:26px;color:var(--muted);font-size:12px;text-align:center}
 
   <section class="hero">
     <div class="score">
-      <b>100</b><span class="of">/ 100</span>
+      <b>98</b><span class="of">/ 100</span>
       <span class="lvl-tag">卓越</span>
     </div>
-    <div class="bar "><span style="width:100.0%"></span></div>
+    <div class="bar "><span style="width:98.0%"></span></div>
     <p class="conclusion">四个方向都相当稳定，可以放心把常规整理与推理任务交给它。</p>
   </section>
 
@@ -98,8 +98,8 @@ footer{margin-top:26px;color:var(--muted);font-size:12px;text-align:center}
         <div class="dim-head"><span>逻辑推理</span><b>25<i>/25</i></b></div>
         <div class="bar "><span style="width:100.0%"></span></div>
       </div><div class="dim">
-        <div class="dim-head"><span>信息整理</span><b>25<i>/25</i></b></div>
-        <div class="bar "><span style="width:100.0%"></span></div>
+        <div class="dim-head"><span>信息整理</span><b>23<i>/25</i></b></div>
+        <div class="bar "><span style="width:92.0%"></span></div>
       </div><div class="dim">
         <div class="dim-head"><span>状态追踪与纠错</span><b>25<i>/25</i></b></div>
         <div class="bar "><span style="width:100.0%"></span></div>
@@ -129,19 +129,19 @@ footer{margin-top:26px;color:var(--muted);font-size:12px;text-align:center}
             <span class="tag">PASS</span>
             <span class="ck-id">I01.C1</span>
             <span class="ck-pts">1分</span>
-            <span class="ck-reason">截止时间正确：周四下午4点</span>
+            <span class="ck-reason">截止时间正确：周三下午4点</span>
           </li><li class="pass">
             <span class="tag">PASS</span>
             <span class="ck-id">I01.C2</span>
             <span class="ck-pts">3分</span>
-            <span class="ck-reason">正确表示不附预算表</span>
+            <span class="ck-reason">正确表示需要附预算表</span>
           </li></ul>
           <div class="parsed-wrap"><div class="label">解析后的答案</div><pre class="parsed">{
-  &quot;deadline&quot;: &quot;周四下午4点&quot;,
-  &quot;budgetAttached&quot;: false
+  &quot;deadline&quot;: &quot;周三下午4点&quot;,
+  &quot;budgetAttached&quot;: true
 }</pre></div>
           
-          <p class="muted small">答案指纹 SHA-256：<code>98953d31f23d4fea…</code> · 判分器 v1.1.0</p>
+          <p class="muted small">答案指纹 SHA-256：<code>5d5913fb116b9f2c…</code> · 判分器 v1.2.0</p>
         </div>
       </details><details class="item">
         <summary>
@@ -169,21 +169,21 @@ footer{margin-top:26px;color:var(--muted);font-size:12px;text-align:center}
           </li></ul>
           <div class="parsed-wrap"><div class="label">解析后的答案</div><pre class="parsed">{
   &quot;selected&quot;: [
-    &quot;S02&quot;,
-    &quot;S08&quot;,
-    &quot;S09&quot;
+    &quot;S04&quot;,
+    &quot;S05&quot;,
+    &quot;S07&quot;
   ],
   &quot;rejected&quot;: [
     &quot;S01&quot;,
+    &quot;S02&quot;,
     &quot;S03&quot;,
-    &quot;S04&quot;,
-    &quot;S05&quot;,
     &quot;S06&quot;,
-    &quot;S07&quot;
+    &quot;S08&quot;,
+    &quot;S09&quot;
   ]
 }</pre></div>
           
-          <p class="muted small">答案指纹 SHA-256：<code>701ee65f6992705d…</code> · 判分器 v1.1.0</p>
+          <p class="muted small">答案指纹 SHA-256：<code>bad02bc5c6e59964…</code> · 判分器 v1.2.0</p>
         </div>
       </details><details class="item">
         <summary>
@@ -197,12 +197,12 @@ footer{margin-top:26px;color:var(--muted);font-size:12px;text-align:center}
             <span class="tag">PASS</span>
             <span class="ck-id">I03.C1</span>
             <span class="ck-pts">2分</span>
-            <span class="ck-reason">适用规则正确：R4</span>
+            <span class="ck-reason">适用规则正确：R3</span>
           </li><li class="pass">
             <span class="tag">PASS</span>
             <span class="ck-id">I03.C2</span>
             <span class="ck-pts">2分</span>
-            <span class="ck-reason">审批结论正确：部分批准</span>
+            <span class="ck-reason">审批结论正确：批准</span>
           </li><li class="pass">
             <span class="tag">PASS</span>
             <span class="ck-id">I03.C3</span>
@@ -210,12 +210,12 @@ footer{margin-top:26px;color:var(--muted);font-size:12px;text-align:center}
             <span class="ck-reason">转人工判断正确：false</span>
           </li></ul>
           <div class="parsed-wrap"><div class="label">解析后的答案</div><pre class="parsed">{
-  &quot;rule&quot;: &quot;R4&quot;,
-  &quot;decision&quot;: &quot;部分批准&quot;,
+  &quot;rule&quot;: &quot;R3&quot;,
+  &quot;decision&quot;: &quot;批准&quot;,
   &quot;escalate&quot;: false
 }</pre></div>
           
-          <p class="muted small">答案指纹 SHA-256：<code>a664a334bdcfc087…</code> · 判分器 v1.1.0</p>
+          <p class="muted small">答案指纹 SHA-256：<code>e56403991ec3953a…</code> · 判分器 v1.2.0</p>
         </div>
       </details><details class="item">
         <summary>
@@ -243,11 +243,11 @@ footer{margin-top:26px;color:var(--muted);font-size:12px;text-align:center}
           </li></ul>
           <div class="parsed-wrap"><div class="label">解析后的答案</div><pre class="parsed">{
   &quot;status&quot;: &quot;已驳回&quot;,
-  &quot;owner&quot;: &quot;小林&quot;,
-  &quot;deadline&quot;: &quot;下周一&quot;
+  &quot;owner&quot;: &quot;小周&quot;,
+  &quot;deadline&quot;: &quot;周四&quot;
 }</pre></div>
           
-          <p class="muted small">答案指纹 SHA-256：<code>be0cf523c43fb52e…</code> · 判分器 v1.1.0</p>
+          <p class="muted small">答案指纹 SHA-256：<code>55acebaf07c2b3be…</code> · 判分器 v1.2.0</p>
         </div>
       </details><details class="item">
         <summary>
@@ -261,19 +261,19 @@ footer{margin-top:26px;color:var(--muted);font-size:12px;text-align:center}
             <span class="tag">PASS</span>
             <span class="ck-id">R01.C1</span>
             <span class="ck-pts">1分</span>
-            <span class="ck-reason">原价合计正确：54</span>
+            <span class="ck-reason">原价合计正确：112</span>
           </li><li class="pass">
             <span class="tag">PASS</span>
             <span class="ck-id">R01.C2</span>
             <span class="ck-pts">3分</span>
-            <span class="ck-reason">应付款正确：48</span>
+            <span class="ck-reason">应付款正确：104</span>
           </li></ul>
           <div class="parsed-wrap"><div class="label">解析后的答案</div><pre class="parsed">{
-  &quot;subtotal&quot;: 54,
-  &quot;total&quot;: 48
+  &quot;subtotal&quot;: 112,
+  &quot;total&quot;: 104
 }</pre></div>
           
-          <p class="muted small">答案指纹 SHA-256：<code>6a7255c9a95da8a7…</code> · 判分器 v1.1.0</p>
+          <p class="muted small">答案指纹 SHA-256：<code>9e82f4e82c8e34d7…</code> · 判分器 v1.2.0</p>
         </div>
       </details><details class="item">
         <summary>
@@ -287,7 +287,7 @@ footer{margin-top:26px;color:var(--muted);font-size:12px;text-align:center}
             <span class="tag">PASS</span>
             <span class="ck-id">R02.C1</span>
             <span class="ck-pts">2分</span>
-            <span class="ck-reason">五步齐全且从 A 开始</span>
+            <span class="ck-reason">五步齐全且从「收货入库」(C) 开始</span>
           </li><li class="pass">
             <span class="tag">PASS</span>
             <span class="ck-id">R02.C2</span>
@@ -297,21 +297,21 @@ footer{margin-top:26px;color:var(--muted);font-size:12px;text-align:center}
             <span class="tag">PASS</span>
             <span class="ck-id">R02.C3</span>
             <span class="ck-pts">2分</span>
-            <span class="ck-reason">首末步正确：A 开始、E 结束，且字段自洽</span>
+            <span class="ck-reason">首末步正确：C 开始、B 结束，且字段自洽</span>
           </li></ul>
           <div class="parsed-wrap"><div class="label">解析后的答案</div><pre class="parsed">{
   &quot;order&quot;: [
-    &quot;A&quot;,
-    &quot;B&quot;,
     &quot;C&quot;,
     &quot;D&quot;,
-    &quot;E&quot;
+    &quot;A&quot;,
+    &quot;E&quot;,
+    &quot;B&quot;
   ],
-  &quot;first&quot;: &quot;A&quot;,
-  &quot;last&quot;: &quot;E&quot;
+  &quot;first&quot;: &quot;C&quot;,
+  &quot;last&quot;: &quot;B&quot;
 }</pre></div>
           
-          <p class="muted small">答案指纹 SHA-256：<code>169a86341dce4fab…</code> · 判分器 v1.1.0</p>
+          <p class="muted small">答案指纹 SHA-256：<code>2e8b4b6117217749…</code> · 判分器 v1.2.0</p>
         </div>
       </details><details class="item">
         <summary>
@@ -325,7 +325,7 @@ footer{margin-top:26px;color:var(--muted);font-size:12px;text-align:center}
             <span class="tag">PASS</span>
             <span class="ck-id">R03.C1</span>
             <span class="ck-pts">2分</span>
-            <span class="ck-reason">份数 5（需≥4），蛋白质 11（需≥11）</span>
+            <span class="ck-reason">份数 6（需≥3），蛋白质 12（需≥12）</span>
           </li><li class="pass">
             <span class="tag">PASS</span>
             <span class="ck-id">R03.C2</span>
@@ -335,15 +335,15 @@ footer{margin-top:26px;color:var(--muted);font-size:12px;text-align:center}
             <span class="tag">PASS</span>
             <span class="ck-id">R03.C3</span>
             <span class="ck-pts">2分</span>
-            <span class="ck-reason">总价 64 元，理论最低 64 元</span>
+            <span class="ck-reason">总价 72 元，理论最低 72 元</span>
           </li></ul>
           <div class="parsed-wrap"><div class="label">解析后的答案</div><pre class="parsed">{
-  &quot;veg&quot;: 4,
-  &quot;chicken&quot;: 1,
+  &quot;veg&quot;: 6,
+  &quot;chicken&quot;: 0,
   &quot;beef&quot;: 0
 }</pre></div>
           
-          <p class="muted small">答案指纹 SHA-256：<code>bccbeed71c8179ce…</code> · 判分器 v1.1.0</p>
+          <p class="muted small">答案指纹 SHA-256：<code>6d9099ac83fad9d4…</code> · 判分器 v1.2.0</p>
         </div>
       </details><details class="item">
         <summary>
@@ -371,26 +371,26 @@ footer{margin-top:26px;color:var(--muted);font-size:12px;text-align:center}
           </li></ul>
           <div class="parsed-wrap"><div class="label">解析后的答案</div><pre class="parsed">{
   &quot;seats&quot;: {
-    &quot;阿澈&quot;: {
+    &quot;阿果&quot;: {
       &quot;position&quot;: 1,
-      &quot;color&quot;: &quot;橙&quot;
+      &quot;color&quot;: &quot;紫&quot;
     },
-    &quot;阿海&quot;: {
+    &quot;阿豆&quot;: {
       &quot;position&quot;: 2,
-      &quot;color&quot;: &quot;绿&quot;
+      &quot;color&quot;: &quot;红&quot;
     },
     &quot;阿布&quot;: {
       &quot;position&quot;: 3,
-      &quot;color&quot;: &quot;红&quot;
+      &quot;color&quot;: &quot;橙&quot;
     },
-    &quot;阿金&quot;: {
+    &quot;阿岚&quot;: {
       &quot;position&quot;: 4,
-      &quot;color&quot;: &quot;蓝&quot;
+      &quot;color&quot;: &quot;黄&quot;
     }
   }
 }</pre></div>
           
-          <p class="muted small">答案指纹 SHA-256：<code>c74f662bd4f7a0d4…</code> · 判分器 v1.1.0</p>
+          <p class="muted small">答案指纹 SHA-256：<code>452d4e248fee1737…</code> · 判分器 v1.2.0</p>
         </div>
       </details><details class="item">
         <summary>
@@ -413,15 +413,15 @@ footer{margin-top:26px;color:var(--muted);font-size:12px;text-align:center}
           </li></ul>
           <div class="parsed-wrap"><div class="label">解析后的答案</div><pre class="parsed">{
   &quot;list&quot;: [
+    &quot;南京&quot;,
     &quot;苏州&quot;,
     &quot;杭州&quot;,
     &quot;宁波&quot;,
-    &quot;合肥&quot;,
-    &quot;无锡&quot;
+    &quot;合肥&quot;
   ]
 }</pre></div>
           
-          <p class="muted small">答案指纹 SHA-256：<code>09a7087aa2c08d6d…</code> · 判分器 v1.1.0</p>
+          <p class="muted small">答案指纹 SHA-256：<code>f4ab10b9779e6d2a…</code> · 判分器 v1.2.0</p>
         </div>
       </details><details class="item">
         <summary>
@@ -440,33 +440,33 @@ footer{margin-top:26px;color:var(--muted);font-size:12px;text-align:center}
             <span class="tag">PASS</span>
             <span class="ck-id">D02.C2</span>
             <span class="ck-pts">2分</span>
-            <span class="ck-reason">理由指出关键缺口（甲最终支出缺失 / 预算≠最终支出）</span>
+            <span class="ck-reason">理由引用了两个真实支出数字（13 / 21）并给出正确方向</span>
           </li><li class="pass">
             <span class="tag">PASS</span>
             <span class="ck-id">D02.C3</span>
             <span class="ck-pts">2分</span>
-            <span class="ck-reason">没有把预算当作最终支出</span>
+            <span class="ck-reason">正确使用实际支出数字，没有把预算当支出</span>
           </li></ul>
           <div class="parsed-wrap"><div class="label">解析后的答案</div><pre class="parsed">{
-  &quot;answer&quot;: &quot;C&quot;,
-  &quot;reason&quot;: &quot;甲项目的最终实际支出这一栏是空的、报告没有给出这个数字;预算不等于最终实际支出,因此无法判断甲是否比乙少&quot;
+  &quot;answer&quot;: &quot;A&quot;,
+  &quot;reason&quot;: &quot;甲项目的最终实际支出是 13 万元,乙项目是 21 万元,13 小于 21,所以甲确实比乙少&quot;
 }</pre></div>
           
-          <p class="muted small">答案指纹 SHA-256：<code>00c1d09b140e45cf…</code> · 判分器 v1.1.0</p>
+          <p class="muted small">答案指纹 SHA-256：<code>ae6ce095d5a5a42f…</code> · 判分器 v1.2.0</p>
         </div>
       </details><details class="item">
         <summary>
           <span class="iid">D03</span>
           <span class="ititle">两表合并与冲突检测</span>
-          <span class="ipoints">6/6</span>
+          <span class="ipoints">4/6</span>
           <span class="pill ok">已判分</span>
         </summary>
         <div class="item-body">
-          <ul class="checks"><li class="pass">
-            <span class="tag">PASS</span>
+          <ul class="checks"><li class="fail">
+            <span class="tag">FAIL</span>
             <span class="ck-id">D03.C1</span>
             <span class="ck-pts">2分</span>
-            <span class="ck-reason">亏本 SKU 完全正确</span>
+            <span class="ck-reason">亏本 SKU 应为 A-101, C-315，实际为 C-315</span>
           </li><li class="pass">
             <span class="tag">PASS</span>
             <span class="ck-id">D03.C2</span>
@@ -480,16 +480,12 @@ footer{margin-top:26px;color:var(--muted);font-size:12px;text-align:center}
           </li></ul>
           <div class="parsed-wrap"><div class="label">解析后的答案</div><pre class="parsed">{
   &quot;lossMaking&quot;: [
-    &quot;B-207&quot;
+    &quot;C-315&quot;
   ],
-  &quot;onlyInStore&quot;: [
-    &quot;C-315&quot;,
-    &quot;G-721&quot;
-  ],
-  &quot;commonCount&quot;: 4
+  &quot;commonCount&quot;: 5
 }</pre></div>
-          
-          <p class="muted small">答案指纹 SHA-256：<code>0a19c01fac007ccb…</code> · 判分器 v1.1.0</p>
+          <p class="muted small">解析备注：字段 onlyInStore 无法解析为 list</p>
+          <p class="muted small">答案指纹 SHA-256：<code>b0e0ea2ba87ec255…</code> · 判分器 v1.2.0</p>
         </div>
       </details><details class="item">
         <summary>
@@ -519,9 +515,9 @@ footer{margin-top:26px;color:var(--muted);font-size:12px;text-align:center}
   &quot;levels&quot;: {
     &quot;甲&quot;: &quot;普通&quot;,
     &quot;乙&quot;: &quot;普通&quot;,
-    &quot;丙&quot;: &quot;金牌&quot;,
+    &quot;丙&quot;: &quot;普通&quot;,
     &quot;丁&quot;: &quot;普通&quot;,
-    &quot;戊&quot;: &quot;普通&quot;,
+    &quot;戊&quot;: &quot;金牌&quot;,
     &quot;己&quot;: &quot;普通&quot;
   },
   &quot;counts&quot;: {
@@ -531,7 +527,7 @@ footer{margin-top:26px;color:var(--muted);font-size:12px;text-align:center}
   }
 }</pre></div>
           
-          <p class="muted small">答案指纹 SHA-256：<code>801646e907703ab0…</code> · 判分器 v1.1.0</p>
+          <p class="muted small">答案指纹 SHA-256：<code>d1f3c9062c0094d7…</code> · 判分器 v1.2.0</p>
         </div>
       </details><details class="item">
         <summary>
@@ -550,14 +546,14 @@ footer{margin-top:26px;color:var(--muted);font-size:12px;text-align:center}
             <span class="tag">PASS</span>
             <span class="ck-id">C01.C2</span>
             <span class="ck-pts">3分</span>
-            <span class="ck-reason">正确结果：60</span>
+            <span class="ck-reason">正确结果：52</span>
           </li></ul>
           <div class="parsed-wrap"><div class="label">解析后的答案</div><pre class="parsed">{
   &quot;isCorrect&quot;: false,
-  &quot;correctTotal&quot;: 60
+  &quot;correctTotal&quot;: 52
 }</pre></div>
           
-          <p class="muted small">答案指纹 SHA-256：<code>18011aea0046b683…</code> · 判分器 v1.1.0</p>
+          <p class="muted small">答案指纹 SHA-256：<code>b9af885487cd0db7…</code> · 判分器 v1.2.0</p>
         </div>
       </details><details class="item">
         <summary>
@@ -571,24 +567,24 @@ footer{margin-top:26px;color:var(--muted);font-size:12px;text-align:center}
             <span class="tag">PASS</span>
             <span class="ck-id">C02.C1</span>
             <span class="ck-pts">2分</span>
-            <span class="ck-reason">撤回前库存正确：46</span>
+            <span class="ck-reason">撤回前库存正确：65</span>
           </li><li class="pass">
             <span class="tag">PASS</span>
             <span class="ck-id">C02.C2</span>
             <span class="ck-pts">2分</span>
-            <span class="ck-reason">撤回前 46 → 撤回后 53，正确加回 7 件</span>
+            <span class="ck-reason">撤回前 65 → 撤回后 69，正确加回 4 件</span>
           </li><li class="pass">
             <span class="tag">PASS</span>
             <span class="ck-id">C02.C3</span>
             <span class="ck-pts">2分</span>
-            <span class="ck-reason">最终库存正确：53</span>
+            <span class="ck-reason">最终库存正确：69</span>
           </li></ul>
           <div class="parsed-wrap"><div class="label">解析后的答案</div><pre class="parsed">{
-  &quot;beforeVoid&quot;: 46,
-  &quot;finalStock&quot;: 53
+  &quot;beforeVoid&quot;: 65,
+  &quot;finalStock&quot;: 69
 }</pre></div>
           
-          <p class="muted small">答案指纹 SHA-256：<code>061c6531007b1b7e…</code> · 判分器 v1.1.0</p>
+          <p class="muted small">答案指纹 SHA-256：<code>737679b1864a8855…</code> · 判分器 v1.2.0</p>
         </div>
       </details><details class="item">
         <summary>
@@ -612,7 +608,7 @@ footer{margin-top:26px;color:var(--muted);font-size:12px;text-align:center}
             <span class="tag">PASS</span>
             <span class="ck-id">C03.C3</span>
             <span class="ck-pts">2分</span>
-            <span class="ck-reason">第2笔正确按旧规则判定（提交于 2 月 12 日，金额 4151，需人工=true）</span>
+            <span class="ck-reason">第2笔正确按旧规则判定（提交于 2 月 12 日，金额 3422，需人工=false）</span>
           </li></ul>
           <div class="parsed-wrap"><div class="label">解析后的答案</div><pre class="parsed">{
   &quot;a1&quot;: {
@@ -621,7 +617,7 @@ footer{margin-top:26px;color:var(--muted);font-size:12px;text-align:center}
   },
   &quot;a2&quot;: {
     &quot;rule&quot;: &quot;旧&quot;,
-    &quot;needManual&quot;: true
+    &quot;needManual&quot;: false
   },
   &quot;a3&quot;: {
     &quot;rule&quot;: &quot;新&quot;,
@@ -633,7 +629,7 @@ footer{margin-top:26px;color:var(--muted);font-size:12px;text-align:center}
   }
 }</pre></div>
           
-          <p class="muted small">答案指纹 SHA-256：<code>fea0664fc8c4bf32…</code> · 判分器 v1.1.0</p>
+          <p class="muted small">答案指纹 SHA-256：<code>7311a278451e75ae…</code> · 判分器 v1.2.0</p>
         </div>
       </details><details class="item">
         <summary>
@@ -652,35 +648,35 @@ footer{margin-top:26px;color:var(--muted);font-size:12px;text-align:center}
             <span class="tag">PASS</span>
             <span class="ck-id">C04.C2</span>
             <span class="ck-pts">3分</span>
-            <span class="ck-reason">修复后小计正确：120</span>
+            <span class="ck-reason">修复后小计正确：96</span>
           </li><li class="pass">
             <span class="tag">PASS</span>
             <span class="ck-id">C04.C3</span>
             <span class="ck-pts">3分</span>
-            <span class="ck-reason">修复后应付正确：102</span>
+            <span class="ck-reason">修复后应付正确：81.6</span>
           </li></ul>
           <div class="parsed-wrap"><div class="label">解析后的答案</div><pre class="parsed">{
   &quot;rootCause&quot;: &quot;数量用错&quot;,
-  &quot;fixedSubtotal&quot;: 120,
-  &quot;fixedTotal&quot;: 102
+  &quot;fixedSubtotal&quot;: 96,
+  &quot;fixedTotal&quot;: 81.6
 }</pre></div>
           
-          <p class="muted small">答案指纹 SHA-256：<code>7bb60942b2893f2e…</code> · 判分器 v1.1.0</p>
+          <p class="muted small">答案指纹 SHA-256：<code>cd806ec3df8374bc…</code> · 判分器 v1.2.0</p>
         </div>
       </details>
 
   <div class="section-title">运行信息</div>
   <div class="meta">
     <dl>
-      <dt>运行编号</dt><dd><code>run-20261029-171944-3ce70b</code></dd>
+      <dt>运行编号</dt><dd><code>run-20261029-185817-d153d2</code></dd>
       <dt>成绩状态</dt><dd><b>已完成</b></dd>
-      <dt>题库版本</dt><dd>exam v1.1.0 · 契约 v1.0.0</dd>
-      <dt>判分器版本</dt><dd>grader v1.1.0</dd>
-      <dt>随机种子</dt><dd><code>host-trial-v12</code></dd>
-      <dt>题库指纹</dt><dd><code>216b3ea4740108f890411d6cbaa6507571492113e8423cb810e1d52ae586a0ca</code></dd>
-      <dt>开始时间</dt><dd>2026/10/30 01:19:44</dd>
-      <dt>结束时间</dt><dd>2026/10/30 01:22:50</dd>
-      <dt>总耗时</dt><dd>186.6 秒</dd>
+      <dt>题库版本</dt><dd>exam v1.2.0 · 契约 v1.0.0</dd>
+      <dt>判分器版本</dt><dd>grader v1.2.0</dd>
+      <dt>随机种子</dt><dd><code>host-trial-v13</code></dd>
+      <dt>题库指纹</dt><dd><code>a72cf9c4e4abcd1f7474e4fc83f30e7f0b9c69b4a7ff3bfe26015a370b7a5026</code></dd>
+      <dt>开始时间</dt><dd>2026/10/30 02:58:17</dd>
+      <dt>结束时间</dt><dd>2026/10/30 02:59:54</dd>
+      <dt>总耗时</dt><dd>96.5 秒</dd>
       <dt>运行环境</dt><dd>node v24.20.0 · win32/x64</dd>
       <dt>成绩性质</dt><dd><b>本地规则核验 · 非认证成绩（LOCAL_SELF_TEST）</b></dd>
     </dl>
@@ -691,7 +687,7 @@ footer{margin-top:26px;color:var(--muted);font-size:12px;text-align:center}
     题库与判分器均为公开源码，因此它<strong>不能</strong>防止有意改题、改答案或改判分器，也<strong>不是</strong>权威认证或全球排行榜。
     请只与<strong>同题库版本、同判分器版本</strong>的成绩比较。
   </div>
-  <footer>LeziBench 1.1.0 · 由本地脚本生成，无外部资源、无追踪</footer>
+  <footer>LeziBench 1.2.0 · 由本地脚本生成，无外部资源、无追踪</footer>
 </div>
 </body>
 </html>

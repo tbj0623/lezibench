@@ -1,0 +1,8 @@
+{
+  "answers": {
+    "I01": { "deadline": "周三下午4点", "budgetAttached": true },
+    "R01": { "subtotal": 112, "total": 104 },
+    "D01": { "list": ["南京", "苏州", "杭州", "宁波", "合肥"] },
+    "C01": { "isCorrect": false, "correctTotal": 52 }
+  }
+}

@@ -1,9 +1,9 @@
 {
-  "runId": "run-20261029-185705-cc4a1a",
+  "runId": "run-20261029-191318-5ed80c",
   "seed": "lezi-demo-2026",
-  "startedAt": "2026-10-29T18:57:05.168Z",
-  "finishedAt": "2026-10-29T18:57:05.630Z",
-  "durationMs": 462,
+  "startedAt": "2026-10-29T19:13:18.723Z",
+  "finishedAt": "2026-10-29T19:13:19.654Z",
+  "durationMs": 931,
   "environment": "node v24.20.0 · win32/x64",
   "demo": true,
   "summary": {

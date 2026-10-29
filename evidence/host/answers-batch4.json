@@ -1,0 +1,19 @@
+{
+  "answers": {
+    "I04": { "status": "已驳回", "owner": "小周", "deadline": "周四" },
+    "R04": {
+      "阿果": { "position": 1, "color": "紫" },
+      "阿豆": { "position": 2, "color": "红" },
+      "阿布": { "position": 3, "color": "橙" },
+      "阿岚": { "position": 4, "color": "黄" }
+    },
+    "D04": {
+      "levels": {
+        "甲": "普通", "乙": "普通", "丙": "普通",
+        "丁": "普通", "戊": "金牌", "己": "普通"
+      },
+      "counts": { "gold": 1, "silver": 0, "normal": 5 }
+    },
+    "C04": { "rootCause": "数量用错", "fixedSubtotal": 96, "fixedTotal": 81.6 }
+  }
+}
