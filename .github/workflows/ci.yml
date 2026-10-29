@@ -63,6 +63,14 @@ jobs:
       - name: 端到端（满分卷 / 全错卷 / 部分卷 / 幂等 / 路径安全）
         run: node tests/e2e-run.mjs
 
+      # 文档与源码的漂移门禁：SCORING.md 必须由 publicCriteria 生成，
+      # 改了题目/条件却没重新生成文档，这一步会红。site 的逐题页同理。
+      - name: 文档与源码一致性（SCORING.md / 站点逐题页）
+        shell: bash
+        run: |
+          node docs/build/build-scoring.mjs --check
+          node website/build/build-site.mjs --check
+
       - name: 变异测试（证明测试真的会失败）
         run: node tests/mutation.mjs
 

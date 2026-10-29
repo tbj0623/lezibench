@@ -17,12 +17,12 @@
   },
   "metaReplacedIn": 0,
   "demo": {
-    "runId": "run-20261029-192620-250b5f",
+    "runId": "run-demo-lezibench-fixed",
     "seed": "lezi-demo-2026",
     "total": 77,
     "level": "良好",
     "status": "COMPLETED",
-    "durationMs": 447,
+    "demo": true,
     "dims": [
       {
         "key": "instruction",

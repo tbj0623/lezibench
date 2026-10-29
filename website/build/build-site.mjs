@@ -98,7 +98,10 @@ async function buildDemo() {
   ans.C03 = JSON.parse(JSON.stringify(good.C03));
   ans.C03.a2 = { rule: '新', needManual: true };
 
-  const { runId } = await startRun({ root, seed, demo: true });
+  // 固定 runId：否则每次构建 demo 报告里的 runId 都会变，构建产物不确定（git 永远 dirty）。
+  // DEMO 报告本来就标着 demo:true，用固定编号不会让人误以为是真实运行。
+  const DEMO_RUN_ID = 'run-demo-lezibench-fixed';
+  const { runId } = await startRun({ root, seed, demo: true, runId: DEMO_RUN_ID });
   for (const b of BATCHES) {
     const payload = {};
     for (const it of itemsForBatch(b)) payload[it.id] = ans[it.id];
@@ -137,7 +140,9 @@ async function buildDemo() {
     total: rep.summary.total,
     level: rep.summary.level,
     status: rep.summary.status,
-    durationMs: rep.durationMs,
+    // 故意不写 durationMs：DEMO 是构建时现场跑的，耗时每次不同，
+    // 写进产物会让 build 不幂等（git 永远 dirty）。真实用时看报告里的 startedAt/finishedAt。
+    demo: true,
     dims: rep.summary.dimensions.map((d) => ({ key: d.key, label: d.label, awarded: d.awarded, max: d.max })),
     lost: rep.items.filter((i) => i.awarded < i.maxPoints).map((i) => ({ id: i.id, title: i.title, awarded: i.awarded, max: i.maxPoints })),
     fails,
@@ -304,6 +309,28 @@ async function injectMeta() {
 
 /* ---------- main ---------- */
 if (process.argv[1] && path.resolve(process.argv[1]) === path.resolve(fileURLToPath(import.meta.url))) {
+  // --check：判断「站点产物是否与源码同步」，不留下任何修改。
+  //
+  // 实现方式是「快照 → 正常构建 → 逐文件比对 → 还原」：
+  //   构建函数本身是幂等的，所以「构建后内容 != 构建前内容」就等价于「磁盘上的产物已经漂了」。
+  // 比给 5 个注入函数各加一个 dryRun 分支简单得多，也不会因为遗漏某条路径而漏检。
+  const CHECK = process.argv.includes('--check');
+
+  // 快照点：所有会被本脚本写入的文件
+  const TOUCHED = [
+    'method.html', 'index.html', 'demo.html', 'install.html', 'faq.html',
+    'limits.html', 'privacy.html', '404.html',
+    'assets/demo-report.html', 'assets/demo-report.json', 'assets/demo-summary.txt',
+  ];
+  let snapshot = null;
+  if (CHECK) {
+    snapshot = new Map();
+    for (const rel of TOUCHED) {
+      const p = path.join(SITE, rel);
+      try { snapshot.set(rel, await readFile(p)); } catch { snapshot.set(rel, null); }
+    }
+  }
+
   const crit = await injectCriteria();
   const demo = await buildDemo();
   demo.examVersion = EXAM_VERSION;
@@ -321,6 +348,27 @@ if (process.argv[1] && path.resolve(process.argv[1]) === path.resolve(fileURLToP
     metaReplacedIn: meta.filesTouched,
     demo,
   };
+
+  if (CHECK) {
+    const drift = [];
+    for (const rel of TOUCHED) {
+      const p = path.join(SITE, rel);
+      const before = snapshot.get(rel);
+      let after = null;
+      try { after = await readFile(p); } catch { /* 文件不存在 */ }
+      const same = (before === null && after === null) || (before && after && before.equals(after));
+      if (!same) drift.push(rel);
+    }
+    if (drift.length) {
+      console.error(`✘ 站点产物与源码不同步（${drift.length} 个文件）：`);
+      for (const d of drift) console.error(`  - website/${d}`);
+      console.error('\n请运行：node website/build/build-site.mjs');
+      process.exit(1);
+    }
+    console.error('✔ 站点产物与源码一致');
+    process.exit(0);
+  }
+
   console.log(JSON.stringify(out, null, 2));
   // 落一份摘要，供 README / 首页核对数字时直接引用
   await writeFile(path.join(HERE, 'build-summary.json'), `${JSON.stringify(out, null, 2)}\n`, 'utf8');

@@ -291,19 +291,30 @@
           <h3>题库指纹</h3>
           <p>
             每局还会记录一个 <code>catalogFingerprint</code>：由 16 道题的 id、维度、难度、分值、批次，
-            以及每条子条件的 id / 分值 / 文本共同算出的 SHA-256。当前值以
+            每条子条件的 id / 分值 / 文本，<strong>以及两个固定探针 seed 下的题面</strong>共同算出的 SHA-256。当前值以
             <code>doctor</code> 输出为准（本仓库当前是 <code data-fp>a72cf9c4e4ab…</code>）。
           </p>
           <p>
-            指纹的作用很直接：两份报告如果 exam / grader 版本都相同、但指纹不同，
+            指纹的作用是「发现题库被改过」：两份报告如果版本都相同、但指纹不同，
             说明其中一份的题库被改过，两者的分数不可比。
+          </p>
+          <p>
+            <strong>但它不是「同一份卷子」的证明。</strong>指纹只采样 <code>fp-probe-1</code> /
+            <code>fp-probe-2</code> 两个探针 seed，所以它保证的是
+            「评分条件 + 这两个 seed 下的题面」一致，<strong>不保证所有 seed 的题面一致</strong>。
+            同一个指纹下的两次运行，实际题目可能完全不同 —— 这是概率性覆盖，不是完备校验。
+          </p>
+          <p>
+            另外，指纹算法本身升级过（早期版本不含题面探针）。<strong>不同算法版本算出的指纹数值不可直接比较</strong>，
+            这时只能靠版本号判断。
           </p>
 
           <h3>比较成绩的唯一合法条件</h3>
           <blockquote>
             <p>
-              <strong>只有 <code>examVersion</code> 与 <code>graderVersion</code> 都相同的两次运行才能比较分数。</strong>
-              版本不同就不是同一份试卷，横比没有意义。
+              <strong>两次运行可比，需要同时满足三个条件：<code>examVersion</code> 相同、
+              <code>graderVersion</code> 相同、<code>catalogFingerprint</code> 相同。</strong>
+              少任何一个，都不是同一把尺子，横比没有意义。
             </p>
           </blockquote>
         </section>
