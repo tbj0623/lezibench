@@ -150,7 +150,7 @@ const D02 = {
       '',
       '注意：答案里请写选项字母（A/B/C）或对应的选项原文，不要自创含糊措辞。',
       '只输出一个 JSON 对象：',
-      '{"answer":"C","reason":"用一句话说明依据"}',
+      '{"answer":"<A|B|C>","reason":"用一句话说明依据（要引用题目里的数字或指出哪一栏为空）"}',
     ].join('\n');
     return {
       prompt,
@@ -182,7 +182,7 @@ const D02 = {
     }
     return {
       answer: 'C',
-      keyTerms: ['缺失', '没有给出', '未知', '不确定', '预算不等于', '不能仅凭预算', '无法由预算', '未提供', '空白', '空缺', '没有甲'],
+      keyTerms: ['缺失', '没有给出', '未给出', '没给', '未知', '不确定', '无法确定', '未提供', '空白', '空缺', '没写', '未填'],
       sampleB: facts.projectB_Final,
       sampleA: facts.projectA_Budget,
       aGiven: false,
@@ -231,8 +231,17 @@ const D02 = {
         ? `理由引用了两个真实支出数字（${o.requiresNumbers[0]} / ${o.requiresNumbers[1]}）并给出正确方向`
         : `理由必须同时引用甲(${o.requiresNumbers[0]})、乙(${o.requiresNumbers[1]})的实际支出并说明方向；实际为「${reason.slice(0, 60)}」`;
     } else {
-      reasonHasTerm = o.keyTerms.some((t) => reason.includes(squash(t)));
-      c2Reason = reasonHasTerm ? '理由指出关键缺口（甲最终支出缺失 / 预算≠最终支出）' : '理由没有指出「信息缺失 / 预算≠最终支出」这一关键点';
+      // 收紧：光出现「缺失/无法确定」这类词不算 —— 必须**同时**指明是「甲」的
+      // 「最终支出 / 实际支出」这一栏没有给出。否则「随便写两个字：缺失」也能拿分。
+      const rc = squash(reason);
+      const mentionsJia = /甲/.test(rc);
+      // 「最终支出」「实际支出」「这一栏」「那一栏」都算指明了字段；单说「信息不足」不算
+      const mentionsFinal = /最终支出|实际支出|支出|这一栏|那一栏|该栏|此栏/.test(rc);
+      const mentionsMissing = o.keyTerms.some((t) => rc.includes(squash(t)));
+      reasonHasTerm = mentionsJia && mentionsFinal && mentionsMissing;
+      c2Reason = reasonHasTerm
+        ? '理由明确指出「甲的最终实际支出」这一栏缺失'
+        : `理由必须同时指出是「甲」的「最终/实际支出」这一栏没有给出（当前：甲=${mentionsJia}，最终支出=${mentionsFinal}，缺失词=${mentionsMissing}）`;
     }
     checks.push({
       criterionId: 'D02.C2',
@@ -458,7 +467,10 @@ const D04 = {
       '',
       '请给出每个人的最终等级，并统计金牌、银牌、普通各有多少人。',
       '只输出一个 JSON 对象：',
-      '{"levels":{"甲":"金牌","乙":"银牌","丙":"普通","丁":"普通","戊":"普通","己":"普通"},"counts":{"gold":1,"silver":1,"normal":4}}',
+      '{"levels":{"甲":"<金牌|银牌|普通>","乙":"<金牌|银牌|普通>","丙":"<金牌|银牌|普通>",'
+        + ' "丁":"<金牌|银牌|普通>","戊":"<金牌|银牌|普通>","己":"<金牌|银牌|普通>"},'
+        + ' "counts":{"gold":<金牌人数>,"silver":<银牌人数>,"normal":<普通人数>}}',
+      '（上面只示范结构，六个人分别是什么等级要自己按规则判，三个计数要与等级一致。）',
     ].join('\n');
     return {
       prompt,

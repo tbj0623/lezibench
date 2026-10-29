@@ -68,6 +68,7 @@
           <li><a href="#timing">耗时不是能力指标</a></li>
           <li><a href="#judge">确定性判分的代价</a></li>
           <li><a href="#v1">V1 版本的具体边界</a></li>
+          <li><a href="#exploit">判分偏宽与可被固定答案命中</a></li>
         </ol>
       </nav>
 
@@ -244,17 +245,72 @@
 
         <section id="v1">
           <h2>V1 版本的具体边界</h2>
-          <p>当前版本 <code>0.1.0</code>（exam v<span data-meta="exam">1.1.0</span> / grader v<span data-meta="grader">1.1.0</span>），已知的具体限制：</p>
+          <p>当前引擎版本 exam v<span data-meta="exam">1.2.0</span> / grader v<span data-meta="grader">1.2.0</span>（以 <code>cli.mjs version</code> 为准）。已知的具体限制：</p>
           <ul>
             <li><strong>只有 standard 一种模式。</strong>传入其他模式会明确报错，不会静默降级。</li>
             <li><strong>客户端可改。</strong>state.json、答案文件、判分器都在本地，没有签名校验。</li>
             <li><strong>只有中文。</strong>题库、理由、报告都是中文。</li>
-            <li><strong>只有 16 题。</strong>没有题库轮换，跑第三次开始就会有熟悉度。</li>
+            <li><strong>只有 16 题。</strong>没有题库轮换，同一模型重复跑会积累熟悉度。</li>
             <li><strong>已判分的批次不可覆盖。</strong>答案写错了只能新开一局，不能就地重答。</li>
             <li><strong>无并发保护。</strong>两个进程同时对同一 <code>runId</code> 提交，行为未定义（原子写保证文件不损坏，但不保证逻辑顺序）。</li>
             <li><strong>平台验证不完整。</strong>只有 DSH 与 Windows 真机跑通过；macOS / Linux 有实现但未跑完整局；
                 OpenClaw / Codex 完全未核实。详见<a href="install.html#platforms">支持环境表</a>。</li>
+            <li><strong>判分有偏宽处，个别题可被固定答案命中。</strong>见下一节。</li>
           </ul>
+        </section>
+
+        <section id="exploit">
+          <h2>判分偏宽：有些分是可以「白捡」的</h2>
+          <p>
+            这一节写的是我们自己测出来的弱点。先说结论：
+            <strong>背答案拿不到高分，但确实能白捡几分 —— 所以「防作弊」不是这个产品的卖点。</strong>
+          </p>
+
+          <h3>整体上限：闭着眼睛瞎答能拿多少</h3>
+          <p>用「完全不读题面、只给固定答案」的策略，各跑 120 个 seed 取平均总分（满分 100）：</p>
+          <div class="anatomy">
+            <table class="grid">
+              <caption class="visually-hidden">固定答案策略的平均总分</caption>
+              <thead><tr><th scope="col">策略</th><th scope="col" class="num">平均总分</th></tr></thead>
+              <tbody>
+                <tr><th scope="row">每题都填第一个选项字母</th><td class="num">约 5.4 / 100</td></tr>
+                <tr><th scope="row">每题都答 <code>C</code>（不确定）</th><td class="num">约 1.3 / 100</td></tr>
+                <tr><th scope="row">全部填 <code>0</code></th><td class="num">0.0 / 100</td></tr>
+                <tr><th scope="row">全部填空对象 <code>{}</code></th><td class="num">0.0 / 100</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <p class="small muted" style="margin-top:0.8rem">
+            也就是说：靠背答案拿高分这条路走不通，真正拿高分仍须逐题读题面。
+          </p>
+
+          <h3>已知的两处局部偏宽</h3>
+          <div class="anatomy">
+            <table class="grid">
+              <caption class="visually-hidden">已知局部偏宽</caption>
+              <thead><tr><th scope="col">位置</th><th scope="col">现象</th><th scope="col" class="num">实测</th></tr></thead>
+              <tbody>
+                <tr>
+                  <th scope="row"><code>D02</code> 的理由判分</th>
+                  <td>理由条件只做关键词命中（「缺失」「不确定」等），门槛太宽。
+                      固定答 <code>C</code> + 固定理由，在 C 类 seed 上通杀。</td>
+                  <td class="num">满分 69/200<br>平均 2.07/6</td>
+                </tr>
+                <tr>
+                  <th scope="row"><code>R04</code> 的题面示例</th>
+                  <td>少量 seed 下题面列出的姓名顺序恰好等于真实座位顺序，
+                      照抄示例的 <code>position</code> 能拿到 C1 的 3 分。</td>
+                  <td class="num">7 / 60 seed</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <p style="margin-top:1rem">
+            这两条已登记为已知缺陷。修不修都不改变一个事实：
+            <strong>这套题的设计目标从来不是防作弊，而是可解释。</strong>
+            如果你需要严格防背题的评测，这份题库不适用 —— 题库本来就是公开的。
+          </p>
 
           <div class="honest" style="margin-top:1.6rem">
             <h3>最后一句</h3>

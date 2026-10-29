@@ -46,41 +46,64 @@ function flatten(obj, prefix = '') {
 /* ==================================================================== */
 test('反泄漏：任何题的题面示例都不得是可直接照抄的满分答案', () => {
   const offenders = [];
+  const parseable = [];
   for (const item of ITEMS) {
     let sampleable = 0;
     for (const seed of SEEDS) {
       const gen = item.generate(seed);
+      assert.equal(typeof gen.prompt, 'string', `${item.id}@${seed}: prompt 不是字符串`);
       const ex = exampleOf(gen.prompt);
-      if (!ex) continue;
+      if (!ex) continue; // 占位符（<...>）不是合法 JSON，照抄无从谈起
       sampleable++;
       const r = grade(item.id, JSON.stringify(ex), seed);
       if (r.awarded === item.points) {
         offenders.push(`${item.id}@${seed} 照抄示例得满分 ${r.awarded}/${item.points}`);
       }
     }
-    // 附加信息：示例可解析但完全不得分也算合格
-    assert.ok(sampleable >= 0, `${item.id}: 内部错误`);
+    if (sampleable > 0) parseable.push(`${item.id}(${sampleable}/${SEEDS.length})`);
   }
-  assert.deepEqual(offenders, [], `题面示例泄漏答案：\n${offenders.slice(0, 20).join('\n')}`);
+  // 说明：占位符题（示例不可解析）在结构上就不可能被照抄，因此不进入 parseable 列表；
+  // 这里只把「示例可解析」的题打印出来，便于人工确认判据覆盖到了哪些题。
+  assert.deepEqual(
+    offenders,
+    [],
+    `题面示例泄漏答案：\n${offenders.slice(0, 20).join('\n')}\n（示例可解析的题：${parseable.join(', ')}）`,
+  );
 });
 
-test('反泄漏：照抄示例的期望得分必须为 0（按题汇总，N=60）', () => {
+test('反泄漏：照抄示例的平均得分必须 ≤ 0.5 分（按题汇总，N=60）', () => {
+  // 【判据为什么是「≤0.5 分」而不是「必须 0 分」】
+  //   1) 大多数题（I01/I03/R01/R03/D03/D04/C01/C03/C04）的示例已改成 `<...>` 占位符，
+  //      不是合法 JSON，解析必然失败 → 结构上就不可能靠照抄得分，天然为 0。
+  //   2) 少数题（如 D01/C02）的示例仍是具体数字（"南京"、"100"/"108"），在个别 seed 下
+  //      可能恰好与真实答案的某个 criterion 重合（例如 D01 的示例正好含 2 个真实城市）。
+  //      要求「每个 seed 都 0 分」既做不到也不必要——真正要防的是「照抄即可捡到整题」。
+  //   3) 因此判据取「按题平均 ≤ 0.5 分」：既容忍低概率巧合，又能抓住
+  //      「示例含真实答案成分」的系统性泄漏（那种情况下平均会显著 >0.5）。
   const report = [];
+  const skipped = [];
   for (const item of ITEMS) {
-    let sum = 0, n = 0;
+    let sum = 0, n = 0, max = 0;
     for (const seed of SEEDS) {
       const ex = exampleOf(item.generate(seed).prompt);
       if (!ex) continue;
-      sum += grade(item.id, JSON.stringify(ex), seed).awarded;
-      n++;
+      const a = grade(item.id, JSON.stringify(ex), seed).awarded;
+      sum += a; n++; max = Math.max(max, a);
     }
-    if (n > 0) report.push({ id: item.id, avg: sum / n, max: item.points });
+    if (n === 0) { skipped.push(item.id); continue; } // 全占位符，天然不可照抄
+    report.push({ id: item.id, avg: sum / n, max: item.points, worst: max, samples: n });
   }
-  const bad = report.filter((r) => r.avg > 0);
+  // 至少要有若干题是「真的被这条判据覆盖到」的，否则说明示例全成了占位符、
+  // 本用例退化为空转——显式断言覆盖数，防止将来悄悄失效。
+  assert.ok(
+    report.length >= 3,
+    `只有 ${report.length} 道题的示例可解析，本判据覆盖不足（占位符题：${skipped.join(', ')}）`,
+  );
+  const bad = report.filter((r) => r.avg > 0.5);
   assert.deepEqual(
-    bad.map((r) => `${r.id} 平均 ${r.avg.toFixed(2)}/${r.max}`),
+    bad.map((r) => `${r.id} 平均 ${r.avg.toFixed(2)}/${r.max}（最高 ${r.worst}）`),
     [],
-    `照抄题面示例仍有得分（说明示例含有真实答案成分）`,
+    `照抄题面示例的平均得分超过 0.5 分，说明示例含有真实答案成分`,
   );
 });
 
@@ -93,10 +116,13 @@ test('反作弊：R04 示例给出的 position 不得等于真实名次', () => 
     const examplePositionsAllCorrect = names.every((n, i) => o.answer[n].position === i + 1);
     if (examplePositionsAllCorrect) offenders.push(seed);
   }
-  assert.deepEqual(
-    offenders.slice(0, 10),
-    [],
-    `R04 在 ${offenders.length}/${N} 个 seed 下「姓名顺序 = 位置顺序」，示例会泄漏全部 position`,
+  // 4 个名字的排列共 4! = 24 种，「姓名顺序恰好等于位置顺序」的概率是 1/24 ≈ 4.2%。
+  // 所以要求 0 次是不讲概率的；正确判据是「显著高于随机水平」才算结构性问题。
+  const rate = offenders.length / N;
+  assert.ok(
+    rate <= 0.12,
+    `R04 在 ${offenders.length}/${N} 个 seed (${(rate * 100).toFixed(1)}%) 下「姓名顺序 = 位置顺序」；` +
+      `随机水平应为 1/24 ≈ 4.2%，超过 12% 说明是结构性泄漏`,
   );
 });
 
@@ -119,10 +145,14 @@ test('反作弊：D02 不得存在「一个固定答案通杀所有 seed」', ()
   for (const seed of SEEDS) {
     if (grade('D02', template, seed).awarded === 6) full++;
   }
-  assert.equal(
-    full,
-    0,
-    `D02 用同一个模板答案在 ${full}/${N} 个 seed 上拿到满分 —— 答案恒定，考生无需读题`,
+  // D02 是三选一（A/B/C），单靠「固定答 C + 通用理由」在 C 分支的 seed 上本来就应该满分
+  // —— 那是因为那个 seed 的正确答案确实是 C，不是判分缺陷。
+  // 真正要防的是「答案恒定」，所以判据是：命中率不得显著高于 1/3。
+  const rate = full / N;
+  assert.ok(
+    rate <= 0.45,
+    `D02 固定模板在 ${full}/${N} 个 seed (${(rate * 100).toFixed(1)}%) 上满分；` +
+      `三选一结构下限约 33%，超过 45% 说明答案分布又偏了`,
   );
 });
 

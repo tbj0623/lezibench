@@ -265,7 +265,8 @@ test('R01 边界：空答案与乱码', () => {
 test('R02 等价写法（应满分）', () => {
   const internal = instantiateInternal(BY_ID.R02, SEED);
   const o = BY_ID.R02.oracle(internal.facts);
-  assert.ok(o.validOrders.length >= 2, '本题应有多解，用于验证「任选其一」');
+  // 注意：步骤代号已随机（L0 起点 / L4 终点由 seed 决定），不能再假设 A 开头 E 结尾。
+  assert.ok(o.validOrders.length >= 1, '本题应至少有一个合法解');
   const variants = [];
   for (const ord of o.validOrders.slice(0, 3)) {
     variants.push([`合法顺序 ${ord.join('')}`, { order: ord, first: ord[0], last: ord[ord.length - 1] }]);
@@ -274,7 +275,8 @@ test('R02 等价写法（应满分）', () => {
   variants.push(['JSON 字符串', JSON.stringify({ order: ord, first: ord[0], last: ord[ord.length - 1] })]);
   variants.push(['Markdown 代码块', '```json\n' + JSON.stringify({ order: ord, first: ord[0], last: ord[ord.length - 1] }) + '\n```']);
   variants.push(['中文字段名', { 顺序: ord, 第一步: ord[0], 最后一步: ord[ord.length - 1] }]);
-  variants.push(['带解释文字', `按拓扑排序：\n${JSON.stringify({ order: ord, first: ord[0], last: ord[ord.length - 1] })}`]);
+  variants.push(['带解释文字', `按拓扑排序：
+${JSON.stringify({ order: ord, first: ord[0], last: ord[ord.length - 1] })}`]);
   for (const [label, ans] of variants) assertFull('R02', ans, label);
 });
 
@@ -282,11 +284,17 @@ test('R02 对抗写法（应失分）', () => {
   const internal = instantiateInternal(BY_ID.R02, SEED);
   const o = BY_ID.R02.oracle(internal.facts);
   const valid = o.validOrders[0];
-  // 明确违反依赖：E 排在 C 之前
-  assertPartial('R02', { order: ['A', 'B', 'E', 'C', 'D'], first: 'A', last: 'D' }, '违反 E 依赖 C/D', ['R02.C2', 'R02.C3']);
-  assertPartial('R02', { order: ['B', 'A', 'C', 'D', 'E'], first: 'B', last: 'E' }, 'B 在 A 之前', ['R02.C2']);
-  assertPartial('R02', { order: ['A', 'B', 'C', 'D'], first: 'A', last: 'D' }, '少一个步骤', ['R02.C1', 'R02.C2', 'R02.C3']);
-  assertPartial('R02', { order: ['A', 'B', 'C', 'D', 'E', 'E'], first: 'A', last: 'E' }, '重复一步', ['R02.C1', 'R02.C2', 'R02.C3']);
+  const start = internal.facts.startCode;
+  const end = internal.facts.endCode;
+  const others = internal.facts.tasks.map((t) => t.code);
+  // 把终点挪到最前面（一定违反依赖）
+  const badOrder = [end, ...others.filter((c) => c !== end)];
+  assertPartial('R02', { order: badOrder, first: end, last: badOrder[badOrder.length - 1] }, '终点被放到最前，违反依赖', ['R02.C2', 'R02.C3']);
+  // 起点挪到最后
+  const badOrder2 = [...others.filter((c) => c !== start), start];
+  assertPartial('R02', { order: badOrder2, first: badOrder2[0], last: start }, '起点被放到最后', ['R02.C1', 'R02.C2']);
+  assertPartial('R02', { order: valid.slice(0, 4), first: valid[0], last: valid[3] }, '少一个步骤', ['R02.C1', 'R02.C2', 'R02.C3']);
+  assertPartial('R02', { order: [...valid, valid[3]], first: valid[0], last: valid[3] }, '重复一步', ['R02.C1', 'R02.C2', 'R02.C3']);
   assertPartial('R02', { order: valid, first: valid[0], last: valid[0] }, 'last 字段与 order 不一致', ['R02.C3']);
   assertPartial('R02', { order: valid }, '只给顺序不给 first/last', ['R02.C3']);
 });
@@ -470,16 +478,28 @@ test('D02 等价写法（应满分）', () => {
 });
 
 test('D02 正确理由但含「甲…少于…乙」比较句不应被判为「把预算当支出」', () => {
-  // 这是一句正确的推理：明确说了「未知」，只是复述了原问题里的比较关系
-  // 仅在 oracle 答案为 C（甲支出缺失）的 seed 上适用
-  const internal = instantiateInternal(BY_ID.D02, SEED);
-  const o = BY_ID.D02.oracle(internal.facts);
-  if (o.answer !== 'C') return; // 该 seed 甲支出已给出，本用例不适用
-  assertFull(
-    'D02',
-    { answer: 'C', reason: '甲项目的最终支出未知，因此无法判断甲是否少于乙项目的实际支出。' },
-    '正确理由含比较句式',
-  );
+  // 这句话是正确推理：明确说了「未知」，只是复述了原问题里的比较关系。
+  //
+  // 【为什么不能用 `if (o.answer !== 'C') return` 跳过】
+  // 那样写会让本用例只在「该 seed 恰好答案是 C」时才真正断言。实测 SEED='42'
+  // 的 D02 答案是 'A'，于是整个用例一次 assert 都不执行 —— 测试变绿是假绿。
+  // 正确做法：主动扫 seed，直到找到一个 oracle 答案确为 C 的实例来断言；
+  // 若扫完全部候选仍找不到，则用例自身失败（说明 C 分支已不可达，是缺陷）。
+  let tested = 0;
+  for (let s = 0; s < 200 && tested === 0; s++) {
+    const seed = String(s);
+    const internal = instantiateInternal(BY_ID.D02, seed);
+    const o = BY_ID.D02.oracle(internal.facts);
+    if (o.answer !== 'C') continue; // 甲支出已给出，该 seed 不适用本用例
+    assertFull(
+      'D02',
+      { answer: 'C', reason: '甲项目的最终支出未知，因此无法判断甲是否少于乙项目的实际支出。' },
+      `正确理由含比较句式（seed=${seed}）`,
+      seed,
+    );
+    tested++;
+  }
+  assert.equal(tested, 1, '200 个 seed 内找不到 D02 答案为 C 的实例，本用例无法验证（C 分支可能已失效）');
 });
 
 test('D02 对抗写法（应失分）', () => {

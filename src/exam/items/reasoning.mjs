@@ -249,26 +249,24 @@ const R02 = {
   title: '依赖关系与可行顺序',
   generate(seed) {
     const rng = makeRng(`${seed}#R02`);
-    const tasks = [
-      { code: 'A', name: '收货入库' },
-      { code: 'B', name: '质检' },
-      { code: 'C', name: '拍照上架' },
-      { code: 'D', name: '定价' },
-      { code: 'E', name: '开放销售' },
-    ];
-    // 依赖图随 seed 变化，但必须保持两条不变量（否则题面与评分条件会打架）：
-    //   · A 是唯一无前驱的任务 → 必然第一步
-    //   · E 是唯一无后继的任务 → 必然最后一步
-    // 变化点：C 与 D 之间是否加一条先后约束（各占一半）。
-    // 这样 E 始终等 C 和 D，中间两条分支的排列数随之变化（1 或 2 种合法序），
-    // 题面因此不会在多个 seed 下逐字节相同。
-    const deps = { B: ['A'], C: ['B'], D: ['B'], E: ['C', 'D'] };
+    // 步骤代号必须随机：否则固定写 ["A","B","C","D","E"] 在 100% 的 seed 上都合法，
+    // 等于 6 分白送（实测 30/30 全中）。这里把「角色」与「字母代号」解耦：
+    //   L0 = 起点（无前驱），L4 = 终点（无后继），L1/L2/L3 在中间。
+    const roleNames = ['收货入库', '质检', '拍照上架', '定价', '开放销售'];
+    const letters = rng.shuffle(['A', 'B', 'C', 'D', 'E']);
+    const [L0, L1, L2, L3, L4] = letters;
+    const tasks = roleNames.map((name, i) => ({ code: letters[i], name }));
+    const deps = { [L1]: [L0], [L2]: [L1], [L3]: [L1], [L4]: [L2, L3] };
     const cBeforeD = rng.next() < 0.5;
-    if (cBeforeD) deps.D = ['B', 'C']; // D 必须等 C → 强制 C 在 D 之前
-    const facts = { tasks, deps, cBeforeD };
-    const depLines = ['A 收货入库：随时可以开始。', 'B 质检：必须等 A 完成。', 'C 拍照上架：必须等 B 完成。'];
-    depLines.push(cBeforeD ? 'D 定价：必须等 B 和 C 都完成。' : 'D 定价：必须等 B 完成。');
-    depLines.push('E 开放销售：必须等 C 和 D 都完成。');
+    if (cBeforeD) deps[L3] = [L1, L2]; // L3 必须等 L2
+    const facts = { tasks, deps, cBeforeD, startCode: L0, endCode: L4 };
+    const depLines = [
+      `${L0} 收货入库：随时可以开始。`,
+      `${L1} 质检：必须等 ${L0} 完成。`,
+      `${L2} 拍照上架：必须等 ${L1} 完成。`,
+      cBeforeD ? `${L3} 定价：必须等 ${L1} 和 ${L2} 都完成。` : `${L3} 定价：必须等 ${L1} 完成。`,
+      `${L4} 开放销售：必须等 ${L2} 和 ${L3} 都完成。`,
+    ];
     const depText = depLines.join('\n');
     const prompt = [
       '你是「云朵二手书店」的仓管，今天要完成 5 个步骤，每个步骤只用一次、不可并行：',
@@ -289,9 +287,9 @@ const R02 = {
         last: { type: 'text', aliases: ['last', '最后一步', '末步', 'lastStep'] },
       },
       publicCriteria: [
-        { id: 'R02.C1', points: 2, text: '顺序包含 A–E 五步各一次，且以 A（收货入库）开始' },
+        { id: 'R02.C1', points: 2, text: '顺序包含全部五步各一次，且以「收货入库」那一步开头' },
         { id: 'R02.C2', points: 2, text: '满足全部先后依赖约束' },
-        { id: 'R02.C3', points: 2, text: '以 E（开放销售）收尾，且 first/last 字段与 order 首末一致' },
+        { id: 'R02.C3', points: 2, text: '以「开放销售」那一步收尾，且 first/last 字段与 order 首末一致' },
       ],
     };
   },
@@ -318,21 +316,23 @@ const R02 = {
     const order = rawOrder.map((x) => String(x).normalize('NFKC').toUpperCase().replace(/[^A-Z]/g, '')).filter((x) => x.length === 1);
     const expected = facts.tasks.map((t) => t.code);
     const setOk = order.length === expected.length && expected.every((c) => order.includes(c)) && new Set(order).size === order.length;
-    const startsWithA = setOk && order[0] === 'A';
-    const endsWithE = setOk && order[order.length - 1] === 'E';
+    const startCode = facts.startCode || 'A';
+    const endCode = facts.endCode || 'E';
+    const startsCorrect = setOk && order[0] === startCode;
+    const endsCorrect = setOk && order[order.length - 1] === endCode;
     const checks = [];
     checks.push({
       criterionId: 'R02.C1',
       points: 2,
-      passed: startsWithA,
+      passed: startsCorrect,
       reason:
         order.length === 0
           ? '未解析出 order 数组'
           : !setOk
             ? `步骤集合不正确：${JSON.stringify(order)}`
-            : startsWithA
-              ? '五步齐全且从 A 开始'
-              : `五步齐全但并非从 A 开始（首步为 ${order[0]}）`,
+            : startsCorrect
+              ? `五步齐全且从「收货入库」(${startCode}) 开始`
+              : `五步齐全但首步应为「收货入库」(${startCode})，实际为 ${order[0]}`,
     });
     const violations = [];
     if (setOk) {
@@ -350,16 +350,16 @@ const R02 = {
     });
     const firstTxt = parsed.fields.first ? normText(parsed.fields.first).toUpperCase().replace(/[^A-Z]/g, '') : null;
     const lastTxt = parsed.fields.last ? normText(parsed.fields.last).toUpperCase().replace(/[^A-Z]/g, '') : null;
-    // C3 同时校验：order 真的以 E 收尾，且 first/last 字段与 order 首末一致（防止只填对字段、顺序错）
+    // C3 同时校验：order 真的以「开放销售」那一步收尾，且 first/last 字段与 order 首末一致
     const firstOk = setOk && firstTxt === order[0];
     const lastOk = setOk && lastTxt === order[order.length - 1];
     checks.push({
       criterionId: 'R02.C3',
       points: 2,
-      passed: setOk && endsWithE && firstOk && lastOk,
+      passed: setOk && endsCorrect && firstOk && lastOk,
       reason: !setOk
         ? '顺序不完整，无法校验首末步'
-        : !endsWithE
+        : !endsCorrect
           ? `最后一步应为 E（开放销售），实际为 ${order[order.length - 1]}`
           : firstOk && lastOk
             ? `首末步正确：${order[0]} 开始、${order[order.length - 1]} 结束，且字段自洽`

@@ -1,16 +1,16 @@
 {
-  "runId": "run-20261029-180439-6e07b5",
+  "runId": "run-20261029-185705-cc4a1a",
   "seed": "lezi-demo-2026",
-  "startedAt": "2026-10-29T18:04:39.495Z",
-  "finishedAt": "2026-10-29T18:04:40.780Z",
-  "durationMs": 1285,
+  "startedAt": "2026-10-29T18:57:05.168Z",
+  "finishedAt": "2026-10-29T18:57:05.630Z",
+  "durationMs": 462,
   "environment": "node v24.20.0 · win32/x64",
   "demo": true,
   "summary": {
     "examVersion": "1.2.0",
     "graderVersion": "1.2.0",
     "contractVersion": "1.0.0",
-    "catalogFingerprint": "4fa6c87169d69155c130e71c99d5d70b5639b1f64fad15a35069d47f9fa78330",
+    "catalogFingerprint": "a72cf9c4e4abcd1f7474e4fc83f30e7f0b9c69b4a7ff3bfe26015a370b7a5026",
     "total": 77,
     "maxTotal": 100,
     "status": "COMPLETED",
@@ -248,7 +248,7 @@
       "id": "R02",
       "version": "standard",
       "maxPoints": 6,
-      "rawAnswerSha256": "169a86341dce4fab1061debd8fbdc633391754bae8e3a1edd4db7504a9d7ff77",
+      "rawAnswerSha256": "476d13098bbda0b21c0bb4fa68cf9933023575b10b2c544b2a31542df860885d",
       "inputSeed": "ab55ef5a0c34e5e8874439762fb3313f518204b5d204b8e53ba424ac3b37c345",
       "graderVersion": "1.2.0",
       "dimension": "reasoning",
@@ -256,13 +256,13 @@
       "awarded": 6,
       "parsedAnswer": {
         "order": [
-          "A",
-          "B",
-          "C",
           "D",
+          "C",
+          "B",
+          "A",
           "E"
         ],
-        "first": "A",
+        "first": "D",
         "last": "E"
       },
       "checks": [
@@ -270,7 +270,7 @@
           "criterionId": "R02.C1",
           "points": 2,
           "passed": true,
-          "reason": "五步齐全且从 A 开始"
+          "reason": "五步齐全且从「收货入库」(D) 开始"
         },
         {
           "criterionId": "R02.C2",
@@ -282,7 +282,7 @@
           "criterionId": "R02.C3",
           "points": 2,
           "passed": true,
-          "reason": "首末步正确：A 开始、E 结束，且字段自洽"
+          "reason": "首末步正确：D 开始、E 结束，且字段自洽"
         }
       ],
       "gradingStatus": "GRADED",
@@ -717,6 +717,6 @@
     "examVersion": "1.2.0",
     "graderVersion": "1.2.0",
     "contractVersion": "1.0.0",
-    "catalogFingerprint": "4fa6c87169d69155c130e71c99d5d70b5639b1f64fad15a35069d47f9fa78330"
+    "catalogFingerprint": "a72cf9c4e4abcd1f7474e4fc83f30e7f0b9c69b4a7ff3bfe26015a370b7a5026"
   }
 }
