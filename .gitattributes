@@ -1,0 +1,36 @@
+# 统一换行符：仓库内一律用 LF
+#
+# 为什么需要这个文件：
+#   Windows 上 `core.autocrlf=true` 会把提交进 git 的文本文件转成 CRLF，
+#   而 `website/build/build-site.mjs` 生成产物时写的是 LF。
+#   结果就是：本地 `--check` 通过（工作区 LF == 构建 LF），
+#   但 CI（Linux，检出 LF）跑 `--check` 时，
+#   git 里存的是 CRLF、构建产出 LF → 判定「产物漂移」，CI 红。
+#
+#   `.gitattributes` 里的 `text=auto eol=lf` 优先级高于 core.autocrlf，
+#   保证任何人、任何平台检出和提交都是 LF，构建产物与仓库内容一致。
+#
+# 二进制文件不参与换行转换。
+
+* text=auto eol=lf
+
+# 明确的二进制类型
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.webp binary
+*.ico binary
+*.zip binary
+*.gz binary
+*.woff binary
+*.woff2 binary
+*.ttf binary
+*.otf binary
+
+# 这些是生成产物，必须与构建脚本输出逐字节一致
+website/assets/demo-report.html text eol=lf
+website/assets/demo-report.json text eol=lf
+website/assets/demo-summary.txt text eol=lf
+website/*.html text eol=lf
+docs/SCORING.md text eol=lf
