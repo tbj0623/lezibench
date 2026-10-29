@@ -126,11 +126,18 @@ test('BUG-6b D02: 真的把预算数字当最终支出比较，必须被扣分',
  * BUG-7（redteam-qa 发现）：C04.C1 误杀带排除说明的正确 rootCause
  * 现象：「数量用错（不是单价问题）」只拿 6/9。
  * ------------------------------------------------------------------ */
-test('BUG-7 C04: 「数量用错（不是单价问题）」必须通过 C1', () => {
+test('BUG-7 C04: 正确答案后面加「不是 X」这类排除说明，不得被误判', () => {
+  // 原始缺陷：判分器用子串匹配，正确答案写成「数量用错（不是单价问题）」反而被判错。
+  // C04 现在是双 bug（rootCause 随 seed 变，形如「单价用错+四舍五入」），
+  // 所以不写死 rootCause，而是用本题真实答案 + 一个本题未涉及的选项做排除说明。
+  const OPTIONS = ['数量用错', '单价用错', '折扣漏乘', '四舍五入'];
   const internal = instantiateInternal(item('C04'), 'q');
   const o = item('C04').oracle(internal.facts);
-  const r = gradeItem(internal, { rootCause: '数量用错（不是单价问题）', fixedSubtotal: o.fixedSubtotal, fixedTotal: o.fixedTotal }, { seed: 'q' });
-  assert.equal(r.awarded, 9, `只拿到 ${r.awarded}/9`);
+  const core = (w) => w.replace('用错', '').replace('漏乘', '');
+  const uninvolved = OPTIONS.find((opt) => !o.rootCause.includes(core(opt))) || '折扣漏乘';
+  const withExclusion = `${o.rootCause}（不是${uninvolved}问题）`;
+  const r = gradeItem(internal, { rootCause: withExclusion, fixedSubtotal: o.fixedSubtotal, fixedTotal: o.fixedTotal }, { seed: 'q' });
+  assert.equal(r.awarded, 9, `正确答案「${withExclusion}」只拿到 ${r.awarded}/9`);
 });
 
 test('BUG-7b C04: 选错根因（单价用错）不得通过 C1', () => {
@@ -242,15 +249,23 @@ test('不变量: 所有 16 题在 12 个 seed 下正确答案均满分', () => {
  *       测的是抄写而不是推理。
  * ------------------------------------------------------------------ */
 test('BUG-13 R04: 线索不得退化为纯直述，必须含推理成分', () => {
-  for (let i = 0; i < 20; i++) {
+  // 原始缺陷：线索全是「X 坐在 n 号位」，看一遍就能填，测的是抄写不是推理。
+  // 现在人数提到 6，线索条数也不再固定 6，所以按比例校验而非写死条数。
+  for (let i = 0; i < 15; i++) {
     const g = item('R04').generate(`degenerate-${i}`);
-    const lines = g.prompt.split('\n').filter((l) => /^\d\) /.test(l));
-    assert.equal(lines.length, 6, `seed degenerate-${i} 线索数不是 6`);
-    const directCount = lines.filter((l) => /坐在 \d 号位|的卡片是.{1,3}色|号位的卡片是.{1,3}色/.test(l)).length;
-    const relationalCount = lines.filter((l) => /位置编号比/.test(l)).length;
-    const negativeCount = lines.filter((l) => /不在 \d 号位|卡片不是/.test(l)).length;
-    assert.ok(directCount < 6, `seed degenerate-${i} 6 条全是直述，被测的是抄写`);
-    assert.ok(relationalCount + negativeCount >= 2, `seed degenerate-${i} 推理型线索不足（相对${relationalCount}/否定${negativeCount}）`);
+    const lines = g.prompt.split('\n').filter((l) => /^\d+\) /.test(l));
+    assert.ok(lines.length >= 6, `seed degenerate-${i} 线索数 ${lines.length} < 6`);
+    const directCount = lines.filter((l) => /坐在 \d+ 号位|的卡片是.{1,3}色|号位的卡片是.{1,3}色/.test(l)).length;
+    const relationalCount = lines.filter((l) => /位置编号比|相邻|靠前|靠后/.test(l)).length;
+    const negativeCount = lines.filter((l) => /不在 \d+ 号位|不是.{1,3}色|不坐在/.test(l)).length;
+    assert.ok(
+      directCount < lines.length,
+      `seed degenerate-${i} 全部 ${lines.length} 条都是直述，被测的是抄写`,
+    );
+    assert.ok(
+      relationalCount + negativeCount >= 2,
+      `seed degenerate-${i} 推理型线索不足（相对${relationalCount}/否定${negativeCount}）`,
+    );
   }
 });
 

@@ -292,7 +292,7 @@
           <p>
             每局还会记录一个 <code>catalogFingerprint</code>：由 16 道题的 id、维度、难度、分值、批次，
             每条子条件的 id / 分值 / 文本，<strong>以及两个固定探针 seed 下的题面</strong>共同算出的 SHA-256。当前值以
-            <code>doctor</code> 输出为准（本仓库当前是 <code data-fp>a72cf9c4e4ab…</code>）。
+            <code>doctor</code> 输出为准（本仓库当前是 <code data-fp>d44f1304968e…</code>）。
           </p>
           <p>
             指纹的作用是「发现题库被改过」：两份报告如果版本都相同、但指纹不同，
@@ -340,18 +340,18 @@
             <article class="item">
               <div class="item-head">
                 <span class="item-id">I01</span>
-                <span class="item-title">最后一条有效通知覆盖原计划</span>
+                <span class="item-title">多条通知互相作废后的最终要求</span>
                 <span class="item-meta"><span>基础</span><span>第 1 批</span><span class="p">4 分</span></span>
               </div>
               <ul class="crit">
-                <li><span class="cid">I01.C1</span><span class="cp">1 分</span><span class="ct">截止时间与第2条通知给出的最终日期和时段完全一致（不得沿用第1条的原始日期或中午12点）</span></li>
-                <li><span class="cid">I01.C2</span><span class="cp">3 分</span><span class="ct">预算表附件要求与第3条通知的最终要求一致（该附就附、该不附就不附）</span></li>
+                <li><span class="cid">I01.C1</span><span class="cp">1 分</span><span class="ct">deadline 字段与全部通知执行完毕后最终生效的截止时间一致</span></li>
+                <li><span class="cid">I01.C2</span><span class="cp">3 分</span><span class="ct">budgetAttached 字段与全部通知执行完毕后最终生效的附件要求一致</span></li>
               </ul>
             </article>
             <article class="item">
               <div class="item-head">
                 <span class="item-id">I02</span>
-                <span class="item-title">白名单 + 例外 + 状态过滤</span>
+                <span class="item-title">多豁免条款与条款更正</span>
                 <span class="item-meta"><span>标准</span><span>第 2 批</span><span class="p">6 分</span></span>
               </div>
               <ul class="crit">
@@ -363,25 +363,25 @@
             <article class="item">
               <div class="item-head">
                 <span class="item-id">I03</span>
-                <span class="item-title">多条件优先级与例外</span>
+                <span class="item-title">多条件优先级、阈值下调与净额口径</span>
                 <span class="item-meta"><span>标准</span><span>第 3 批</span><span class="p">6 分</span></span>
               </div>
               <ul class="crit">
-                <li><span class="cid">I03.C1</span><span class="cp">2 分</span><span class="ct">rule 字段命中正确的规则编号</span></li>
-                <li><span class="cid">I03.C2</span><span class="cp">2 分</span><span class="ct">decision 字段命中正确的审批结论</span></li>
-                <li><span class="cid">I03.C3</span><span class="cp">2 分</span><span class="ct">escalate 字段正确</span></li>
+                <li><span class="cid">I03.C1</span><span class="cp">2 分</span><span class="ct">rule 字段给出实际命中的规则编号</span></li>
+                <li><span class="cid">I03.C2</span><span class="cp">2 分</span><span class="ct">decision 字段与命中规则对应的审批结论一致</span></li>
+                <li><span class="cid">I03.C3</span><span class="cp">2 分</span><span class="ct">escalate 字段与命中规则对应的人工介入要求一致</span></li>
               </ul>
             </article>
             <article class="item">
               <div class="item-head">
                 <span class="item-id">I04</span>
-                <span class="item-title">四步指令更新后的一致状态</span>
+                <span class="item-title">检查点回滚与条件指令后的最终状态</span>
                 <span class="item-meta"><span>挑战</span><span>第 4 批</span><span class="p">9 分</span></span>
               </div>
               <ul class="crit">
-                <li><span class="cid">I04.C1</span><span class="cp">3 分</span><span class="ct">最终状态 = 第4条指令指定的状态</span></li>
-                <li><span class="cid">I04.C2</span><span class="cp">3 分</span><span class="ct">最终负责人 = 第3条指定的负责人</span></li>
-                <li><span class="cid">I04.C3</span><span class="cp">3 分</span><span class="ct">最终截止时间 = 恢复后的初始日期</span></li>
+                <li><span class="cid">I04.C1</span><span class="cp">3 分</span><span class="ct">status 字段与九条指令执行完毕后的最终状态一致</span></li>
+                <li><span class="cid">I04.C2</span><span class="cp">3 分</span><span class="ct">owner 字段与九条指令执行完毕后的最终负责人一致</span></li>
+                <li><span class="cid">I04.C3</span><span class="cp">3 分</span><span class="ct">deadline 字段与九条指令执行完毕后的最终截止时间一致</span></li>
               </ul>
             </article>
           </div>
@@ -400,8 +400,8 @@
                 <span class="item-meta"><span>基础</span><span>第 1 批</span><span class="p">4 分</span></span>
               </div>
               <ul class="crit">
-                <li><span class="cid">R01.C1</span><span class="cp">1 分</span><span class="ct">原价合计正确（活动前）</span></li>
-                <li><span class="cid">R01.C2</span><span class="cp">3 分</span><span class="ct">应付款正确（已扣满减）</span></li>
+                <li><span class="cid">R01.C1</span><span class="cp">1 分</span><span class="ct">活动前原价合计正确</span></li>
+                <li><span class="cid">R01.C2</span><span class="cp">3 分</span><span class="ct">最终应付款正确（已计入单品促销、优惠券抵扣与运费）</span></li>
               </ul>
             </article>
             <article class="item">
@@ -411,9 +411,9 @@
                 <span class="item-meta"><span>标准</span><span>第 2 批</span><span class="p">6 分</span></span>
               </div>
               <ul class="crit">
-                <li><span class="cid">R02.C1</span><span class="cp">2 分</span><span class="ct">顺序包含全部五步各一次，且以「收货入库」那一步开头</span></li>
-                <li><span class="cid">R02.C2</span><span class="cp">2 分</span><span class="ct">满足全部先后依赖约束</span></li>
-                <li><span class="cid">R02.C3</span><span class="cp">2 分</span><span class="ct">以「开放销售」那一步收尾，且 first/last 字段与 order 首末一致</span></li>
+                <li><span class="cid">R02.C1</span><span class="cp">2 分</span><span class="ct">顺序包含全部工序代号各一次，数量与题面一致</span></li>
+                <li><span class="cid">R02.C2</span><span class="cp">2 分</span><span class="ct">满足题面列出的全部先后依赖</span></li>
+                <li><span class="cid">R02.C3</span><span class="cp">2 分</span><span class="ct">顺序同时满足两条独立工序链各自的内部次序</span></li>
               </ul>
             </article>
             <article class="item">
@@ -423,20 +423,20 @@
                 <span class="item-meta"><span>标准</span><span>第 3 批</span><span class="p">6 分</span></span>
               </div>
               <ul class="crit">
-                <li><span class="cid">R03.C1</span><span class="cp">2 分</span><span class="ct">方案满足份数与蛋白质两个下限</span></li>
-                <li><span class="cid">R03.C2</span><span class="cp">2 分</span><span class="ct">未超过每种餐盒的份数上限</span></li>
-                <li><span class="cid">R03.C3</span><span class="cp">2 分</span><span class="ct">总价达到理论最低（与穷举结果一致）</span></li>
+                <li><span class="cid">R03.C1</span><span class="cp">2 分</span><span class="ct">方案同时满足件数与指标两个下限</span></li>
+                <li><span class="cid">R03.C2</span><span class="cp">2 分</span><span class="ct">各模块采购量均未超过其上限</span></li>
+                <li><span class="cid">R03.C3</span><span class="cp">2 分</span><span class="ct">总花费达到所有可行方案中的最低值</span></li>
               </ul>
             </article>
             <article class="item">
               <div class="item-head">
                 <span class="item-id">R04</span>
-                <span class="item-title">六线索排除推理（唯一解）</span>
+                <span class="item-title">多人多色座位推理（唯一解）</span>
                 <span class="item-meta"><span>挑战</span><span>第 4 批</span><span class="p">9 分</span></span>
               </div>
               <ul class="crit">
-                <li><span class="cid">R04.C1</span><span class="cp">3 分</span><span class="ct">四个人的位置全部正确</span></li>
-                <li><span class="cid">R04.C2</span><span class="cp">3 分</span><span class="ct">四个人的卡片颜色全部正确</span></li>
+                <li><span class="cid">R04.C1</span><span class="cp">3 分</span><span class="ct">六个人的位置全部正确</span></li>
+                <li><span class="cid">R04.C2</span><span class="cp">3 分</span><span class="ct">六个人的卡片颜色全部正确</span></li>
                 <li><span class="cid">R04.C3</span><span class="cp">3 分</span><span class="ct">位置与颜色的一一对应关系全部正确</span></li>
               </ul>
             </article>
@@ -457,7 +457,7 @@
               </div>
               <ul class="crit">
                 <li><span class="cid">D01.C1</span><span class="cp">1 分</span><span class="ct">重复项已去掉，且没有漏掉任何不同名称</span></li>
-                <li><span class="cid">D01.C2</span><span class="cp">3 分</span><span class="ct">顺序与给定的摊位序号升序完全一致</span></li>
+                <li><span class="cid">D01.C2</span><span class="cp">3 分</span><span class="ct">顺序与摊位序号、名录序号的规定完全一致</span></li>
               </ul>
             </article>
             <article class="item">
@@ -467,9 +467,9 @@
                 <span class="item-meta"><span>标准</span><span>第 2 批</span><span class="p">6 分</span></span>
               </div>
               <ul class="crit">
-                <li><span class="cid">D02.C1</span><span class="cp">2 分</span><span class="ct">答案与题面事实一致：甲支出已给出时按数值比较得出 A 或 B，未给出时选 C</span></li>
-                <li><span class="cid">D02.C2</span><span class="cp">2 分</span><span class="ct">理由与所选答案一致：给出支出时引用两个真实数字并说明方向，缺失时指出信息不足</span></li>
-                <li><span class="cid">D02.C3</span><span class="cp">2 分</span><span class="ct">没有把预算数字当作最终实际支出，也没有声称已给出的支出缺失</span></li>
+                <li><span class="cid">D02.C1</span><span class="cp">2 分</span><span class="ct">结论与台账中的实际支出合计一致</span></li>
+                <li><span class="cid">D02.C2</span><span class="cp">2 分</span><span class="ct">依据与结论一致：要么引用双方实际支出合计并给出正确方向，要么指出缺口在哪一行</span></li>
+                <li><span class="cid">D02.C3</span><span class="cp">2 分</span><span class="ct">没有把预算数或未入账的估计值当成实际支出</span></li>
               </ul>
             </article>
             <article class="item">
@@ -492,8 +492,8 @@
               </div>
               <ul class="crit">
                 <li><span class="cid">D04.C1</span><span class="cp">3 分</span><span class="ct">每个人的等级判定全部正确</span></li>
-                <li><span class="cid">D04.C2</span><span class="cp">3 分</span><span class="ct">金牌与银牌人数统计正确</span></li>
-                <li><span class="cid">D04.C3</span><span class="cp">3 分</span><span class="ct">普通人数统计正确（即总人数与前三项自洽）</span></li>
+                <li><span class="cid">D04.C2</span><span class="cp">3 分</span><span class="ct">钻石、白金、金牌、银牌四种等级的人数统计全部正确</span></li>
+                <li><span class="cid">D04.C3</span><span class="cp">3 分</span><span class="ct">普通人数统计正确，且五项合计与总人数自洽</span></li>
               </ul>
             </article>
           </div>
@@ -508,48 +508,48 @@
             <article class="item">
               <div class="item-head">
                 <span class="item-id">C01</span>
-                <span class="item-title">指出算式中的错误并纠正</span>
+                <span class="item-title">指出算式的错误类别并给出正确结果</span>
                 <span class="item-meta"><span>基础</span><span>第 1 批</span><span class="p">4 分</span></span>
               </div>
               <ul class="crit">
-                <li><span class="cid">C01.C1</span><span class="cp">1 分</span><span class="ct">正确判定原等式是否成立（isCorrect 与实际等式一致）</span></li>
-                <li><span class="cid">C01.C2</span><span class="cp">3 分</span><span class="ct">给出正确的和</span></li>
+                <li><span class="cid">C01.C1</span><span class="cp">1 分</span><span class="ct">正确判定所给结果是否成立，并在需要时给出正确的错误类别</span></li>
+                <li><span class="cid">C01.C2</span><span class="cp">3 分</span><span class="ct">给出该表达式按常规运算顺序计算的正确值</span></li>
               </ul>
             </article>
             <article class="item">
               <div class="item-head">
                 <span class="item-id">C02</span>
-                <span class="item-title">四步修改后的最新库存状态</span>
+                <span class="item-title">十步台账后的最新库存状态</span>
                 <span class="item-meta"><span>标准</span><span>第 2 批</span><span class="p">6 分</span></span>
               </div>
               <ul class="crit">
-                <li><span class="cid">C02.C1</span><span class="cp">2 分</span><span class="ct">前三步处理后的库存（撤回前）正确</span></li>
-                <li><span class="cid">C02.C2</span><span class="cp">2 分</span><span class="ct">正确理解「撤回第2步」＝把那笔出库加回来</span></li>
-                <li><span class="cid">C02.C3</span><span class="cp">2 分</span><span class="ct">最终库存数值正确</span></li>
+                <li><span class="cid">C02.C1</span><span class="cp">2 分</span><span class="ct">第一次作废之前的合计库存正确</span></li>
+                <li><span class="cid">C02.C2</span><span class="cp">2 分</span><span class="ct">从第一次作废到最终状态之间的库存变化量正确（作废、反悔、调拨的影响都算对）</span></li>
+                <li><span class="cid">C02.C3</span><span class="cp">2 分</span><span class="ct">最终合计库存数值正确</span></li>
               </ul>
             </article>
             <article class="item">
               <div class="item-head">
                 <span class="item-id">C03</span>
-                <span class="item-title">新旧规则更迭后的合法操作</span>
+                <span class="item-title">三版规则更迭后的合法操作</span>
                 <span class="item-meta"><span>标准</span><span>第 3 批</span><span class="p">6 分</span></span>
               </div>
               <ul class="crit">
-                <li><span class="cid">C03.C1</span><span class="cp">2 分</span><span class="ct">四笔申请适用的规则版本（旧/新）全部正确</span></li>
-                <li><span class="cid">C03.C2</span><span class="cp">2 分</span><span class="ct">四笔申请是否需要人工审批全部正确</span></li>
-                <li><span class="cid">C03.C3</span><span class="cp">2 分</span><span class="ct">第2笔按「提交日期所属的那一版规则」判定（按提交时间，不按审批时间）</span></li>
+                <li><span class="cid">C03.C1</span><span class="cp">2 分</span><span class="ct">八笔申请最终适用的规则版本全部正确</span></li>
+                <li><span class="cid">C03.C2</span><span class="cp">2 分</span><span class="ct">八笔申请是否需要人工审批全部正确</span></li>
+                <li><span class="cid">C03.C3</span><span class="cp">2 分</span><span class="ct">被追溯条款改判的申请与适用过渡期例外的申请，两者判定都正确</span></li>
               </ul>
             </article>
             <article class="item">
               <div class="item-head">
                 <span class="item-id">C04</span>
-                <span class="item-title">找出错误根源、修复并算最终结果</span>
+                <span class="item-title">找出两处互相掩盖的错误并算出修复后的结果</span>
                 <span class="item-meta"><span>挑战</span><span>第 4 批</span><span class="p">9 分</span></span>
               </div>
               <ul class="crit">
-                <li><span class="cid">C04.C1</span><span class="cp">3 分</span><span class="ct">错误根源指出「数量用错」</span></li>
-                <li><span class="cid">C04.C2</span><span class="cp">3 分</span><span class="ct">修复后小计正确</span></li>
-                <li><span class="cid">C04.C3</span><span class="cp">3 分</span><span class="ct">修复后应付总额正确（已乘折扣）</span></li>
+                <li><span class="cid">C04.C1</span><span class="cp">3 分</span><span class="ct">两处错误的类别都指出正确</span></li>
+                <li><span class="cid">C04.C2</span><span class="cp">3 分</span><span class="ct">修复后的小计正确</span></li>
+                <li><span class="cid">C04.C3</span><span class="cp">3 分</span><span class="ct">修复后的应付总额正确（已按折扣率计算并保留两位小数）</span></li>
               </ul>
             </article>
           </div>

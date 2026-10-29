@@ -22,17 +22,22 @@ function allPerms(arr) {
   return out;
 }
 
-test('R04: 题面必须显式声明 4 种颜色（否则第 4 人颜色欠定）', () => {
+test('R04: 题面必须显式声明全部人名与颜色（否则未提到的人颜色欠定）', () => {
+  // 这条断言源自一个真实缺陷：早期题面只写了线索里提到的名字，
+  // 导致「第 4 个人」从未出现在题面里，但判分要求所有人都对 → 满分理论上不可能。
+  // 现在人数由题目自己决定，所以不写死 4，而是按 facts 校验题面完整性。
   for (const seed of ['a', 'b', 'host-trial-2026', 'host-trial-v2', '42', 'zzz']) {
     const g = byId('R04').generate(seed);
-    const colors = g.facts.colors;
-    assert.equal(colors.length, 4);
-    // 题面里必须把这 4 种颜色都写出来
+    const { names, colors } = g.facts;
+    assert.ok(names.length >= 4, `seed=${seed} 人数应 >= 4，实际 ${names.length}`);
+    assert.equal(names.length, colors.length, `seed=${seed} 人数与颜色数应一致`);
+    for (const n of names) {
+      assert.ok(g.prompt.includes(n), `seed=${seed} 题面缺少人名「${n}」`);
+    }
     for (const c of colors) {
       assert.ok(g.prompt.includes(c), `seed=${seed} 题面缺少颜色「${c}」`);
     }
-    // 只能出现这 4 种颜色的名字（不能暗示更大的色池）
-    assert.ok(g.prompt.includes('恰好'), '题面必须说明颜色集合是「恰好」这四种');
+    assert.ok(g.prompt.includes('恰好'), '题面必须说明颜色集合是「恰好」这些');
   }
 });
 

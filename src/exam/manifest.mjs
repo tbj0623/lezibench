@@ -9,8 +9,8 @@ import data from './items/data.mjs';
 import correction from './items/correction.mjs';
 import { sha256Hex } from './rng.mjs';
 
-export const EXAM_VERSION = '1.2.0';
-export const GRADER_VERSION = '1.2.0';
+export const EXAM_VERSION = '1.3.0';
+export const GRADER_VERSION = '1.3.0';
 export const SCORING_CONTRACT_VERSION = '1.0.0';
 
 export const DIMENSIONS = [

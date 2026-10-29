@@ -92,19 +92,8 @@
             <p class="claim">得 <strong>1/4</strong>，有 1 条条件未通过。</p>
           </div>
           <p class="detail">
-            <code>R01.C2 · 3 分</code>　应付款应为 65，实际为 70
+            <code>R01.C2 · 3 分</code>　最终应付款应为 572.5，实际为 637
             <br><span class="muted">两条条件独立计分：算对原价拿 1 分，算错应付款再丢 3 分。不会因为「整体思路对」就给中间分。</span>
-          </p>
-        </article>
-
-        <article class="ev">
-          <div>
-            <h3>R04 · 六线索排除推理（唯一解）</h3>
-            <p class="claim">得 <strong>3/9</strong>，有 2 条条件未通过。</p>
-          </div>
-          <p class="detail">
-            <code>R04.C2 · 3 分</code>　3/4 人颜色正确<br><code>R04.C3 · 3 分</code>　3/4 人的位置与颜色同时正确
-            <br><span class="muted">三条条件都要求「全部正确」才给分：位置全对 3 分、颜色全对 3 分、配对全对 3 分。错一个人会同时丢掉后两项。</span>
           </p>
         </article>
 
@@ -114,29 +103,29 @@
             <p class="claim">得 <strong>0/6</strong>，有 3 条条件未通过。</p>
           </div>
           <p class="detail">
-            <code>D02.C1 · 2 分</code>　答案应为 C（信息不足），实际为「A」<br><code>D02.C2 · 2 分</code>　理由必须同时引用甲(33)、乙(29)的实际支出并说明方向；实际为「甲项目预算比乙低,所以更省钱」<br><code>D02.C3 · 2 分</code>　结论本身错误，无法通过此项
+            <code>D02.C1 · 2 分</code>　答案应为 C，实际为「A」<br><code>D02.C2 · 2 分</code>　理由必须同时指出是「甲」的「实际支出」缺失（当前：甲=true，实际支出=false，缺失词=false）<br><code>D02.C3 · 2 分</code>　结论本身错误，无法通过此项
             <br><span class="muted">这题随机生成三种情形（A / B / C），不是固定答案。判分看三件事：选项对不对、理由是否引用了实际给出的数字、有没有把预算当成实际支出。</span>
           </p>
         </article>
 
         <article class="ev">
           <div>
-            <h3>C02 · 四步修改后的最新库存状态</h3>
+            <h3>C02 · 十步台账后的最新库存状态</h3>
             <p class="claim">得 <strong>2/6</strong>，有 2 条条件未通过。</p>
           </div>
           <p class="detail">
-            <code>C02.C2 · 2 分</code>　撤回后应比撤回前多 3 件，实际差 0 件<br><code>C02.C3 · 2 分</code>　最终库存应为 84，实际为 81
+            <code>C02.C2 · 2 分</code>　变化量应为 54，实际为 0<br><code>C02.C3 · 2 分</code>　最终合计库存应为 573，实际为 519
             <br><span class="muted">「撤回第 2 步的出库单」意味着把那笔出库<strong>加回来</strong>。C02.C2 专门检查「最终值 − 撤回前值」是否等于撤回数量，所以两步都算错时仍可能单独拿到这一分。</span>
           </p>
         </article>
 
         <article class="ev">
           <div>
-            <h3>C03 · 新旧规则更迭后的合法操作</h3>
+            <h3>C03 · 三版规则更迭后的合法操作</h3>
             <p class="claim">得 <strong>2/6</strong>，有 2 条条件未通过。</p>
           </div>
           <p class="detail">
-            <code>C03.C1 · 2 分</code>　3/4 笔规则版本正确；a2(规则旧/人工true，实际新/true)<br><code>C03.C3 · 2 分</code>　第2笔应按旧规则判定（提交于 2 月 22 日，金额 3645，需人工=true），实际为 新/true
+            <code>C03.C1 · 2 分</code>　7/8 笔规则版本正确；a2(应为旧/false，实际新/true)<br><code>C03.C2 · 2 分</code>　7/8 笔人工审批判断正确
             <br><span class="muted">关键约束是「规则按<strong>提交时间</strong>适用，不按审批时间」。判分器把「规则版本」和「是否人工」拆成两条，再加一条专门盯第 2 笔的陷阱条件。</span>
           </p>
         </article>

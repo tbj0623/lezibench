@@ -1,26 +1,26 @@
 {
-  "examVersion": "1.2.0",
-  "graderVersion": "1.2.0",
-  "catalogFingerprint": "a72cf9c4e4abcd1f7474e4fc83f30e7f0b9c69b4a7ff3bfe26015a370b7a5026",
+  "examVersion": "1.3.0",
+  "graderVersion": "1.3.0",
+  "catalogFingerprint": "d44f1304968e7ed4eee26be5b3491d1cf35d8f461987343546815ad4e73dae1f",
   "criteriaInjected": {
     "items": 16,
     "criteria": 44
   },
   "scoreCard": {
-    "total": 77,
-    "level": "良好",
-    "fails": 10
+    "total": 83,
+    "level": "优秀",
+    "fails": 8
   },
   "whatFails": {
-    "lost": 5,
-    "fails": 10
+    "lost": 4,
+    "fails": 8
   },
   "metaReplacedIn": 0,
   "demo": {
     "runId": "run-demo-lezibench-fixed",
     "seed": "lezi-demo-2026",
-    "total": 77,
-    "level": "良好",
+    "total": 83,
+    "level": "优秀",
     "status": "COMPLETED",
     "demo": true,
     "dims": [
@@ -33,7 +33,7 @@
       {
         "key": "reasoning",
         "label": "逻辑推理",
-        "awarded": 16,
+        "awarded": 22,
         "max": 25
       },
       {
@@ -57,12 +57,6 @@
         "max": 4
       },
       {
-        "id": "R04",
-        "title": "六线索排除推理（唯一解）",
-        "awarded": 3,
-        "max": 9
-      },
-      {
         "id": "D02",
         "title": "区分事实、推断与信息不足",
         "awarded": 0,
@@ -70,13 +64,13 @@
       },
       {
         "id": "C02",
-        "title": "四步修改后的最新库存状态",
+        "title": "十步台账后的最新库存状态",
         "awarded": 2,
         "max": 6
       },
       {
         "id": "C03",
-        "title": "新旧规则更迭后的合法操作",
+        "title": "三版规则更迭后的合法操作",
         "awarded": 2,
         "max": 6
       }
@@ -86,31 +80,19 @@
         "item": "R01",
         "crit": "R01.C2",
         "pts": 3,
-        "reason": "应付款应为 65，实际为 70"
-      },
-      {
-        "item": "R04",
-        "crit": "R04.C2",
-        "pts": 3,
-        "reason": "3/4 人颜色正确"
-      },
-      {
-        "item": "R04",
-        "crit": "R04.C3",
-        "pts": 3,
-        "reason": "3/4 人的位置与颜色同时正确"
+        "reason": "最终应付款应为 572.5，实际为 637"
       },
       {
         "item": "D02",
         "crit": "D02.C1",
         "pts": 2,
-        "reason": "答案应为 C（信息不足），实际为「A」"
+        "reason": "答案应为 C，实际为「A」"
       },
       {
         "item": "D02",
         "crit": "D02.C2",
         "pts": 2,
-        "reason": "理由必须同时引用甲(33)、乙(29)的实际支出并说明方向；实际为「甲项目预算比乙低,所以更省钱」"
+        "reason": "理由必须同时指出是「甲」的「实际支出」缺失（当前：甲=true，实际支出=false，缺失词=false）"
       },
       {
         "item": "D02",
@@ -122,28 +104,28 @@
         "item": "C02",
         "crit": "C02.C2",
         "pts": 2,
-        "reason": "撤回后应比撤回前多 3 件，实际差 0 件"
+        "reason": "变化量应为 54，实际为 0"
       },
       {
         "item": "C02",
         "crit": "C02.C3",
         "pts": 2,
-        "reason": "最终库存应为 84，实际为 81"
+        "reason": "最终合计库存应为 573，实际为 519"
       },
       {
         "item": "C03",
         "crit": "C03.C1",
         "pts": 2,
-        "reason": "3/4 笔规则版本正确；a2(规则旧/人工true，实际新/true)"
+        "reason": "7/8 笔规则版本正确；a2(应为旧/false，实际新/true)"
       },
       {
         "item": "C03",
-        "crit": "C03.C3",
+        "crit": "C03.C2",
         "pts": 2,
-        "reason": "第2笔应按旧规则判定（提交于 2 月 22 日，金额 3645，需人工=true），实际为 新/true"
+        "reason": "7/8 笔人工审批判断正确"
       }
     ],
-    "examVersion": "1.2.0",
-    "graderVersion": "1.2.0"
+    "examVersion": "1.3.0",
+    "graderVersion": "1.3.0"
   }
 }
