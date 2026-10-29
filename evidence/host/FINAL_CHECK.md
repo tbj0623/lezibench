@@ -86,7 +86,7 @@ node scripts/cli.mjs version    # → exam 1.1.0 / grader 1.1.0 / node v24.20.0
 
 round 5（exam v1.0.0）时曾用最新同步版本重新生成报告，与旧版**逐字节一致**，说明当时 `cli.mjs` / `runner.mjs` 的改动不影响那一局的判分结果。
 
-**但当前交付已换到 exam v1.2.0（修复 R02 答案恒定、D02 判分过宽、R04 姓名顺序泄漏），该结论不再适用**。当前 `evidence/host/report.*` 全部由 `run-20261029-185817-d153d2` 生成：
+**但当前交付已换到 exam v1.2.0（修复 R02 答案恒定、照抄示例得分），该结论不再适用**。当前 `evidence/host/report.*` 全部由 `run-20261029-185817-d153d2` 生成：
 
 ```bash
 node scripts/cli.mjs report --run run-20261029-185817-d153d2 --format html    --out evidence/host/report.html
