@@ -134,7 +134,7 @@ node --test tests/*.test.mjs        # 期望：203 pass / 0 fail
 node --input-type=module -e "import('./src/exam/manifest.mjs').then(m=>console.log(m.catalogFingerprint()))"
 ```
 
-期望 `d44f1304968e7ed4…`（v1.3.0）。如果不是这个值，说明代码与文档不一致。
+期望 `6e24cad28bd680c4…`（v1.3.0）。如果不是这个值，说明代码与文档不一致。
 
 ### 5.3 独立跑一场真实考试
 

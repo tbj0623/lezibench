@@ -641,6 +641,35 @@ const D03 = {
  *      改按常规规则判，最终等级封顶在银牌 —— 例外之中还有例外，且带封顶；
  *   5) 阈值全部踩边界：积分恰好等于线、比线少 1、年龄恰好 18、恰好 20。
  */
+/**
+ * D04 的判级规则（**唯一真相源**）。
+ *
+ * 抽成独立函数的原因：出题时要用它校验「扰动后的画像仍然五级齐备、例外链仍然触发」，
+ * 判分时要用它算正确答案。两边各写一遍必然漂移，所以只写一遍。
+ *
+ * 返回 { lv, capped }：capped 表示这条命中「例外一的例外」的封顶银牌规则。
+ */
+function d04Classify(t, facts) {
+  let lv = '普通';
+  if (t.points >= facts.diamondLine && t.active && t.years >= 3) lv = '钻石';
+  else if (t.points >= facts.platinumLine && t.active && t.invite && t.years >= 2) lv = '白金';
+  else if (t.points >= facts.goldLine && t.active && t.age >= 20) lv = '金牌';
+  else if (t.points >= facts.silverLine && t.active && (t.age >= 18 || t.invite)) lv = '银牌';
+
+  let capped = false;
+  if (t.age < 18) {
+    if (t.years >= 5 && t.active) {
+      if (lv === '钻石' || lv === '白金' || lv === '金牌') {
+        lv = '银牌';
+        capped = true;
+      }
+    } else {
+      lv = '普通';
+    }
+  }
+  return { lv, capped };
+}
+
 const D04_ROSTER = ['甲', '乙', '丙', '丁', '戊', '己', '庚', '辛', '壬', '癸', '子', '丑', '寅', '卯'];
 const D04_LEVELS = ['钻石', '白金', '金牌', '银牌', '普通'];
 
@@ -676,7 +705,41 @@ const D04 = {
       { age: 15, points: platinumLine + 50, active: false, invite: false, years: 7 }, // 老会员但不活跃 → 例外一 → 普通
       { age: 17, points: goldLine + 100, active: true, invite: true, years: 5 },      // 例外一的例外 → 常规为银牌，封顶银牌
     ];
-    const tiers = profiles.map((p, i) => ({ name: names[i], ...p }));
+    // ---- 按 seed 扰动画像属性，让「各等级人数」随 seed 变化 ----
+    //
+    // 为什么必须扰动：上面 14 个画像是写死的，判级只依赖相对阈值，
+    // 所以每个 seed 的分布恒为 钻石1/白金1/金牌3/银牌5/普通4。
+    // 后果是考生**不用读题**，只要记住这 5 个数字就能通过 D04.C2（3 分）和
+    // D04.C3（3 分）—— 实测 20/20 个 seed 全过，6/9 分白送。
+    //
+    // 但扰动不能乱来：必须保证「五个等级都有人」和「例外链真的触发」，
+    // 否则统计项会退化、例外链考点会消失。所以每次扰动后用 d04Classify 校验，
+    // 不满足就换一组扰动重试。
+    const thresholds = { goldLine, silverLine, platinumLine, diamondLine };
+    const validDistribution = (trial) => {
+      const withNames = trial.map((p, i) => ({ name: names[i], ...p }));
+      const res = withNames.map((t) => d04Classify(t, thresholds));
+      const present = new Set(res.map((r) => r.lv));
+      const cappedCount = res.filter((r) => r.capped).length;
+      return present.size === 5 && cappedCount >= 1;
+    };
+
+    let chosenProfiles = null;
+    for (let attempt = 0; attempt < 40 && !chosenProfiles; attempt++) {
+      const trial = profiles.map((p) => ({ ...p }));
+      const n = rng.int(3, 6);
+      for (let k = 0; k < n; k++) {
+        const p = trial[rng.int(0, trial.length - 1)];
+        const kind = rng.int(0, 2);
+        if (kind === 0) p.years = Math.max(0, Math.min(10, p.years + rng.pick([-1, 1])));
+        else if (kind === 1) p.invite = !p.invite;
+        else p.active = !p.active;
+      }
+      if (validDistribution(trial)) chosenProfiles = trial;
+    }
+    // 兜底：扰动全部不合法就用原始画像（分布虽恒定，但不会出坏题）
+    const finalProfiles = chosenProfiles || profiles.map((p) => ({ ...p }));
+    const tiers = finalProfiles.map((p, i) => ({ name: names[i], ...p }));
 
     const facts = { tiers, goldLine, silverLine, platinumLine, diamondLine };
     const table = tiers
@@ -726,22 +789,7 @@ const D04 = {
     const counts = { diamond: 0, platinum: 0, gold: 0, silver: 0, normal: 0 };
     const KEY = { 钻石: 'diamond', 白金: 'platinum', 金牌: 'gold', 银牌: 'silver', 普通: 'normal' };
     for (const t of facts.tiers) {
-      // 常规规则：自上而下命中即停
-      let lv = '普通';
-      if (t.points >= facts.diamondLine && t.active && t.years >= 3) lv = '钻石';
-      else if (t.points >= facts.platinumLine && t.active && t.invite && t.years >= 2) lv = '白金';
-      else if (t.points >= facts.goldLine && t.active && t.age >= 20) lv = '金牌';
-      else if (t.points >= facts.silverLine && t.active && (t.age >= 18 || t.invite)) lv = '银牌';
-
-      // 例外链：先看例外一，再看例外一的例外
-      if (t.age < 18) {
-        if (t.years >= 5 && t.active) {
-          // 例外一的例外：沿用常规判定结果，但封顶银牌
-          if (lv === '钻石' || lv === '白金' || lv === '金牌') lv = '银牌';
-        } else {
-          lv = '普通';
-        }
-      }
+      const { lv } = d04Classify(t, facts);
       levels[t.name] = lv;
       counts[KEY[lv]]++;
     }

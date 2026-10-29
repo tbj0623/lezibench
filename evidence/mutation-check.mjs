@@ -52,7 +52,13 @@ function corruptOneField(answer, mode = 'first-scalar') {
   const v = target.value;
   if (typeof v === 'number') node[key] = v + 997;
   else if (typeof v === 'boolean') node[key] = !v;
-  else node[key] = `${v}__MUTATED__`;
+  // 字符串变异必须**真的改变语义**，不能在正确值后面追加噪声。
+  // 踩过的坑：C04 的 rootCause 原本用 `${v}__MUTATED__` 变异，
+  // 而判分器会归一化/剥离非中文字符，结果「单价用错+四舍五入__MUTATED__」
+  // 仍被读成「单价用错+四舍五入」→ 变异被判定为「未被检出」，
+  // 但那不是判分漏项，是变异器没改坏。
+  else if (/^[A-Z]$/.test(v)) node[key] = v === 'Z' ? 'Y' : 'Z';
+  else node[key] = '错误值';
   return { answer: clone, field: target.path.join('.'), from: v, to: node[key] };
 }
 

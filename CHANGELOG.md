@@ -73,7 +73,7 @@
 
 ### 不兼容
 
-- `catalogFingerprint` 变化：`a72cf9c4e4ab…` → `d44f1304968e…`
+- `catalogFingerprint` 变化：`a72cf9c4e4ab…` → `6e24cad28bd6…`
 - **v1.2.0 与 v1.3.0 的分数不可比较**（题目内容完全不同）。
 
 ### 未解决的已知边界
