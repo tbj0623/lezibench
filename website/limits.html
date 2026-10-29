@@ -67,7 +67,8 @@
           <li><a href="#compare">什么样的比较没有意义</a></li>
           <li><a href="#timing">耗时不是能力指标</a></li>
           <li><a href="#judge">确定性判分的代价</a></li>
-          <li><a href="#v1">V1 版本的具体边界</a></li>
+          <li><a href="#v1">为什么上一版会被「轻松考满分」</a></li>
+          <li><a href="#v1-limits">V1 版本的具体边界</a></li>
           <li><a href="#exploit">背答案能拿多少分</a></li>
         </ol>
       </nav>
@@ -127,15 +128,15 @@
               <tbody>
                 <tr>
                   <th scope="row">长上下文</th>
-                  <td>单题材料最长不过两三百字。真实场景里「两万字文档里找一处矛盾」这类能力，这里没有对应题目。</td>
+                  <td>单题材料最长约 1200 字（v1.3.0 最长的 D04）。真实场景里「两万字文档里找一处矛盾」这类能力，这里没有对应题目。</td>
                 </tr>
                 <tr>
                   <th scope="row">多轮工具调用</th>
-                  <td>整套题是「一次作答、一次判分」，没有需要连续调用工具、根据返回值调整策略的任务。</td>
+                  <td>整套题是「一次作答、一次判分」，没有需要连续调用工具、根据返回值调整策略的任务。这是当前最大的覆盖缺口。</td>
                 </tr>
                 <tr>
                   <th scope="row">代码工程能力</th>
-                  <td>没有需要读仓库、改代码、跑测试的题。C04 只是看一段十行的伪代码，不是工程任务。</td>
+                  <td>没有需要读仓库、改代码、跑测试的题。C04 只是看一段伪代码找两个互相掩盖的 bug，不是工程任务。</td>
                 </tr>
                 <tr>
                   <th scope="row">开放式写作与审美</th>
@@ -244,6 +245,46 @@
         </section>
 
         <section id="v1">
+          <h2>为什么上一版会被「轻松考满分」</h2>
+          <p>
+            v1.2.0 曾经收到过一个很准的质疑：<strong>怎么会轻轻松松就考满分？</strong>
+            我们做了结构量化，结论是 —— 不是模型太强，是<strong>题目太浅</strong>。
+          </p>
+
+          <div class="anatomy">
+            <table class="grid">
+              <caption class="visually-hidden">v1.2.0 的题目结构实测</caption>
+              <thead><tr><th scope="col">指标</th><th scope="col">v1.2.0 实测</th><th scope="col">意味着什么</th></tr></thead>
+              <tbody>
+                <tr><th scope="row">平均题面</th><td class="num">346 字</td><td>一条微博的量</td></tr>
+                <tr><th scope="row">平均数据行</th><td class="num">2.8 行</td><td>表格题只有 3 行要读</td></tr>
+                <tr><th scope="row">平均条件算子</th><td class="num">3.0 个</td><td>整题只有 3 处需要判断</td></tr>
+                <tr><th scope="row">最深的搜索空间</th><td class="num">4! = 24</td><td>座位推理只有 4 个人，可以心算穷举</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <p>
+            这种卷子测的是<strong>「有没有认真读完」</strong>，不是能力。所以那个 100 分只证明题浅。
+            v1.3.0 把 16 道题全部重写：题面 <strong>346 → 651 字（1.9×）</strong>，
+            数据行 <strong>2.8 → 6.9（2.5×）</strong>，条件算子 <strong>3.0 → 5.5（1.8×）</strong>。
+            关键不是变长，是变难：
+          </p>
+          <ul>
+            <li><strong>R04</strong>：4 人 24 种排列 → 6 人 6 色，线索<strong>零直述</strong>（全部是「谁比谁靠前」「谁与谁相邻」），每个 seed 穷举验证解唯一。</li>
+            <li><strong>R03</strong>：可穷举的 3 种餐盒 → 6 种模块的背包，<strong>贪心会选错</strong>，必须精确求解。</li>
+            <li><strong>C04</strong>：单 bug → <strong>两个 bug 互相掩盖</strong>，只修一个拿不到满分。</li>
+            <li><strong>D04</strong>：3 级 6 人 → 5 级 14 人，例外链 + 边界值（恰好达线 / 差 1 分）。</li>
+          </ul>
+
+          <p class="callout">
+            <strong>但加固效果不由我们自己验收。</strong>
+            我们保留了一条硬标准：<strong>如果某个模型拿到满分、且全程没有任何一个评分条件失败过，
+            那说明题目还是太浅</strong>，请提 issue 告诉我们。这个项目的价值在于可复核，不在于给个好分数。
+          </p>
+        </section>
+
+        <section id="v1-limits">
           <h2>V1 版本的具体边界</h2>
           <p>当前引擎版本 exam v<span data-meta="exam">1.2.0</span> / grader v<span data-meta="grader">1.2.0</span>（以 <code>cli.mjs version</code> 为准）。已知的具体限制：</p>
           <ul>
