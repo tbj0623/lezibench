@@ -19,7 +19,16 @@ import { renderHtml, renderSummaryText } from './report/html.mjs';
 
 export const STATE_FILE = 'state.json';
 
-export function environmentInfo() {
+/**
+ * 运行环境描述。
+ *
+ * DEMO 模式下返回固定串：否则 Linux CI 与 Windows 本机会产出不同的
+ * demo-report.*，`build-site.mjs --check` 在 CI 上必然失败（真实运行不受影响）。
+ */
+export const DEMO_FIXED_ENV = 'node (demo) · (demo)/(demo)';
+
+export function environmentInfo(demo = false) {
+  if (demo) return DEMO_FIXED_ENV;
   return `node ${process.version} · ${process.platform}/${process.arch}`;
 }
 
@@ -113,7 +122,7 @@ export async function startRun(opts = {}) {
     currentBatch: 1,
     gradedItems: [],
     batches: {},
-    environment: environmentInfo(),
+    environment: environmentInfo(opts.demo === true),
     demo: opts.demo === true,
   };
   await atomicWriteJson(paths.state, state);
