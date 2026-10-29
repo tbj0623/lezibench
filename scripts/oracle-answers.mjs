@@ -47,8 +47,14 @@ function answerFor(id, o, internal) {
       return o.answer;
     case 'D01':
       return { list: o.unique };
-    case 'D02':
-      return { answer: 'C', reason: '甲项目的最终实际支出没有给出，信息不足，无法确定甲是否比乙省。' };
+    case 'D02': {
+      // 按 oracle 的答案分支生成（部分 seed 甲的最终支出是给出的，答案会是 A 或 B）
+      const a = o.answer;
+      const reason = a === 'C'
+        ? '甲项目的最终实际支出没有给出，信息不足，无法确定甲是否比乙省。'
+        : `甲项目最终实际支出 ${o.sampleA} 万元，乙项目 ${o.sampleB} 万元，甲${a === 'A' ? '比乙少，更省钱' : '比乙多，不比乙省'}。`;
+      return { answer: a, reason };
+    }
     case 'D03':
       return { lossMaking: o.lossMaking, onlyInStore: o.onlyInStore, commonCount: o.commonCount };
     case 'D04':

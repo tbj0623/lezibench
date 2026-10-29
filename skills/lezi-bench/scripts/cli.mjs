@@ -158,7 +158,7 @@ export async function main(argv = process.argv.slice(2)) {
         const s = await statusRun({ root: ctx.root, runId: o.run });
         if (o.json) { jsonOut(s); return 0; }
         out(`运行 ${s.runId}`);
-        out(`  状态：${s.status}　进度：${s.progress}　已得：${s.totalScoreFar ?? s.totalScoreSoFar}/${100}`);
+        out(`  状态：${s.status}　进度：${s.progress}　已得：${s.totalScoreSoFar}/100`);
         out(`  已完成批次：${s.completedBatches.join(', ') || '无'}　下一批：${s.nextBatch ?? '无'}`);
         if (s.pendingReview.length) out(`  待复核：${s.pendingReview.join(', ')}`);
         return 0;

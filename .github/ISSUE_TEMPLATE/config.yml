@@ -1,0 +1,28 @@
+# Issue 模板选择页的配置。
+# blank_issues_enabled: false —— 强制走模板，避免出现「就一句话、什么信息都没有」的 issue。
+blank_issues_enabled: false
+
+contact_links:
+  - name: 🔐 上报安全漏洞（请不要开公开 Issue）
+    url: https://github.com/tbj0623/lezibench/security/advisories/new
+    about: 路径穿越、解析崩溃、XSS、哈希校验绕过等安全问题，请走 GitHub Security Advisory 私密上报。
+
+  - name: 📖 安装文档（先看这份）
+    url: https://github.com/tbj0623/lezibench/blob/main/docs/INSTALL.md
+    about: 最常见的坑：Skill 名是 lezi-bench，不是 lezibench。装错名字会被宿主静默跳过。
+
+  - name: 🧭 兼容性与证据分级（哪些平台真的验证过）
+    url: https://github.com/tbj0623/lezibench/blob/main/docs/COMPATIBILITY.md
+    about: VERIFIED / PARTIAL / NOT_TESTED 三级证据说明。OpenClaw 与 Codex 目前是 NOT_TESTED。
+
+  - name: 🚧 能力与信任边界（它测不了什么）
+    url: https://github.com/tbj0623/lezibench/blob/main/docs/LIMITATIONS.md
+    about: 题库公开可读、不防作弊、不能作为认证成绩、16 题覆盖不到的能力清单。
+
+  - name: 🤝 贡献指南（加一道题要交哪些东西）
+    url: https://github.com/tbj0623/lezibench/blob/main/CONTRIBUTING.md
+    about: 新增题目必须同时提交题面 / generate / 独立 oracle / grade / ≥5 等价答案 / ≥5 对抗答案 / 多 seed 稳定性。
+
+  - name: 📜 行为准则
+    url: https://github.com/tbj0623/lezibench/blob/main/CODE_OF_CONDUCT.md
+    about: 参与本项目需遵守的行为底线，以及上报骚扰的渠道。

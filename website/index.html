@@ -82,16 +82,17 @@
 
         <!-- 成绩卡：页面主角。数据来自真实运行的 DEMO，不是示意 -->
         <div class="reveal reveal-2">
+          <!--SCORE-CARD:START-->
           <figure class="report report--demo" aria-labelledby="card-cap">
             <div class="report-top">
               <span class="seal">DEMO · 演示数据</span>
               <span>标准局 / STANDARD</span>
-              <span class="rid">run-20261029-160012-ca4f29</span>
+              <span class="rid">run-20261029-173349-1b6ba9</span>
             </div>
 
             <div class="report-body">
               <div class="report-score">
-                <span class="num">74</span>
+                <span class="num">77</span>
                 <span class="of">/ 100</span>
                 <span class="level">良好</span>
               </div>
@@ -99,8 +100,8 @@
               <div class="dims">
                 <div class="dim">
                   <span class="dim-label">指令理解</span>
-                  <span class="dim-track"><span class="dim-fill" style="width:88%"></span></span>
-                  <span class="dim-val">22<i>/25</i></span>
+                  <span class="dim-track"><span class="dim-fill" style="width:100%"></span></span>
+                  <span class="dim-val">25<i>/25</i></span>
                 </div>
                 <div class="dim">
                   <span class="dim-label">逻辑推理</span>
@@ -121,27 +122,28 @@
 
               <div class="report-checks">
                 <div class="rcheck">
-                  <span class="cid">I01.C2</span>
-                  <span class="txt"><b>−3 分</b>　错误地表示仍要附预算表</span>
-                </div>
-                <div class="rcheck">
                   <span class="cid">R01.C2</span>
                   <span class="txt"><b>−3 分</b>　应付款应为 65，实际为 70</span>
                 </div>
                 <div class="rcheck">
-                  <span class="cid">D02.C1</span>
-                  <span class="txt"><b>−2 分</b>　答案应为 C（信息不足），实际为「A」</span>
+                  <span class="cid">R04.C2</span>
+                  <span class="txt"><b>−3 分</b>　3/4 人颜色正确</span>
+                </div>
+                <div class="rcheck">
+                  <span class="cid">R04.C3</span>
+                  <span class="txt"><b>−3 分</b>　3/4 人的位置与颜色同时正确</span>
                 </div>
               </div>
 
               <div class="report-foot">
-                <span>exam 1.0.0</span>
-                <span>grader 1.0.0</span>
-                <span>另有 5 条扣分依据</span>
+                <span>exam 1.2.0</span>
+                <span>grader 1.2.0</span>
+                <span>另有 7 条扣分依据</span>
                 <span class="spacer">本地规则核验</span>
               </div>
             </div>
           </figure>
+          <!--SCORE-CARD:END-->
           <p class="report-caption" id="card-cap">
             <b>上图是演示数据</b>，由真实运行的判分器生成，用来说明报告长什么样 ——
             不是任何真实用户、模型或产品的成绩。
@@ -662,7 +664,7 @@ node scripts/cli.mjs report --run &lt;RUN_ID&gt; --format summary</code></pre>
     </div>
     <div class="foot-legal">
       <span>© 2026 LeziBench contributors</span>
-      <span>exam v1.0.0 · grader v1.0.0</span>
+      <span>exam v1.2.0 · grader v1.2.0</span>
       <span>本站无 Cookie、无分析脚本、无外部字体</span>
       <span class="spacer">本地规则核验 · 非认证成绩</span>
     </div>

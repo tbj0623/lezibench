@@ -1,17 +1,17 @@
 {
-  "runId": "run-20261029-161417-f8130d",
+  "runId": "run-20261029-173349-1b6ba9",
   "seed": "lezi-demo-2026",
-  "startedAt": "2026-10-29T16:14:17.340Z",
-  "finishedAt": "2026-10-29T16:14:18.174Z",
-  "durationMs": 834,
+  "startedAt": "2026-10-29T17:33:49.927Z",
+  "finishedAt": "2026-10-29T17:33:52.428Z",
+  "durationMs": 2501,
   "environment": "node v24.20.0 · win32/x64",
   "demo": true,
   "summary": {
-    "examVersion": "1.0.0",
-    "graderVersion": "1.0.0",
+    "examVersion": "1.2.0",
+    "graderVersion": "1.2.0",
     "contractVersion": "1.0.0",
-    "catalogFingerprint": "255c5caa2848f8d9b8a4c7970a1879b57461cb7f380f41090309146ef13912ee",
-    "total": 74,
+    "catalogFingerprint": "539fd88d6f1d3f5040db5c4e8d74cfe0f8309795533259b08157319b346f44bf",
+    "total": 77,
     "maxTotal": 100,
     "status": "COMPLETED",
     "completed": true,
@@ -21,7 +21,7 @@
       {
         "key": "instruction",
         "label": "指令理解",
-        "awarded": 22,
+        "awarded": 25,
         "max": 25,
         "items": 4
       },
@@ -59,10 +59,10 @@
       "maxPoints": 4,
       "rawAnswerSha256": "aa429257e4a07826601a162705685536727d92343691afc83ef4588b176b3e60",
       "inputSeed": "e488fb768733aabc41409a6f3438e1aea4047f008e2ea4867fd267df82673563",
-      "graderVersion": "1.0.0",
+      "graderVersion": "1.2.0",
       "dimension": "instruction",
       "title": "最后一条有效通知覆盖原计划",
-      "awarded": 1,
+      "awarded": 4,
       "parsedAnswer": {
         "deadline": "周三上午10点",
         "budgetAttached": true
@@ -77,8 +77,8 @@
         {
           "criterionId": "I01.C2",
           "points": 3,
-          "passed": false,
-          "reason": "错误地表示仍要附预算表"
+          "passed": true,
+          "reason": "正确表示需要附预算表"
         }
       ],
       "gradingStatus": "GRADED",
@@ -91,7 +91,7 @@
       "maxPoints": 6,
       "rawAnswerSha256": "e2e8858de982ee0ae763bd3225576b98d7e19ab33378bfc814378e735c89170c",
       "inputSeed": "75b31c8a7142a88028a0d68c0bf7f11ded2d82087ad750bfaf0f08d1426e9661",
-      "graderVersion": "1.0.0",
+      "graderVersion": "1.2.0",
       "dimension": "instruction",
       "title": "白名单 + 例外 + 状态过滤",
       "awarded": 6,
@@ -138,15 +138,15 @@
       "id": "I03",
       "version": "standard",
       "maxPoints": 6,
-      "rawAnswerSha256": "4bd19bdb950f5e3b40637094427ca46c7db7b24942be5dc3275f8a85737ae212",
+      "rawAnswerSha256": "e56403991ec3953a4d4812e3d89496499ec9beaf1a04d4fc4893269135050b89",
       "inputSeed": "17b9bfb5ec250c84e24e5ff34d4ff7fb0bdab0dac586f415d993a6ff9c31d395",
-      "graderVersion": "1.0.0",
+      "graderVersion": "1.2.0",
       "dimension": "instruction",
       "title": "多条件优先级与例外",
       "awarded": 6,
       "parsedAnswer": {
-        "rule": "R2",
-        "decision": "部分批准",
+        "rule": "R3",
+        "decision": "批准",
         "escalate": false
       },
       "checks": [
@@ -154,13 +154,13 @@
           "criterionId": "I03.C1",
           "points": 2,
           "passed": true,
-          "reason": "适用规则正确：R2"
+          "reason": "适用规则正确：R3"
         },
         {
           "criterionId": "I03.C2",
           "points": 2,
           "passed": true,
-          "reason": "审批结论正确：部分批准"
+          "reason": "审批结论正确：批准"
         },
         {
           "criterionId": "I03.C3",
@@ -177,14 +177,14 @@
       "id": "I04",
       "version": "challenge",
       "maxPoints": 9,
-      "rawAnswerSha256": "580ff7c43e182387950331fcf10fba091b7b164754896bfb35031f728492ff5f",
+      "rawAnswerSha256": "2c87a32e632e497e5d26722c9e5c1a7d015311d6aa8a1dc97528347c5cc4aac7",
       "inputSeed": "5c343490602c6e901bd15d26db74ca6a4fd4635a5062db33d0855de4755f4058",
-      "graderVersion": "1.0.0",
+      "graderVersion": "1.2.0",
       "dimension": "instruction",
       "title": "四步指令更新后的一致状态",
       "awarded": 9,
       "parsedAnswer": {
-        "status": "已通过",
+        "status": "已驳回",
         "owner": "小杨",
         "deadline": "周四"
       },
@@ -218,7 +218,7 @@
       "maxPoints": 4,
       "rawAnswerSha256": "a635aa9e6740733f5781c4843f572aaf2a97cfd3674ca2d71cd8ada8173f46e6",
       "inputSeed": "b1635a50909442d17784d05db42fde2a94cae1ef8841ae32c18f5dbe771f24c1",
-      "graderVersion": "1.0.0",
+      "graderVersion": "1.2.0",
       "dimension": "reasoning",
       "title": "购物小票的真实合计",
       "awarded": 1,
@@ -250,7 +250,7 @@
       "maxPoints": 6,
       "rawAnswerSha256": "169a86341dce4fab1061debd8fbdc633391754bae8e3a1edd4db7504a9d7ff77",
       "inputSeed": "ab55ef5a0c34e5e8874439762fb3313f518204b5d204b8e53ba424ac3b37c345",
-      "graderVersion": "1.0.0",
+      "graderVersion": "1.2.0",
       "dimension": "reasoning",
       "title": "依赖关系与可行顺序",
       "awarded": 6,
@@ -295,7 +295,7 @@
       "maxPoints": 6,
       "rawAnswerSha256": "7c11a029ff5e3f26b3a400226504778063f340871bc57ad9b64fc9e6838df6cc",
       "inputSeed": "ae9595eef22d485d5f116d5e48f51a5d4efb27ab2ef7e01a3e58e7f5e25035c4",
-      "graderVersion": "1.0.0",
+      "graderVersion": "1.2.0",
       "dimension": "reasoning",
       "title": "满足多条件的最低成本方案",
       "awarded": 6,
@@ -332,29 +332,29 @@
       "id": "R04",
       "version": "challenge",
       "maxPoints": 9,
-      "rawAnswerSha256": "ec649438d8985c10bce485fa76942e01dbb87bf01d6f145944dd91bca63a6906",
+      "rawAnswerSha256": "ed45ac9a16f39e492308a838c1cd65a5c78f142a6a3b5b7731b1243f7fd6fd73",
       "inputSeed": "49d8f9f7a3f3fc2114328b7d36b6c721ca40699c9ce77e4621dc4bd2d12f9823",
-      "graderVersion": "1.0.0",
+      "graderVersion": "1.2.0",
       "dimension": "reasoning",
       "title": "六线索排除推理（唯一解）",
       "awarded": 3,
       "parsedAnswer": {
         "seats": {
-          "阿岚": {
-            "position": 1,
+          "阿金": {
+            "position": 3,
             "color": "蓝"
           },
-          "阿金": {
+          "阿芙": {
             "position": 2,
-            "color": "红"
+            "color": "橙"
           },
           "阿布": {
-            "position": 3,
-            "color": "紫"
-          },
-          "阿芙": {
             "position": 4,
             "color": "绿"
+          },
+          "阿岚": {
+            "position": 1,
+            "color": "黄"
           }
         }
       },
@@ -388,7 +388,7 @@
       "maxPoints": 4,
       "rawAnswerSha256": "37f99422f001adfd2e4d5036f65169d607e9f69456841b2ce695dc4e95b00973",
       "inputSeed": "b41cfb65e802a5291c5168c4818763aa73d9aeb3b882b145a3ec3ad3d57bddb4",
-      "graderVersion": "1.0.0",
+      "graderVersion": "1.2.0",
       "dimension": "data",
       "title": "去重并按规定排序",
       "awarded": 4,
@@ -425,7 +425,7 @@
       "maxPoints": 6,
       "rawAnswerSha256": "362b5c8ce9383e487efaf40195665c42e2f0f180f4616179c8ce8f3819aa7c20",
       "inputSeed": "5ea7f8742b0d9d7eba6389b5798d60c746505b6ef12c201615804d5c26ac1c0a",
-      "graderVersion": "1.0.0",
+      "graderVersion": "1.2.0",
       "dimension": "data",
       "title": "区分事实、推断与信息不足",
       "awarded": 0,
@@ -444,7 +444,7 @@
           "criterionId": "D02.C2",
           "points": 2,
           "passed": false,
-          "reason": "理由没有指出「信息缺失 / 预算≠最终支出」这一关键点"
+          "reason": "理由必须同时引用甲(33)、乙(29)的实际支出并说明方向；实际为「甲项目预算比乙低,所以更省钱」"
         },
         {
           "criterionId": "D02.C3",
@@ -461,20 +461,22 @@
       "id": "D03",
       "version": "standard",
       "maxPoints": 6,
-      "rawAnswerSha256": "b226cec45ff9b83d12f7d051598b8ea7027fef9589b81efe524ad4f8a42c749d",
+      "rawAnswerSha256": "9e871dac7e09429132000c4f05183ff6241278cdd1402b576a936d2f8e0a85c8",
       "inputSeed": "1cccc110aa9016a0552675bb979160e3fa70cbacadd431619213bdc027126fa7",
-      "graderVersion": "1.0.0",
+      "graderVersion": "1.2.0",
       "dimension": "data",
       "title": "两表合并与冲突检测",
       "awarded": 6,
       "parsedAnswer": {
         "lossMaking": [
-          "A-101"
+          "A-101",
+          "C-315"
         ],
         "onlyInStore": [
-          "F-660"
+          "D-402",
+          "E-518"
         ],
-        "commonCount": 5
+        "commonCount": 4
       },
       "checks": [
         {
@@ -506,7 +508,7 @@
       "maxPoints": 9,
       "rawAnswerSha256": "f9079d488039a10df74ed576bd2803ba9b71a12a10f14093f4288b6b36855f72",
       "inputSeed": "46d598c71284272fcf51151dd6c8a64a7d383f669988c012d10c71e373955ab1",
-      "graderVersion": "1.0.0",
+      "graderVersion": "1.2.0",
       "dimension": "data",
       "title": "规则化条件匹配与例外",
       "awarded": 9,
@@ -555,7 +557,7 @@
       "maxPoints": 4,
       "rawAnswerSha256": "ea6521277e2b07b8fae3133f8864054304cbd42156424a507fae40d74258992d",
       "inputSeed": "161f0b60a0b752871b182554c51fa3780df2ddb7f1e8c63a879ded145d27b5d7",
-      "graderVersion": "1.0.0",
+      "graderVersion": "1.2.0",
       "dimension": "correction",
       "title": "指出算式中的错误并纠正",
       "awarded": 4,
@@ -587,7 +589,7 @@
       "maxPoints": 6,
       "rawAnswerSha256": "1abd697755036530bcb8536401ab1a01dd466aff5cc115154ae4dfc9b83cd732",
       "inputSeed": "54b19948e85bf06a18b13827adce5343c38c43c7688bfa61bc9d74a7e368fab3",
-      "graderVersion": "1.0.0",
+      "graderVersion": "1.2.0",
       "dimension": "correction",
       "title": "四步修改后的最新库存状态",
       "awarded": 2,
@@ -623,9 +625,9 @@
       "id": "C03",
       "version": "standard",
       "maxPoints": 6,
-      "rawAnswerSha256": "2a4508afe6dc01a2a150a937ee5fd3ee5d76a8104bcbd530905acc91c3c90cf4",
+      "rawAnswerSha256": "de76ad79c0451c63fa4c0e5af38357497a8921843a2e216d155cfb066826fd2e",
       "inputSeed": "a9145ed3f36e8cf82191cb8d4a530d6811fb459c5f11c1c1df78031e1325c028",
-      "graderVersion": "1.0.0",
+      "graderVersion": "1.2.0",
       "dimension": "correction",
       "title": "新旧规则更迭后的合法操作",
       "awarded": 2,
@@ -643,7 +645,7 @@
           "needManual": false
         },
         "a4": {
-          "rule": "旧",
+          "rule": "新",
           "needManual": false
         }
       },
@@ -651,20 +653,20 @@
         {
           "criterionId": "C03.C1",
           "points": 2,
-          "passed": true,
-          "reason": "四笔申请的规则版本全部正确"
+          "passed": false,
+          "reason": "3/4 笔规则版本正确；a2(规则旧/人工true，实际新/true)"
         },
         {
           "criterionId": "C03.C2",
           "points": 2,
-          "passed": false,
-          "reason": "3/4 笔人工审批判断正确"
+          "passed": true,
+          "reason": "四笔申请的人工审批判断全部正确"
         },
         {
           "criterionId": "C03.C3",
           "points": 2,
           "passed": false,
-          "reason": "第2笔应按新规则判定（金额 3645，门槛 5655，需人工=false），实际为 新/true"
+          "reason": "第2笔应按旧规则判定（提交于 2 月 22 日，金额 3645，需人工=true），实际为 新/true"
         }
       ],
       "gradingStatus": "GRADED",
@@ -677,7 +679,7 @@
       "maxPoints": 9,
       "rawAnswerSha256": "c55069242f57f2dbfd5a7fe12a4a5b75d14803c314c270458ca704bec8b28684",
       "inputSeed": "1dd40d040f3a80fcd280bba66556361ee360fcddb65dd39db2b1f3dc58bc4550",
-      "graderVersion": "1.0.0",
+      "graderVersion": "1.2.0",
       "dimension": "correction",
       "title": "找出错误根源、修复并算最终结果",
       "awarded": 9,
@@ -712,9 +714,9 @@
     }
   ],
   "meta": {
-    "examVersion": "1.0.0",
-    "graderVersion": "1.0.0",
+    "examVersion": "1.2.0",
+    "graderVersion": "1.2.0",
     "contractVersion": "1.0.0",
-    "catalogFingerprint": "255c5caa2848f8d9b8a4c7970a1879b57461cb7f380f41090309146ef13912ee"
+    "catalogFingerprint": "539fd88d6f1d3f5040db5c4e8d74cfe0f8309795533259b08157319b346f44bf"
   }
 }

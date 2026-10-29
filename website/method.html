@@ -272,12 +272,12 @@
                 <tr>
                   <th scope="row"><code>examVersion</code></th>
                   <td>题目内容可能变化。跨版本继续运行会被拒绝，必须重新 <code>start</code>。</td>
-                  <td class="num">1.0.0</td>
+                  <td class="num">1.2.0</td>
                 </tr>
                 <tr>
                   <th scope="row"><code>graderVersion</code></th>
                   <td>判分规则可能变化。可以用 <code>regrade --grader &lt;ver&gt;</code> 在新版本下重判旧答案。</td>
-                  <td class="num">1.0.0</td>
+                  <td class="num">1.2.0</td>
                 </tr>
                 <tr>
                   <th scope="row"><code>contractVersion</code></th>
@@ -292,7 +292,7 @@
           <p>
             每局还会记录一个 <code>catalogFingerprint</code>：由 16 道题的 id、维度、难度、分值、批次，
             以及每条子条件的 id / 分值 / 文本共同算出的 SHA-256。当前值以
-            <code>doctor</code> 输出为准（本仓库 v1.0.0 的前 12 位是 <code>1b665890f294</code>）。
+            <code>doctor</code> 输出为准（本仓库当前是 <code data-fp>539fd88d6f1d…</code>）。
           </p>
           <p>
             指纹的作用很直接：两份报告如果 exam / grader 版本都相同、但指纹不同，
@@ -334,7 +334,7 @@
               </div>
               <ul class="crit">
                 <li><span class="cid">I01.C1</span><span class="cp">1 分</span><span class="ct">截止时间与第2条通知给出的最终日期和时段完全一致（不得沿用第1条的原始日期或中午12点）</span></li>
-                <li><span class="cid">I01.C2</span><span class="cp">3 分</span><span class="ct">明确表示不附预算表（budgetAttached=false）</span></li>
+                <li><span class="cid">I01.C2</span><span class="cp">3 分</span><span class="ct">预算表附件要求与第3条通知的最终要求一致（该附就附、该不附就不附）</span></li>
               </ul>
             </article>
             <article class="item">
@@ -368,7 +368,7 @@
                 <span class="item-meta"><span>挑战</span><span>第 4 批</span><span class="p">9 分</span></span>
               </div>
               <ul class="crit">
-                <li><span class="cid">I04.C1</span><span class="cp">3 分</span><span class="ct">最终状态 = 已通过</span></li>
+                <li><span class="cid">I04.C1</span><span class="cp">3 分</span><span class="ct">最终状态 = 第4条指令指定的状态</span></li>
                 <li><span class="cid">I04.C2</span><span class="cp">3 分</span><span class="ct">最终负责人 = 第3条指定的负责人</span></li>
                 <li><span class="cid">I04.C3</span><span class="cp">3 分</span><span class="ct">最终截止时间 = 恢复后的初始日期</span></li>
               </ul>
@@ -456,9 +456,9 @@
                 <span class="item-meta"><span>标准</span><span>第 2 批</span><span class="p">6 分</span></span>
               </div>
               <ul class="crit">
-                <li><span class="cid">D02.C1</span><span class="cp">2 分</span><span class="ct">答案选择 C（信息不足，无法确定）</span></li>
-                <li><span class="cid">D02.C2</span><span class="cp">2 分</span><span class="ct">理由指出「甲项目的最终支出缺失」或「预算不等于最终支出」</span></li>
-                <li><span class="cid">D02.C3</span><span class="cp">2 分</span><span class="ct">没有把预算数字当作最终实际支出进行比较</span></li>
+                <li><span class="cid">D02.C1</span><span class="cp">2 分</span><span class="ct">答案与题面事实一致：甲支出已给出时按数值比较得出 A 或 B，未给出时选 C</span></li>
+                <li><span class="cid">D02.C2</span><span class="cp">2 分</span><span class="ct">理由与所选答案一致：给出支出时引用两个真实数字并说明方向，缺失时指出信息不足</span></li>
+                <li><span class="cid">D02.C3</span><span class="cp">2 分</span><span class="ct">没有把预算数字当作最终实际支出，也没有声称已给出的支出缺失</span></li>
               </ul>
             </article>
             <article class="item">
@@ -501,7 +501,7 @@
                 <span class="item-meta"><span>基础</span><span>第 1 批</span><span class="p">4 分</span></span>
               </div>
               <ul class="crit">
-                <li><span class="cid">C01.C1</span><span class="cp">1 分</span><span class="ct">明确判定原等式错误（isCorrect=false）</span></li>
+                <li><span class="cid">C01.C1</span><span class="cp">1 分</span><span class="ct">正确判定原等式是否成立（isCorrect 与实际等式一致）</span></li>
                 <li><span class="cid">C01.C2</span><span class="cp">3 分</span><span class="ct">给出正确的和</span></li>
               </ul>
             </article>
@@ -526,7 +526,7 @@
               <ul class="crit">
                 <li><span class="cid">C03.C1</span><span class="cp">2 分</span><span class="ct">四笔申请适用的规则版本（旧/新）全部正确</span></li>
                 <li><span class="cid">C03.C2</span><span class="cp">2 分</span><span class="ct">四笔申请是否需要人工审批全部正确</span></li>
-                <li><span class="cid">C03.C3</span><span class="cp">2 分</span><span class="ct">第2笔（3 月提交）按新规则门槛判定，未误用旧规则门槛</span></li>
+                <li><span class="cid">C03.C3</span><span class="cp">2 分</span><span class="ct">第2笔按「提交日期所属的那一版规则」判定（按提交时间，不按审批时间）</span></li>
               </ul>
             </article>
             <article class="item">
@@ -588,7 +588,7 @@
     </div>
     <div class="foot-legal">
       <span>© 2026 LeziBench contributors</span>
-      <span>exam v1.0.0 · grader v1.0.0</span>
+      <span>exam v1.2.0 · grader v1.2.0</span>
       <span>本站无 Cookie、无分析脚本、无外部字体</span>
       <span class="spacer">本地规则核验 · 非认证成绩</span>
     </div>

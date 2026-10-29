@@ -11,6 +11,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
+import { fileURLToPath } from 'node:url';
 import {
   resolveDataRoot, newRunId, assertSafeRunId, runDir, atomicWrite, atomicWriteJson,
   readJson, probeWritable, resolveOutputPath, DATA_DIR_ENV,
@@ -20,8 +21,9 @@ import { perfectAnswers } from '../scripts/oracle-answers.mjs';
 import { itemsForBatch, BATCHES } from '../src/exam/manifest.mjs';
 import { validateSkillDir, parseFrontmatter, hashTree } from '../scripts/sync-skill.mjs';
 
-const CLI = path.resolve(import.meta.dirname, '..', 'scripts', 'cli.mjs');
-const REPO = path.resolve(import.meta.dirname, '..');
+const HERE = path.dirname(fileURLToPath(import.meta.url));
+const CLI = path.resolve(HERE, '..', 'scripts', 'cli.mjs');
+const REPO = path.resolve(HERE, '..');
 const run = promisify(execFile);
 
 async function cli(args, opts = {}) {
@@ -364,4 +366,33 @@ test('parseFrontmatter: 简单 YAML 解析', () => {
   assert.equal(fm.name, 'abc');
   assert.equal(fm.description, 'hello world');
   assert.equal(parseFrontmatter('no frontmatter'), null);
+});
+
+/* ------------------------------------------------------------------ *
+ * 审计发现：atomicWrite 退化成裸 writeFile 也无人检出
+ * 这里直接检查实现特征（临时文件 + rename），因为行为测试很难区分两者。
+ * ------------------------------------------------------------------ */
+test('atomicWrite 必须是「先写临时文件再 rename」，不能退化成裸 writeFile', async () => {
+  const src = await readFile(path.join(REPO, 'src', 'storage', 'store.mjs'), 'utf8');
+  const fnStart = src.indexOf('export async function atomicWrite(');
+  assert.ok(fnStart > 0, '找不到 atomicWrite 定义');
+  const fnBody = src.slice(fnStart, fnStart + 2000);
+  assert.ok(/\.tmp/.test(fnBody), 'atomicWrite 应使用 .tmp 临时文件');
+  assert.ok(/rename\(/.test(fnBody), 'atomicWrite 应使用 rename 原子替换');
+  assert.ok(/\.sync\(\)/.test(fnBody), 'atomicWrite 应 fsync 后才 rename');
+});
+
+test('atomicWrite 并发写入同一文件后，最终内容必须是其中一次的完整值', async () => {
+  // 说明：不做「写入过程中高频读」的测试 —— 在 Windows 上 rename 覆盖会退化成
+  // unlink+rename，存在极短暂的「文件不存在」窗口，那是 OS 语义不是缺陷。
+  // 真正要保证的不变量是：并发写完之后，文件内容完整且等于某一次写入的值。
+  const dir = await tmpRoot();
+  try {
+    const f = path.join(dir, 'concurrent.json');
+    const payloads = Array.from({ length: 8 }, (_, i) => ({ v: i, data: 'x'.repeat(5000 + i * 100) }));
+    await Promise.all(payloads.map((p) => atomicWriteJson(f, p)));
+    const txt = await readFile(f, 'utf8');
+    const got = JSON.parse(txt); // 必须是完整合法 JSON
+    assert.ok(payloads.some((p) => p.v === got.v && p.data.length === got.data.length), '最终内容不等于任何一次写入的值');
+  } finally { await rm(dir, { recursive: true, force: true }); }
 });

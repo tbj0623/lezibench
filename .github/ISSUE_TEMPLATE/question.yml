@@ -1,0 +1,63 @@
+name: ❓ 使用问题
+description: 装不上、跑不通、结果看不懂、不确定某个说法是什么意思
+title: '[Question] '
+labels: ['question']
+body:
+  - type: markdown
+    attributes:
+      value: |
+        「装好了但没反应」「这个分数算好还是差」这类问题完全值得问。
+        不过在提问前，下面这几份文档能答掉大部分：
+
+        - [README.md](https://github.com/tbj0623/lezibench/blob/main/README.md) —— 产品定位与支持矩阵
+        - [docs/INSTALL.md](https://github.com/tbj0623/lezibench/blob/main/docs/INSTALL.md) —— 安装步骤（最容易踩的坑：Skill 名是 `lezi-bench`，不是 `lezibench`）
+        - [docs/FAQ.md](https://github.com/tbj0623/lezibench/blob/main/docs/FAQ.md) —— 常见误解
+        - [docs/LIMITATIONS.md](https://github.com/tbj0623/lezibench/blob/main/docs/LIMITATIONS.md) —— 它测不了什么
+        - [docs/SCORING.md](https://github.com/tbj0623/lezibench/blob/main/docs/SCORING.md) —— 逐题评分规则
+
+        > ⚠️ **不要贴真实成绩里的个人路径**（`C:\Users\你的名字\...`、`/home/你的名字/...`），
+        > 请替换成 `<HOME>` 或 `<我的用户名>`。
+
+  - type: textarea
+    id: question
+    attributes:
+      label: 你的问题
+      description: 一句话说清你想知道什么。如果是「这样算正常吗」，请把实际现象写出来。
+      placeholder: |
+        装到 ~/.agents/skills/lezi-bench 之后，DSH 里看不到 /lezi-bench，
+        但目录确实存在、doctor 也能跑通。这是正常的吗？
+    validations:
+      required: true
+
+  - type: textarea
+    id: context
+    attributes:
+      label: 相关背景
+      description: |
+        你做了什么、看到什么。能贴命令输出就贴命令输出。
+        （可选，但有了它答案会准确得多）
+      render: shell
+
+  - type: dropdown
+    id: topic
+    attributes:
+      label: 问题属于哪一类
+      options:
+        - 安装 / 发现不了 Skill
+        - 跑不起来 / 报错
+        - 看不懂分数或判分理由
+        - 不确定某个说法（防作弊？认证？兼容性？）
+        - 想用到自己的场景里，想知道适不适合
+        - 其它
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: confirm
+    attributes:
+      label: 提交前确认
+      options:
+        - label: 我已经翻过上面列出的文档，没有找到答案
+          required: true
+        - label: 我贴出的内容已脱敏，不含个人路径、真实 token 与他人隐私
+          required: true

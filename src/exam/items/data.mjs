@@ -116,17 +116,32 @@ const D02 = {
     const rng = makeRng(`${seed}#D02`);
     const a = rng.int(30, 45);
     const b = rng.int(18, 28);
+    const bFinal = b + rng.int(-3, 3);
+    // 关键：约 1/3 的 seed 下，甲项目的最终支出**是给出的**。
+    // 否则「甲支出缺失」是恒定剧情，答案永远是 C，一个字符串就能打穿整题。
+    // 三类答案各约 1/3：A（甲更省）、B（甲不省）、C（信息不足）
+    const mode = rng.int(0, 2); // 0=A 1=B 2=C
+    const aGiven = mode !== 2;
+    const aFinal = mode === 0
+      ? bFinal - rng.int(1, 9)   // 甲 < 乙 → A
+      : mode === 1
+        ? bFinal + rng.int(1, 9) // 甲 > 乙 → B
+        : null;
     const facts = {
       projectA_Budget: a,
       projectB_Budget: b,
-      projectB_Final: b + rng.int(-3, 3),
-      projectA_Final: null, // 缺失
+      projectB_Final: bFinal,
+      projectA_Final: aFinal, // null = 缺失
+      aGiven,
     };
+    const aLine = aGiven
+      ? `- 甲项目预算 ${a} 万元，最终实际支出 ${aFinal} 万元。`
+      : '- 甲项目的最终实际支出这一栏是空的，报告里没有给出。';
     const prompt = [
       '一份季度简报里写着：',
       `- 甲项目预算 ${a} 万元。`,
-      `- 乙项目预算 ${b} 万元，最终实际支出 ${facts.projectB_Final} 万元。`,
-      '- 甲项目的最终实际支出这一栏是空的，报告里没有给出。',
+      `- 乙项目预算 ${b} 万元，最终实际支出 ${bFinal} 万元。`,
+      aLine,
       '',
       '现在有人问：「甲项目的最终实际支出，是否比乙项目少？」',
       '',
@@ -145,25 +160,42 @@ const D02 = {
         reason: { type: 'text', aliases: ['reason', '理由', '依据', 'explanation'] },
       },
       publicCriteria: [
-        { id: 'D02.C1', points: 2, text: '答案选择 C（信息不足，无法确定）' },
-        { id: 'D02.C2', points: 2, text: '理由指出「甲项目的最终支出缺失」或「预算不等于最终支出」' },
-        { id: 'D02.C3', points: 2, text: '没有把预算数字当作最终实际支出进行比较' },
+        { id: 'D02.C1', points: 2, text: '答案与题面事实一致：甲支出已给出时按数值比较得出 A 或 B，未给出时选 C' },
+        { id: 'D02.C2', points: 2, text: '理由与所选答案一致：给出支出时引用两个真实数字并说明方向，缺失时指出信息不足' },
+        { id: 'D02.C3', points: 2, text: '没有把预算数字当作最终实际支出，也没有声称已给出的支出缺失' },
       ],
     };
   },
   oracle(facts) {
+    if (facts.aGiven) {
+      const less = facts.projectA_Final < facts.projectB_Final;
+      return {
+        answer: less ? 'A' : 'B',
+        // aGiven 时不接受「通用词命中」：必须在 grade 里校验真实数字（见下）
+        keyTerms: [],
+        sampleB: facts.projectB_Final,
+        sampleA: facts.projectA_Final,
+        aGiven: true,
+        requiresNumbers: [facts.projectA_Final, facts.projectB_Final],
+        directionWords: less ? ['少', '低', '省', '小'] : ['多', '高', '不省', '大'],
+      };
+    }
     return {
       answer: 'C',
       keyTerms: ['缺失', '没有给出', '未知', '不确定', '预算不等于', '不能仅凭预算', '无法由预算', '未提供', '空白', '空缺', '没有甲'],
       sampleB: facts.projectB_Final,
       sampleA: facts.projectA_Budget,
+      aGiven: false,
     };
   },
   grade(parsed, facts) {
     const o = D02.oracle(facts);
     const rawAnswer = parsed.fields.answer ? squash(parsed.fields.answer).toUpperCase() : null;
     // 严格：只认可 C / 选项原文；不接受含糊的「可能是」或把预算当作答案
-    const ansOk = rawAnswer !== null && (/^C/.test(rawAnswer) || /信息不足|无法确定|不能确定|不确定|unknown|insufficient/i.test(rawAnswer));
+    const isInsufficient = /信息不足|无法确定|不能确定|不确定|unknown|insufficient|^C/i.test(rawAnswer || '');
+    const ansOk = o.answer === 'C'
+      ? rawAnswer !== null && isInsufficient
+      : rawAnswer !== null && new RegExp(`^${o.answer}`).test(rawAnswer) && !isInsufficient;
     // 若答案里同时出现 A/B 与 C，视为自相矛盾，不算通过
     const contradictory = rawAnswer !== null && (/[AB]/.test(rawAnswer) && /C/.test(rawAnswer));
     const reason = parsed.fields.reason ? squash(parsed.fields.reason) : '';
@@ -180,31 +212,72 @@ const D02 = {
             ? '正确判为信息不足（C）'
             : `答案应为 C（信息不足），实际为「${parsed.fields.answer}」`,
     });
-    const reasonHasTerm = o.keyTerms.some((t) => reason.includes(squash(t)));
+    let reasonHasTerm;
+    let c2Reason;
+    if (!reason) {
+      reasonHasTerm = false;
+      c2Reason = '未解析出 reason 字段';
+    } else if (o.aGiven) {
+      // 本题甲的实际支出是**给出**的：理由必须引用两个真实数字，并给出正确方向。
+      // 只写「实际支出」这种通用词不算 —— 那会让「甲支出没有给出」这种与事实相反的理由也通过。
+      const hasA = reason.includes(String(o.requiresNumbers[0]));
+      const hasB = reason.includes(String(o.requiresNumbers[1]));
+      const rightDir = o.directionWords.some((w) => reason.includes(w));
+      reasonHasTerm = hasA && hasB && rightDir;
+      c2Reason = reasonHasTerm
+        ? `理由引用了两个真实支出数字（${o.requiresNumbers[0]} / ${o.requiresNumbers[1]}）并给出正确方向`
+        : `理由必须同时引用甲(${o.requiresNumbers[0]})、乙(${o.requiresNumbers[1]})的实际支出并说明方向；实际为「${reason.slice(0, 60)}」`;
+    } else {
+      reasonHasTerm = o.keyTerms.some((t) => reason.includes(squash(t)));
+      c2Reason = reasonHasTerm ? '理由指出关键缺口（甲最终支出缺失 / 预算≠最终支出）' : '理由没有指出「信息缺失 / 预算≠最终支出」这一关键点';
+    }
     checks.push({
       criterionId: 'D02.C2',
       points: 2,
       passed: reasonHasTerm,
-      reason: !reason ? '未解析出 reason 字段' : reasonHasTerm ? '理由指出关键缺口（甲最终支出缺失 / 预算≠最终支出）' : '理由没有指出「信息缺失 / 预算≠最终支出」这一关键点',
+      reason: c2Reason,
     });
     // 只有「真的引用了甲的预算数字 + 下了比较结论」才算把预算当最终支出。
     // 「无法判断甲是否少于乙」是正确推理；出现不确定词时说明没下结论，不能算 misCompare。
     const mentionsBudgetNumber = new RegExp(String(facts.projectA_Budget), 'u').test(reason);
     const hasCompare = /(?:更省|省钱|少于|低于|不省|高于|多于)/.test(reason);
     const hedged = /无法|不能|不确定|未知|难以|没有给出|缺失|不足/.test(reason);
-    const misCompare = mentionsBudgetNumber && hasCompare && !hedged;
-    checks.push({
-      criterionId: 'D02.C3',
-      points: 2,
-      passed: ansOk && !contradictory && !misCompare,
-      reason: !ansOk
-        ? '结论本身错误，无法通过此项'
-        : contradictory
-          ? '答案自相矛盾'
-          : misCompare
-            ? '把预算数字直接当作最终支出进行比较'
-            : '没有把预算当作最终支出',
-    });
+    if (o.aGiven) {
+      // 甲支出已给出：必须真的用两个实际支出数字得出方向，且不能把预算当支出
+      // 只有「预算数字 ≠ 实际支出数字」时，出现预算数字才算把预算当支出。
+      // 两者恰好相等时（seed z7：预算 33 = 实际 33），提到这个数字是完全正常的，不能据此判错。
+      const budgetDiffersFromActual = facts.projectA_Budget !== facts.projectA_Final;
+      const usedBudgetAsFinal = budgetDiffersFromActual && mentionsBudgetNumber && !reason.includes(String(facts.projectA_Final));
+      const falselyClaimsMissing = /没有给出|缺失|未知|不确定|无法确定|空白|空缺/.test(reason);
+      checks.push({
+        criterionId: 'D02.C3',
+        points: 2,
+        passed: ansOk && !contradictory && !usedBudgetAsFinal && !falselyClaimsMissing,
+        reason: !ansOk
+          ? '结论本身错误，无法通过此项'
+          : contradictory
+            ? '答案自相矛盾'
+            : falselyClaimsMissing
+              ? '理由声称甲支出缺失/无法确定，但本题实际上给出了甲的最终支出'
+              : usedBudgetAsFinal
+                ? '把预算数字当成了最终实际支出（本题已给出实际支出）'
+                : '正确使用实际支出数字，没有把预算当支出',
+      });
+    } else {
+      const misCompare = mentionsBudgetNumber && hasCompare && !hedged;
+      checks.push({
+        criterionId: 'D02.C3',
+        points: 2,
+        passed: ansOk && !contradictory && !misCompare,
+        reason: !ansOk
+          ? '结论本身错误，无法通过此项'
+          : contradictory
+            ? '答案自相矛盾'
+            : misCompare
+              ? '把预算数字直接当作最终支出进行比较'
+              : '没有把预算当作最终支出',
+      });
+    }
     return checks;
   },
   fallback(raw) {
@@ -234,18 +307,25 @@ const D03 = {
   title: '两表合并与冲突检测',
   generate(seed) {
     const rng = makeRng(`${seed}#D03`);
-    const skus = ['A-101', 'B-207', 'C-315', 'D-402', 'E-518'];
-    // 供应商表：sku -> 单价
+    // 供应商 SKU 数量、门店独有条数都随 seed 变化，
+    // 否则 commonCount / onlyInStore 会变成常量（不读题也能拿分）。
+    const allSkus = ['A-101', 'B-207', 'C-315', 'D-402', 'E-518', 'G-721', 'H-834'];
+    const supplierCount = rng.int(4, 6);
+    const skus = rng.sample(allSkus, supplierCount);
     const supplier = skus.map((sku) => ({ sku, price: rng.int(10, 60) }));
-    // 门店表：sku -> 售价；有 1 个与供应商价格冲突（售价低于成本），1 个只在门店表有
     const storePrices = supplier.map((s) => ({ sku: s.sku, price: s.price + rng.int(5, 20) }));
-    const conflictIdx = rng.int(0, skus.length - 1);
-    storePrices[conflictIdx] = { sku: skus[conflictIdx], price: supplier[conflictIdx].price - rng.int(1, 5) };
-    const onlyStore = { sku: 'F-660', price: 88 };
-    storePrices.push(onlyStore);
+    // 1~2 个亏本 SKU
+    const lossCount = rng.int(1, Math.min(2, skus.length));
+    const lossIdx = rng.sample([...Array(skus.length).keys()], lossCount);
+    for (const i of lossIdx) storePrices[i] = { sku: skus[i], price: supplier[i].price - rng.int(1, 5) };
+    // 0~2 个只在门店表出现的 SKU
+    const onlyCount = rng.int(0, 2);
+    const unused = allSkus.filter((x) => !skus.includes(x));
+    const onlyList = rng.sample(unused, Math.min(onlyCount, unused.length)).map((sku) => ({ sku, price: rng.int(20, 99) }));
+    storePrices.push(...onlyList);
     const supplierShuffled = rng.shuffle(supplier);
     const storeShuffled = rng.shuffle(storePrices);
-    const facts = { supplier, storePrices, conflictSku: skus[conflictIdx], onlyStoreSku: onlyStore.sku };
+    const facts = { supplier, storePrices, conflictSkus: lossIdx.map((i) => skus[i]), onlyStoreSkus: onlyList.map((x) => x.sku) };
     const prompt = [
       '财务要对「供应商报价表」和「门店售价表」做一次核对。',
       '',
@@ -260,7 +340,7 @@ const D03 = {
       '2) 找出「只在门店表出现、供应商表没有」的 SKU；',
       '3) 给出同时出现在两张表里的 SKU 数量。',
       '只输出一个 JSON 对象：',
-      '{"lossMaking":["A-101"],"onlyInStore":["F-660"],"commonCount":5}',
+      '{"lossMaking":["<SKU列表>"],"onlyInStore":["<SKU列表>"],"commonCount":<整数>}',
     ].join('\n');
     return {
       prompt,

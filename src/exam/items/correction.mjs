@@ -22,17 +22,20 @@ const C01 = {
     const c = rng.int(9, 29);
     const correct = a + b + c;
     // 制造一个有确定偏差的错误和：错和落在 [correct-9, correct+9] 且不等于正确值
+    // 约 1/4 的 seed 生成**正确**的等式（此时 isCorrect 应为 true），
+    // 否则 isCorrect 恒 false，白拿 1 分。
+    const makeCorrect = rng.next() < 0.25;
     let delta = rng.int(1, 9) * (rng.next() < 0.5 ? -1 : 1);
     if (delta === 0) delta = 3;
-    const wrong = correct + delta;
-    const facts = { a, b, c, correct, wrong };
+    const wrong = makeCorrect ? correct : correct + delta;
+    const facts = { a, b, c, correct, wrong, statementIsCorrect: makeCorrect };
     const prompt = [
       '「小禾文具」的店员在核对一张汇总单。',
       `她写的是：${a} + ${b} + ${c} = ${wrong}`,
       '',
       '请检查这个等式，指出原来的结果对不对，并给出正确的和。',
       '只输出一个 JSON 对象：',
-      '{"isCorrect":false,"correctTotal":60}',
+      '{"isCorrect":<true或false>,"correctTotal":<正确的和>}',
       '（isCorrect 表示「原等式的写法是否正确」，这里是 true/false；correctTotal 是正确结果。）',
     ].join('\n');
     return {
@@ -43,13 +46,13 @@ const C01 = {
         correctTotal: { type: 'number', aliases: ['correctTotal', '正确结果', '正确和', 'rightTotal', 'sum'] },
       },
       publicCriteria: [
-        { id: 'C01.C1', points: 1, text: '明确判定原等式错误（isCorrect=false）' },
+        { id: 'C01.C1', points: 1, text: '正确判定原等式是否成立（isCorrect 与实际等式一致）' },
         { id: 'C01.C2', points: 3, text: '给出正确的和' },
       ],
     };
   },
   oracle(facts) {
-    return { isCorrect: false, correctTotal: facts.a + facts.b + facts.c };
+    return { isCorrect: facts.statementIsCorrect, correctTotal: facts.a + facts.b + facts.c };
   },
   grade(parsed, facts) {
     const o = C01.oracle(facts);
@@ -58,8 +61,12 @@ const C01 = {
     checks.push({
       criterionId: 'C01.C1',
       points: 1,
-      passed: ic === false,
-      reason: ic === undefined || ic === null ? '未解析出 isCorrect' : ic === false ? '正确指出原等式错误' : '错误地认为原等式正确',
+      passed: ic === o.isCorrect,
+      reason: ic === undefined || ic === null
+        ? '未解析出 isCorrect'
+        : ic === o.isCorrect
+          ? (o.isCorrect ? '正确判断原等式无误' : '正确指出原等式错误')
+          : `判断错误：原等式${o.isCorrect ? '是正确' : '是错误的'}的，实际填 ${ic}`,
     });
     const ct = parsed.fields.correctTotal ?? null;
     checks.push({
@@ -154,13 +161,21 @@ const C02 = {
       passed: sameNumber(bv, o.beforeVoid),
       reason: bv === null ? '未解析出 beforeVoid' : sameNumber(bv, o.beforeVoid) ? `撤回前库存正确：${o.beforeVoid}` : `撤回前应为 ${o.beforeVoid}，实际为 ${bv}`,
     });
-    // 「理解撤回」：最终库存必须比撤回前多出被撤回的那笔出库数量
+    // 「理解撤回」：最终库存必须比撤回前多出被撤回的那笔出库数量。
+    // 关键：必须与 C1 联动 —— 否则 {"beforeVoid":0,"finalStock":4} 这种「两个都错但差值对」的答案能白拿 2 分。
+    const bvOk = sameNumber(bv, o.beforeVoid);
     const deltaOk = sameNumber(fs !== null && bv !== null ? fs - bv : null, facts.steps[3].qty);
     checks.push({
       criterionId: 'C02.C2',
       points: 2,
-      passed: deltaOk && fs !== null,
-      reason: fs === null || bv === null ? '缺少撤回前或最终库存，无法校验撤回逻辑' : deltaOk ? `最终比撤回前多 ${facts.steps[3].qty} 件，撤回逻辑正确` : `撤回后应比撤回前多 ${facts.steps[3].qty} 件，实际差 ${fs - bv} 件`,
+      passed: bvOk && deltaOk && sameNumber(fs, o.finalStock),
+      reason: bv === null || fs === null
+        ? '缺少撤回前或最终库存，无法校验撤回逻辑'
+        : !bvOk
+          ? `撤回前库存应为 ${o.beforeVoid}，实际为 ${bv}（差值对也不能算理解撤回）`
+          : deltaOk
+            ? `撤回前 ${bv} → 撤回后 ${fs}，正确加回 ${facts.steps[3].qty} 件`
+            : `撤回后应比撤回前多 ${facts.steps[3].qty} 件，实际差 ${fs - bv} 件`,
     });
     checks.push({
       criterionId: 'C02.C3',
@@ -205,7 +220,17 @@ const C03 = {
     const amt2 = coin() ? beyond(oldLimit) : within(oldLimit);   // 新规则（核心：别套旧门槛）
     const amt3 = coin() ? beyond(newLimit) : within(newLimit);   // 新规则
     const amt4 = coin() ? beyond(oldLimit) : within(oldLimit);   // 旧规则
-    const facts = { oldLimit, newLimit, amounts: { a1: amt1, a2: amt2, a3: amt3, a4: amt4 } };
+    // 提交日期也要随 seed 变化：否则 a1/a3/a4 的 rule 恒为旧/新/旧，
+    // 光靠「记下 rule 规律」就能白拿 C1 的 2 分。
+    const oldDate = () => `2 月 ${rng.int(10, 27)} 日`;
+    const newDate = () => `3 月 ${rng.int(2, 28)} 日`;
+    // 哪几笔是「旧规则期提交」也随 seed 变化（2 旧 + 2 新，但位置随机），
+    // 否则 rule 恒为「旧/新/新/旧」，背下来就能拿 C1。
+    const oldSlots = rng.sample(['a1', 'a2', 'a3', 'a4'], 2);
+    const dates = {};
+    for (const k of ['a1', 'a2', 'a3', 'a4']) dates[k] = oldSlots.includes(k) ? oldDate() : newDate();
+    const ruleOf = (d) => (d.startsWith('2 月') ? '旧' : '新');
+    const facts = { oldLimit, newLimit, amounts: { a1: amt1, a2: amt2, a3: amt3, a4: amt4 }, dates, ruleOf };
     const prompt = [
       '某公司的差旅审批规则在 3 月 1 日更新了版本：',
       `旧规则（3 月 1 日前有效）：单笔金额 ≤ ${oldLimit} 元由系统自动通过，超过需经理审批。`,
@@ -213,10 +238,10 @@ const C03 = {
       '公司还规定：规则按「提交时间」适用，不按「审批时间」。',
       '',
       '下面四笔申请，请判断每笔应按哪一版规则处理、以及最终是否需要人工审批。',
-      `1) 2 月 20 日提交，金额 ${amt1} 元；`,
-      `2) 3 月 5 日提交，金额 ${amt2} 元；`,
-      `3) 3 月 5 日提交，金额 ${amt3} 元；`,
-      `4) 2 月 25 日提交，金额 ${amt4} 元。`,
+      `1) ${dates.a1}提交，金额 ${amt1} 元；`,
+      `2) ${dates.a2}提交，金额 ${amt2} 元；`,
+      `3) ${dates.a3}提交，金额 ${amt3} 元；`,
+      `4) ${dates.a4}提交，金额 ${amt4} 元。`,
       '',
       '只输出一个 JSON 对象（a1–a4 四笔都要给，rule 填「旧」或「新」，needManual 填 true 或 false）：',
       '{"a1":{"rule":"<旧或新>","needManual":<true或false>},"a2":{"rule":"<旧或新>","needManual":<true或false>}}',
@@ -234,7 +259,7 @@ const C03 = {
       publicCriteria: [
         { id: 'C03.C1', points: 2, text: '四笔申请适用的规则版本（旧/新）全部正确' },
         { id: 'C03.C2', points: 2, text: '四笔申请是否需要人工审批全部正确' },
-        { id: 'C03.C3', points: 2, text: '第2笔（3 月提交）按新规则门槛判定，未误用旧规则门槛' },
+        { id: 'C03.C3', points: 2, text: '第2笔按「提交日期所属的那一版规则」判定（按提交时间，不按审批时间）' },
       ],
       answerStyle: 'nestedMaps',
     };
@@ -245,21 +270,23 @@ const C03 = {
     const A = facts.amounts;
     return {
       cases: {
-        a1: { rule: '旧', needManual: A.a1 > L },
-        a2: { rule: '新', needManual: A.a2 > N },
-        a3: { rule: '新', needManual: A.a3 > N },
-        a4: { rule: '旧', needManual: A.a4 > L },
+        a1: { rule: facts.ruleOf(facts.dates.a1), needManual: A.a1 > (facts.ruleOf(facts.dates.a1) === '旧' ? L : N) },
+        a2: { rule: facts.ruleOf(facts.dates.a2), needManual: A.a2 > (facts.ruleOf(facts.dates.a2) === '旧' ? L : N) },
+        a3: { rule: facts.ruleOf(facts.dates.a3), needManual: A.a3 > (facts.ruleOf(facts.dates.a3) === '旧' ? L : N) },
+        a4: { rule: facts.ruleOf(facts.dates.a4), needManual: A.a4 > (facts.ruleOf(facts.dates.a4) === '旧' ? L : N) },
       },
     };
   },
   grade(parsed, facts) {
     const o = C03.oracle(facts);
+    // 严格归一：必须整串就是「旧/新」（允许 old/new 与少量修饰），
+    // 旧实现只要含「旧」字就返回「旧」，"旧__乱码" 也能过（N8）。
     const normRule = (v) => {
       const s = squash(v);
       if (!s) return null;
-      if (/旧|old|前/.test(s)) return '旧';
-      if (/新|new/.test(s)) return '新';
-      return s;
+      if (/^(旧|旧规则|old|旧版)$/i.test(s)) return '旧';
+      if (/^(新|新规则|new|新版)$/i.test(s)) return '新';
+      return null;
     };
     const booly = (v) => {
       if (typeof v === 'boolean') return v;
@@ -308,14 +335,14 @@ const C03 = {
     // 但「规则版本=新」在任何 seed 下都成立，且人工判断必须与 oracle 一致。
     const a2 = getCase('a2');
     const expA2 = o.cases.a2;
-    const a2Ok = !!a2 && a2.rule === '新' && a2.needManual === expA2.needManual;
+    const a2Ok = !!a2 && a2.rule === expA2.rule && a2.needManual === expA2.needManual;
     checks.push({
       criterionId: 'C03.C3',
       points: 2,
       passed: a2Ok,
       reason: a2Ok
-        ? `第2笔正确按新规则判定（金额 ${facts.amounts.a2}，门槛 ${facts.newLimit}，需人工=${expA2.needManual}）`
-        : `第2笔应按新规则判定（金额 ${facts.amounts.a2}，门槛 ${facts.newLimit}，需人工=${expA2.needManual}），实际为 ${a2 ? (a2.rule ?? '?') + '/' + (a2.needManual ?? '?') : '缺失'}`,
+        ? `第2笔正确按${expA2.rule}规则判定（提交于 ${facts.dates.a2}，金额 ${facts.amounts.a2}，需人工=${expA2.needManual}）`
+        : `第2笔应按${expA2.rule}规则判定（提交于 ${facts.dates.a2}，金额 ${facts.amounts.a2}，需人工=${expA2.needManual}），实际为 ${a2 ? (a2.rule ?? '?') + '/' + (a2.needManual ?? '?') : '缺失'}`,
     });
     return checks;
   },
@@ -405,20 +432,27 @@ const C04 = {
   },
   grade(parsed, facts) {
     const o = C04.oracle(facts);
-    const rc = parsed.fields.rootCause ? squash(parsed.fields.rootCause) : '';
-    // 四选一归一：先数命中了几项。只命中「数量」→ 通过；
-    // 同时命中多项（如「不是单价问题，是数量用错」里的否定式排除）→ 用否定词消歧，而不是直接判错。
-    const hitsRoot = {
-      数量: /数量/.test(rc),
-      单价: /单价/.test(rc),
-      折扣: /折扣/.test(rc),
-      四舍五入: /四舍五入/.test(rc),
+    // 严格四选一：先剔除「不是X」这类明确否定项，再要求**恰好剩下一个**选项，
+    // 且该选项就是「数量」。旧实现只做 /数量/ 包含匹配，
+    // 导致「数量用错__乱码」「数量用错了但其实是别的原因」都能过（N8）。
+    const rcRaw = parsed.fields.rootCause ? squash(parsed.fields.rootCause) : '';
+    const OPTIONS = ['数量', '单价', '折扣', '四舍五入'];
+    // 先剥离括号/方括号里的补充说明（「数量用错（不是单价问题）」→「数量用错」），
+    // 再判断否定项：括号内说「不是X」是排除，不算主张 X。
+    const rcCore = rcRaw.replace(/[（(\[【][^）)\]】]*[）)\]】]/g, '').trim();
+    // 排除词既可能紧贴在选项前（「不是单价」），也可能是一串（「排除单价和折扣」），
+    // 所以还要检查「排除」之后整段里出现的选项，一律视为被排除。
+    const negated = (w) => {
+      if (new RegExp(`(?:不是|并非|排除|而不是|不是因为|而非)${w}`).test(rcRaw)) return true;
+      const tail = rcRaw.split(/排除|而不是|而非|不是/).slice(1).join('|');
+      return tail.includes(w);
     };
-    const positive = Object.entries(hitsRoot).filter(([k, v]) => v).map(([k]) => k);
-    // 排除式表达：「不是X」「非X」「排除X」——这些不应算作主张 X
-    const negated = (word) => new RegExp(`(?:不是|并非|非|排除|而不是|不是因为)${word}`).test(rc);
-    const effective = positive.filter((w) => !negated(w));
-    const rcOk = effective.length === 1 && effective[0] === '数量';
+    const effective = OPTIONS.filter((w) => rcCore.includes(w) && !negated(w));
+    // 主体部分必须干净：整串就是「数量用错」这类表述，不能夹带其他主张。
+    const cleanQuantity = /^(数量|数量用错|数量错误|数量有误|数量错|用错数量|数量写错|数量有问题|数量不对)$/u.test(rcCore);
+    // 若原文括号里还有其它选项，但都被否定词排除了，仍算干净。
+    const strayPositive = OPTIONS.filter((w) => w !== '数量' && rcRaw.includes(w) && !negated(w));
+    const rcOk = effective.length === 1 && effective[0] === '数量' && cleanQuantity && strayPositive.length === 0;
     const fs = parsed.fields.fixedSubtotal ?? null;
     const ft = parsed.fields.fixedTotal ?? null;
     const checks = [];
@@ -426,7 +460,7 @@ const C04 = {
       criterionId: 'C04.C1',
       points: 3,
       passed: rcOk,
-      reason: !rc ? '未解析出 rootCause' : rcOk ? '正确指出「数量用错」' : `错误根源应为「数量用错」，实际为「${parsed.fields.rootCause}」`,
+      reason: !rcRaw ? '未解析出 rootCause' : rcOk ? '正确指出「数量用错」' : `错误根源应为「数量用错」，实际为「${parsed.fields.rootCause}」`,
     });
     checks.push({
       criterionId: 'C04.C2',

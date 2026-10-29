@@ -8,7 +8,7 @@
 <meta name="robots" content="noindex">
 <meta property="og:type" content="article">
 <meta property="og:title" content="演示报告（DEMO）— 乐子跑分 LeziBench">
-<meta property="og:description" content="用真实判分器跑出来的演示成绩单：74/100，逐题扣分依据完整呈现。演示数据，非真实成绩。">
+<meta property="og:description" content="用真实判分器跑出来的演示成绩单，逐题扣分依据完整呈现。演示数据，非真实成绩。">
 <meta property="og:image" content="./assets/screenshot-home.png">
 <meta name="theme-color" content="#0b0c0e">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='4' fill='%230b0c0e'/%3E%3Cpath d='M8 22V10h3.4v9.2H20V22z' fill='%23ffb84d'/%3E%3Cpath d='M22 10h3.2v5.6H22z' fill='%23ffb84d' opacity='.55'/%3E%3C/svg%3E">
@@ -28,7 +28,7 @@
 <div class="demo-banner" role="note">
   <span class="tag">DEMO</span>
   <strong>演示数据 · 非真实成绩</strong>
-  <span class="note">下面整份报告由真实判分器生成，但答卷是人为构造的示例，不代表任何用户、模型或产品。</span>
+  <span class="banner-note">下面整份报告由真实判分器生成，但答卷是人为构造的示例，不代表任何用户、模型或产品。</span>
 </div>
 
 <header class="site-head">
@@ -56,12 +56,12 @@
       <p class="lede">
         这是 <code>report --format html</code> 的真实输出，原样嵌在下面。
         分数、维度、逐题扣分理由全部由判分器算出来 —— 唯一「不真实」的是答卷本身：
-        我们故意按六种典型错误作答，好让各种失败形态都能被看到。
+        我们故意在几道题上按典型错误作答，好让「扣分是怎么呈现的」能被看到。
       </p>
       <div class="callout callout--warn" style="margin-top:1.4rem">
         <h4>请勿引用为成绩</h4>
         <p>
-          这份报告的种子是 <code>lezi-demo-2026</code>，分数 74/100。它<strong>不</strong>代表任何模型、
+          这份报告由脚本 <code>website/build/build-site.mjs</code> 现场生成（种子 <code>lezi-demo-2026</code>），分数与括号中的指纹都取自那一次真实判分。它<strong>不</strong>代表任何模型、
           任何用户、任何版本的能力水平。真实运行需要你自己走完四批题目，报告里的种子和运行编号会不同。
         </p>
       </div>
@@ -81,87 +81,68 @@
 
     <section class="section" aria-labelledby="what">
       <h2 id="what" style="margin-bottom:1.2rem">这份演示报告刻意覆盖了哪些失败形态</h2>
-      <p>六处失分分别对应六种不同的判分语义，正好可以把「扣分是怎么来的」讲清楚：</p>
+      <p>这一局共失分 <strong>10</strong> 次，分布在 <strong>5</strong> 道题上 —— 正好可以把「扣分是怎么来的」讲清楚：</p>
 
+      <!--WHAT-FAILS:START-->
       <div class="evidence">
 
         <article class="ev">
           <div>
-            <h3>I01 · 最后一条通知没生效</h3>
-            <p class="claim">截止时间答对了，但漏掉了「预算表这次不用交了」这条覆盖。</p>
+            <h3>R01 · 购物小票的真实合计</h3>
+            <p class="claim">得 <strong>1/4</strong>，有 1 条条件未通过。</p>
           </div>
           <p class="detail">
-            得 1/4。理由：<code>I01.C2 · 3 分 · 错误地表示仍要附预算表</code>。
-            <br>这道题考的是<strong>哪条通知最终有效</strong>，不是「有没有读到通知」。
-            后面发的通知覆盖前面的，这是条件文本里写明的口径。
+            <code>R01.C2 · 3 分</code>　应付款应为 65，实际为 70
+            <br><span class="muted">两条条件独立计分：算对原价拿 1 分，算错应付款再丢 3 分。不会因为「整体思路对」就给中间分。</span>
           </p>
         </article>
 
         <article class="ev">
           <div>
-            <h3>R01 · 满减忘了扣</h3>
-            <p class="claim">原价算对了，应付款直接等于原价 —— 活动条件被忽略。</p>
+            <h3>R04 · 六线索排除推理（唯一解）</h3>
+            <p class="claim">得 <strong>3/9</strong>，有 2 条条件未通过。</p>
           </div>
           <p class="detail">
-            得 1/4。理由：<code>R01.C2 · 3 分 · 应付款应为 65，实际为 70</code>。
-            <br>注意这里的机制：<strong>两条条件独立计分</strong>，算对原价拿 1 分，
-            算错应付款再丢 3 分。不会因为「整体思路对」就给个中间分。
+            <code>R04.C2 · 3 分</code>　3/4 人颜色正确<br><code>R04.C3 · 3 分</code>　3/4 人的位置与颜色同时正确
+            <br><span class="muted">三条条件都要求「全部正确」才给分：位置全对 3 分、颜色全对 3 分、配对全对 3 分。错一个人会同时丢掉后两项。</span>
           </p>
         </article>
 
         <article class="ev">
           <div>
-            <h3>R04 · 一对一配错一个人</h3>
-            <p class="claim">四个人的位置全对，但有一个人的卡片颜色错了。</p>
+            <h3>D02 · 区分事实、推断与信息不足</h3>
+            <p class="claim">得 <strong>0/6</strong>，有 3 条条件未通过。</p>
           </div>
           <p class="detail">
-            得 3/9。理由：<code>R04.C2 · 3 分 · 3/4 人颜色正确</code>，
-            <code>R04.C3 · 3 分 · 3/4 人的位置与颜色同时正确</code>。
-            <br>三条条件要求「全部正确」才给分：位置全对 3 分、颜色全对 3 分、配对全对 3 分。
-            三个维度都到位才是满分，错一个人就掉两档。
+            <code>D02.C1 · 2 分</code>　答案应为 C（信息不足），实际为「A」<br><code>D02.C2 · 2 分</code>　理由必须同时引用甲(33)、乙(29)的实际支出并说明方向；实际为「甲项目预算比乙低,所以更省钱」<br><code>D02.C3 · 2 分</code>　结论本身错误，无法通过此项
+            <br><span class="muted">这题随机生成三种情形（A / B / C），不是固定答案。判分看三件事：选项对不对、理由是否引用了实际给出的数字、有没有把预算当成实际支出。</span>
           </p>
         </article>
 
         <article class="ev">
           <div>
-            <h3>D02 · 把预算当成了实际支出</h3>
-            <p class="claim">结论选了「甲更省钱」，理由是「甲预算比乙低」。</p>
+            <h3>C02 · 四步修改后的最新库存状态</h3>
+            <p class="claim">得 <strong>2/6</strong>，有 2 条条件未通过。</p>
           </div>
           <p class="detail">
-            得 0/6，三条条件全丢。这道题的正解是「信息不足，无法确定」——
-            甲的<strong>最终实际支出</strong>那一栏是空的，预算低不等于花得少。
-            <br>注意第三条件 <code>D02.C3</code> 单独立了一条：「没有把预算数字当作最终实际支出进行比较」。
-            即使结论碰巧蒙对，这一条照样会独立判定。
+            <code>C02.C2 · 2 分</code>　撤回后应比撤回前多 3 件，实际差 0 件<br><code>C02.C3 · 2 分</code>　最终库存应为 84，实际为 81
+            <br><span class="muted">「撤回第 2 步的出库单」意味着把那笔出库<strong>加回来</strong>。C02.C2 专门检查「最终值 − 撤回前值」是否等于撤回数量，所以两步都算错时仍可能单独拿到这一分。</span>
           </p>
         </article>
 
         <article class="ev">
           <div>
-            <h3>C02 · 没理解「撤回」的方向</h3>
-            <p class="claim">撤回前库存算对了，最终库存直接等于撤回前 —— 等于没处理撤回。</p>
+            <h3>C03 · 新旧规则更迭后的合法操作</h3>
+            <p class="claim">得 <strong>2/6</strong>，有 2 条条件未通过。</p>
           </div>
           <p class="detail">
-            得 2/6。理由：<code>C02.C2 · 撤回后应比撤回前多 3 件，实际差 0 件</code>。
-            <br>「撤回第 2 步的出库单」意味着把那笔出库<strong>加回来</strong>，库存应该变多而不是不变。
-            条件 <code>C02.C2</code> 不比对最终值，而是专门检查「最终值 − 撤回前值」是否等于撤回数量 ——
-            这样即使两步都算错、只要差值对，也能单独拿到「理解了撤回语义」这一分。
-          </p>
-        </article>
-
-        <article class="ev">
-          <div>
-            <h3>C03 · 新旧规则用混了</h3>
-            <p class="claim">四笔申请的规则版本全判对了，但第 2 笔误判成需要人工审批。</p>
-          </div>
-          <p class="detail">
-            得 2/6。理由：<code>C03.C3 · 第2笔应按新规则判定（金额 3645，门槛 5655，需人工=false），实际为 新/true</code>。
-            <br>这道题的关键约束是「规则按<strong>提交时间</strong>适用，不按审批时间」。
-            第 2 笔是 3 月 5 日提交，该走新规则的门槛，金额低于门槛 → 自动通过。
-            判分器把「规则版本」和「是否人工」拆成两条，再加一条专门盯第 2 笔的陷阱条件。
+            <code>C03.C1 · 2 分</code>　3/4 笔规则版本正确；a2(规则旧/人工true，实际新/true)<br><code>C03.C3 · 2 分</code>　第2笔应按旧规则判定（提交于 2 月 22 日，金额 3645，需人工=true），实际为 新/true
+            <br><span class="muted">关键约束是「规则按<strong>提交时间</strong>适用，不按审批时间」。判分器把「规则版本」和「是否人工」拆成两条，再加一条专门盯第 2 笔的陷阱条件。</span>
           </p>
         </article>
 
       </div>
+      <!--WHAT-FAILS:END-->
     </section>
 
     <section class="section section--tight">
@@ -217,7 +198,7 @@
     </div>
     <div class="foot-legal">
       <span>© 2026 LeziBench contributors</span>
-      <span>exam v1.0.0 · grader v1.0.0</span>
+      <span>exam v1.2.0 · grader v1.2.0</span>
       <span>本站无 Cookie、无分析脚本、无外部字体</span>
       <span class="spacer">本地规则核验 · 非认证成绩</span>
     </div>

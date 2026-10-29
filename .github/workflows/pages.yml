@@ -1,0 +1,108 @@
+name: Deploy site to GitHub Pages
+
+# 只发布能过测试的版本：test job 绿了才允许部署。
+# 前端产物在 website/ 下，是纯静态 HTML/CSS/JS，没有构建步骤、没有外部依赖，
+# 所以直接 upload 整个目录即可（不需要 npm install）。
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'website/**'
+      # 站点内容由题库生成，改题目/分值会改变 demo 报告与 method 页，
+      # 所以这些路径也一并触发，避免线上页面和仓库内容对不上。
+      - 'src/**'
+      - 'scripts/**'
+      - 'tests/**'
+      - '.github/workflows/pages.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# 同一时刻只允许一次部署；新推送排队而不是打断正在进行的部署。
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  # ------------------------------------------------------------------
+  # 部署前先跑测试：Pages 不能发一个测试都过不了的版本。
+  # ------------------------------------------------------------------
+  test:
+    name: 部署前测试
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+
+      - name: 安装 Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: 准备隔离的数据目录
+        shell: bash
+        run: echo "LEZIBENCH_HOME=$RUNNER_TEMP/lezibench-pages-data" >> "$GITHUB_ENV"
+
+      # 与 ci.yml 保持一致：让 bash 展开 glob，避免 Node 18/20 不识别 glob 的差异。
+      - name: 单元 / 契约 / 回归测试
+        shell: bash
+        run: node --test tests/*.test.mjs
+
+      - name: 端到端
+        run: node tests/e2e-run.mjs
+
+      - name: 站点静态产物自检（无外部资源、无分析脚本）
+        shell: bash
+        run: |
+          set -e
+          # 站点声明「外部资源：零」（docs/PRIVACY.md §4），这里守住这条声明。
+          # 只查「会被浏览器加载」的属性：src= 与 <link href=。
+          # <a href="https://github.com/..."> 是普通超链接，不算外部资源，不该误杀。
+          bad=0
+          # 会被浏览器自动加载的资源：script/img/iframe/source/video/audio/embed 的 src
+          if grep -rInE '<(script|img|iframe|source|video|audio|embed)[^>]*\ssrc="(https?:)?//' website --include='*.html'; then bad=1; fi
+          # <link> 的 href（样式表、字体、预连接等）
+          if grep -rInE '<link\s[^>]*href="(https?:)?//' website --include='*.html'; then bad=1; fi
+          # CSS 里的 @import / url() 外链
+          if grep -rInE '@import\s+["(]?(https?:)?//|url\(\s*["(]?(https?:)?//' website --include='*.css'; then bad=1; fi
+          if [ "$bad" -ne 0 ]; then
+            echo "::error::website/ 出现外部资源引用，与 docs/PRIVACY.md §4「零外部资源」的声明不符。"
+            exit 1
+          fi
+          test -f website/index.html || { echo "::error::缺少 website/index.html"; exit 1; }
+          test -f website/.nojekyll  || { echo "::error::缺少 website/.nojekyll（GitHub Pages 需要它来保留 _ 开头的路径）"; exit 1; }
+          echo "站点自检通过：无外部资源、入口文件与 .nojekyll 均在。"
+
+  # ------------------------------------------------------------------
+  # 部署。pages / id-token 权限只给这一个 job，不给整个 workflow。
+  # ------------------------------------------------------------------
+  deploy:
+    name: 部署到 Pages
+    needs: test
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      pages: write
+      id-token: write
+      contents: read
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+
+      - name: 配置 Pages
+        uses: actions/configure-pages@v5
+
+      - name: 打包 website/
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: website
+
+      - name: 部署
+        id: deployment
+        uses: actions/deploy-pages@v4

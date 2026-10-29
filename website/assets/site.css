@@ -625,6 +625,16 @@ hr {
 /* ---------- 分值解剖表 ---------- */
 .anatomy { overflow-x: auto; border: 1px solid var(--line); border-radius: var(--radius); background: var(--panel); }
 
+/* 窄屏：把次要列藏掉、允许单元格换行，让表格基本能塞进 390px。
+   仍溢出的部分横向可滚（overflow-x:auto），但不再默认「一看就像被裁掉」。 */
+@media (max-width: 600px) {
+  .anatomy, .plat { overflow-x: auto; }
+  table.grid { min-width: 0; font-size: 0.78rem; }
+  table.grid th, table.grid td { padding: 0.5rem 0.5rem; word-break: break-word; }
+  table.grid th.num, table.grid td.num { font-size: 0.75rem; }
+  table.grid code { font-size: 0.72rem; word-break: break-all; }
+}
+
 table.grid {
   width: 100%;
   border-collapse: collapse;
@@ -847,7 +857,9 @@ table.grid .pts { color: var(--amber); font-weight: 650; }
   padding-block: clamp(2.4rem, 5vw, 3.8rem) clamp(1.2rem, 3vw, 2rem);
   border-bottom: 1px solid var(--line-soft);
 }
-.page-head h1 { font-size: var(--t-h1); max-width: 26ch; margin-bottom: 0.9rem; }
+/* max-width 用 em 而不是 ch：中文字宽约 1em，ch 按西文数字宽度算会把这些标题压得过窄，
+   导致「十六」被拆到两行。 */
+.page-head h1 { font-size: var(--t-h1); max-width: 19em; margin-bottom: 0.9rem; text-wrap: balance; }
 .page-head .lede {
   font-size: clamp(1rem, 1.4vw, 1.125rem);
   color: var(--fg-dim);
@@ -1101,26 +1113,37 @@ pre .a { color: var(--amber); }
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 0.6rem 1rem;
-  padding: 0.7rem 1rem;
+  gap: 0.5rem 0.9rem;
+  padding: 0.62rem 1rem;
   background: var(--amber);
   color: var(--amber-ink);
   font-weight: 700;
   font-size: var(--t-small);
   letter-spacing: 0.01em;
+  line-height: 1.5;
   position: sticky;
   top: 0;
   z-index: 110;
+  border-bottom: 1px solid color-mix(in srgb, var(--amber-ink) 22%, transparent);
 }
 .demo-banner .tag {
   font-family: var(--mono);
   font-size: 0.68rem;
+  font-weight: 700;
   letter-spacing: 0.1em;
   border: 1px solid color-mix(in srgb, var(--amber-ink) 45%, transparent);
   border-radius: 2px;
   padding: 0.12rem 0.4rem;
+  flex: none;
 }
-.demo-banner .note { font-weight: 500; opacity: 0.85; margin-left: auto; }
+/* 说明文字单独占一行：横幅要窄到 360px 也不挤成一团 */
+.demo-banner .banner-note {
+  flex: 1 1 100%;
+  font-weight: 500;
+  font-size: 0.8125rem;
+  opacity: 1;
+  color: color-mix(in srgb, var(--amber-ink) 82%, transparent);
+}
 
 .demo-frame {
   position: relative;
@@ -1256,13 +1279,20 @@ pre .a { color: var(--amber); }
   .foot-legal .spacer { display: none; }
   .scr-wide { display: none; }
 
-  /* 表格在窄屏压缩成可横滑的紧凑版，并把会被拆成两行的标签锁成一行 */
-  table.grid { min-width: 30rem; font-size: 0.8125rem; }
-  table.grid th, table.grid td { padding: 0.55rem 0.6rem; }
-  .dimcell { white-space: nowrap; gap: 0.35rem; }
+  /* 表格：在 390px 上优先「塞得下」，把次要装饰收掉、允许换行；
+     确实仍会溢出的宽表（如支持环境表）保留横向滚动，但不再靠 30rem 最小宽度硬撑。 */
+  table.grid { min-width: 0; font-size: 0.78rem; }
+  table.grid th, table.grid td { padding: 0.5rem 0.55rem; word-break: break-word; }
+  table.grid code { font-size: 0.72rem; word-break: break-all; }
+  table.grid th.num, table.grid td.num { font-size: 0.74rem; }
+  /* 第一列是行标签，不能被拆成「Nod / e.js」「操作 / 系统」这种断字 */
+  table.grid tbody th { white-space: nowrap; }
+  table.grid tbody th code { word-break: normal; white-space: nowrap; }
+  .dimcell { gap: 0.35rem; }
   .dimcell .k { display: none; }
-  .plat table { min-width: 34rem; }
-  .plat table tbody td:last-child { min-width: 15rem; }
+  .plat table { min-width: 21rem; }
+  .plat table tbody td:last-child { min-width: 0; }
+  .plat table tbody th { white-space: normal; }
 }
 
 @media print {

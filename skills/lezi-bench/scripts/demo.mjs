@@ -10,6 +10,7 @@
  * 用法：node scripts/demo.mjs [--out <dir>]
  */
 import { parseArgs } from 'node:util';
+import { fileURLToPath } from 'node:url';
 import { isMain } from '../src/is-main.mjs';
 import path from 'node:path';
 import os from 'node:os';
@@ -150,7 +151,7 @@ export async function generateDemo(outDir) {
 
 if (isMain(import.meta.url)) {
   const { values } = parseArgs({ options: { out: { type: 'string' } }, allowPositionals: true });
-  const outDir = values.out ? path.resolve(values.out) : path.join(import.meta.dirname, '..', 'website', 'assets');
+  const outDir = values.out ? path.resolve(values.out) : path.join(path.dirname(fileURLToPath(import.meta.url)), '..', 'website', 'assets');
   const { htmlPath, jsonPath, txtPath, report } = await generateDemo(outDir);
   console.log('⚠️  这是一份 DEMO 演示数据，不是任何真实模型的成绩。');
   console.log(`   总分 ${report.summary.total}/100　段位 ${report.summary.level}`);

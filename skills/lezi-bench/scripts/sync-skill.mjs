@@ -19,9 +19,10 @@ import { existsSync } from 'node:fs';
 import path from 'node:path';
 import os from 'node:os';
 import { createHash } from 'node:crypto';
+import { fileURLToPath } from 'node:url';
 
 export const SKILL_NAME = 'lezi-bench';
-const REPO_ROOT = path.resolve(import.meta.dirname, '..');
+const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
 // 需要进入安装包的内容（顺序即复制顺序）
 const PAYLOAD = ['SKILL.md', 'package.json', 'scripts', 'src'];

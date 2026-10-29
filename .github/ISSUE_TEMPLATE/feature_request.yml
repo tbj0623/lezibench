@@ -1,0 +1,94 @@
+name: ✨ 功能 / 新题目建议
+description: 提议新功能、新题目、平台适配或文档改进
+title: '[Feature] '
+labels: ['enhancement', 'needs-triage']
+body:
+  - type: markdown
+    attributes:
+      value: |
+        先说明一下这个项目**刻意不做**什么，能省下你我都一些时间：
+
+        - ❌ 不做线上排行榜 / 账号体系 / 云端成绩同步（没有中心服务器是设计选择）
+        - ❌ 不做「防作弊」「防篡改」「认证成绩」（题库与判分器全在客户端，见 [SECURITY.md §3](https://github.com/tbj0623/lezibench/blob/main/SECURITY.md)）
+        - ❌ 不为了某个模型/某次成绩更好看而调判分口径（见 [CONTRIBUTING.md §2.1](https://github.com/tbj0623/lezibench/blob/main/CONTRIBUTING.md)）
+        - ❌ 不引入 npm 依赖（零依赖是产品约束）
+        - ❌ 不做多语言题库（V1 只有中文）
+
+        在这些之外的提议，都欢迎。
+
+  - type: dropdown
+    id: kind
+    attributes:
+      label: 建议类型
+      options:
+        - 新增一道题 / 一个维度
+        - 改进判分器（误判、覆盖不全）
+        - 改进报告 / CLI
+        - 平台适配（新宿主、新 OS）
+        - 文档改进
+        - 网站改进
+        - 测试 / CI 改进
+        - 其它
+    validations:
+      required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: 要解决什么问题
+      description: |
+        先写**问题**，不要先写方案。你遇到的具体场景是什么？
+        如果只是「感觉应该加个 X」，请说明加了 X 之后能解决什么你现在做不到的事。
+      placeholder: |
+        我在 macOS 上跑完整局时，report --format html 生成的报告在 Safari 里……
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: 你设想怎么做
+      description: 尽量具体。涉及新题目的话，请顺带说明题面和判分口径打算怎么定。
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: 你考虑过的替代方案
+      description: 有没有别的做法？为什么你倾向这个？如果认为「不做」也可接受，请直说。
+
+  - type: dropdown
+    id: breaking
+    attributes:
+      label: 会不会改变既有分数
+      description: |
+        如果会改变判分口径，就必须升 `graderVersion`，且旧分数与新分数不再可比。
+        这不是拒绝的理由，但需要提前说清。
+      options:
+        - 不会（只加功能/文档，不动判分）
+        - 会——新增题目（会影响 catalogFingerprint）
+        - 会——修改现有题目的题面或评分条件
+        - 会——修改判分逻辑（需要升 graderVersion）
+        - 不确定
+    validations:
+      required: true
+
+  - type: textarea
+    id: contribution
+    attributes:
+      label: 你愿意自己实现吗
+      description: |
+        愿意的话请说明大致能投入的范围；如果是要加题，请先读
+        [CONTRIBUTING.md §1](https://github.com/tbj0623/lezibench/blob/main/CONTRIBUTING.md) 的七项必交材料。
+        不愿意也完全没关系，说清楚就行。
+
+  - type: checkboxes
+    id: confirm
+    attributes:
+      label: 提交前确认
+      options:
+        - label: 我已经读过 SECURITY.md / LIMITATIONS.md，这个提议不落在「已知且不做」的清单里
+          required: true
+        - label: 这个提议不是为了让我或某个模型在这次改动后得分更高
+          required: true

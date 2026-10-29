@@ -1,22 +1,33 @@
 {
-  "examVersion": "1.0.0",
-  "graderVersion": "1.0.0",
+  "examVersion": "1.2.0",
+  "graderVersion": "1.2.0",
+  "catalogFingerprint": "539fd88d6f1d3f5040db5c4e8d74cfe0f8309795533259b08157319b346f44bf",
   "criteriaInjected": {
     "items": 16,
     "criteria": 44
   },
+  "scoreCard": {
+    "total": 77,
+    "level": "良好",
+    "fails": 10
+  },
+  "whatFails": {
+    "lost": 5,
+    "fails": 10
+  },
+  "metaReplacedIn": 0,
   "demo": {
-    "runId": "run-20261029-161417-f8130d",
+    "runId": "run-20261029-173349-1b6ba9",
     "seed": "lezi-demo-2026",
-    "total": 74,
+    "total": 77,
     "level": "良好",
     "status": "COMPLETED",
-    "durationMs": 834,
+    "durationMs": 2501,
     "dims": [
       {
         "key": "instruction",
         "label": "指令理解",
-        "awarded": 22,
+        "awarded": 25,
         "max": 25
       },
       {
@@ -39,12 +50,6 @@
       }
     ],
     "lost": [
-      {
-        "id": "I01",
-        "title": "最后一条有效通知覆盖原计划",
-        "awarded": 1,
-        "max": 4
-      },
       {
         "id": "R01",
         "title": "购物小票的真实合计",
@@ -78,12 +83,6 @@
     ],
     "fails": [
       {
-        "item": "I01",
-        "crit": "I01.C2",
-        "pts": 3,
-        "reason": "错误地表示仍要附预算表"
-      },
-      {
         "item": "R01",
         "crit": "R01.C2",
         "pts": 3,
@@ -111,7 +110,7 @@
         "item": "D02",
         "crit": "D02.C2",
         "pts": 2,
-        "reason": "理由没有指出「信息缺失 / 预算≠最终支出」这一关键点"
+        "reason": "理由必须同时引用甲(33)、乙(29)的实际支出并说明方向；实际为「甲项目预算比乙低,所以更省钱」"
       },
       {
         "item": "D02",
@@ -133,16 +132,18 @@
       },
       {
         "item": "C03",
-        "crit": "C03.C2",
+        "crit": "C03.C1",
         "pts": 2,
-        "reason": "3/4 笔人工审批判断正确"
+        "reason": "3/4 笔规则版本正确；a2(规则旧/人工true，实际新/true)"
       },
       {
         "item": "C03",
         "crit": "C03.C3",
         "pts": 2,
-        "reason": "第2笔应按新规则判定（金额 3645，门槛 5655，需人工=false），实际为 新/true"
+        "reason": "第2笔应按旧规则判定（提交于 2 月 22 日，金额 3645，需人工=true），实际为 新/true"
       }
-    ]
+    ],
+    "examVersion": "1.2.0",
+    "graderVersion": "1.2.0"
   }
 }

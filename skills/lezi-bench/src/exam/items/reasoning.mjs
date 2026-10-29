@@ -195,7 +195,7 @@ const R01 = {
       facts,
       schema: {
         subtotal: { type: 'number', aliases: ['subtotal', '原价', '原价合计', '小计', 'beforeDiscount'] },
-        total: { type: 'number', aliases: ['total', '应付款', '实付', '实际付款', 'payable', 'finalTotal'] },
+        total: { type: 'number', aliases: ['total', '应付款', '实付', '实际付款', 'payable', 'finalTotal', '实际应付款', '实付款', '应付金额', '实际支付', '实付金额'] },
       },
       publicCriteria: [
         { id: 'R01.C1', points: 1, text: '原价合计正确（活动前）' },
@@ -256,16 +256,20 @@ const R02 = {
       { code: 'D', name: '定价' },
       { code: 'E', name: '开放销售' },
     ];
-    // 依赖：B→A（A 完成后才能 B）；C→B；D→B；E→C 且 E→D
+    // 依赖图随 seed 变化，但必须保持两条不变量（否则题面与评分条件会打架）：
+    //   · A 是唯一无前驱的任务 → 必然第一步
+    //   · E 是唯一无后继的任务 → 必然最后一步
+    // 变化点：C 与 D 之间是否加一条先后约束（各占一半）。
+    // 这样 E 始终等 C 和 D，中间两条分支的排列数随之变化（1 或 2 种合法序），
+    // 题面因此不会在多个 seed 下逐字节相同。
     const deps = { B: ['A'], C: ['B'], D: ['B'], E: ['C', 'D'] };
-    const facts = { tasks, deps };
-    const depText = [
-      'A 收货入库：随时可以开始。',
-      'B 质检：必须等 A 完成。',
-      'C 拍照上架：必须等 B 完成。',
-      'D 定价：必须等 B 完成。',
-      'E 开放销售：必须等 C 和 D 都完成。',
-    ].join('\n');
+    const cBeforeD = rng.next() < 0.5;
+    if (cBeforeD) deps.D = ['B', 'C']; // D 必须等 C → 强制 C 在 D 之前
+    const facts = { tasks, deps, cBeforeD };
+    const depLines = ['A 收货入库：随时可以开始。', 'B 质检：必须等 A 完成。', 'C 拍照上架：必须等 B 完成。'];
+    depLines.push(cBeforeD ? 'D 定价：必须等 B 和 C 都完成。' : 'D 定价：必须等 B 完成。');
+    depLines.push('E 开放销售：必须等 C 和 D 都完成。');
+    const depText = depLines.join('\n');
     const prompt = [
       '你是「云朵二手书店」的仓管，今天要完成 5 个步骤，每个步骤只用一次、不可并行：',
       depText,
@@ -514,7 +518,11 @@ const R04 = {
     while (attempt++ < 200) {
       const colors = rng.sample(colorPool, 4);
       const shuffledNames = rng.shuffle(names);
-      const solution = [0, 1, 2, 3].map((i) => ({ position: i + 1, name: shuffledNames[i], color: colors[i] }));
+      // 关键：位置必须与姓名的排列**解耦**。
+      // 旧写法 solution[i]={position:i+1, name:shuffledNames[i]} 让 names[i] 的真实位置恒等于 i+1，
+      // 考生按示例里的姓名顺序填 1/2/3/4 就能白拿 C1（结构性泄漏，100/100 seed 命中）。
+      const positions = rng.shuffle([1, 2, 3, 4]);
+      const solution = shuffledNames.map((n, i) => ({ name: n, position: positions[i], color: colors[i] }));
       const facts = { solution, names: shuffledNames, colors };
       const lines = buildCluesFromSolution(facts);
       if (lines && lines.length === 6) { chosen = { facts, lines }; break; }
@@ -522,10 +530,10 @@ const R04 = {
     if (!chosen) {
       // 兜底：固定一套已知唯一解的实例（与随机流无关，保证任何 seed 都能出题）
       const sol = [
-        { position: 1, name: names[0], color: '红' },
-        { position: 2, name: names[1], color: '蓝' },
-        { position: 3, name: names[2], color: '绿' },
-        { position: 4, name: names[3], color: '黄' },
+        { position: 2, name: names[0], color: '红' },
+        { position: 4, name: names[1], color: '蓝' },
+        { position: 1, name: names[2], color: '绿' },
+        { position: 3, name: names[3], color: '黄' },
       ];
       const facts = { solution: sol, names: names.slice(), colors: ['红', '蓝', '绿', '黄'] };
       const lines = buildCluesFromSolution(facts);
@@ -539,14 +547,16 @@ const R04 = {
     // 第 4 个人的颜色在未列出的色池里仍有多种可能 —— 唯一性必须在题面可及的模型空间里成立。
     const colorListText = facts.colors.join('、');
     const prompt = [
-      `四个朋友各拿一张不同颜色的卡片，坐在 1、2、3、4 号四个位置上（一人一位）。`,
+      `四个朋友：${facts.names.join('、')}，各拿一张不同颜色的卡片，坐在 1、2、3、4 号四个位置上（一人一位）。`,
+      '四个人的位置和颜色都要推出来，一个都不能少。',
       `四张卡片的颜色恰好是这四种：${colorListText}（每种各一张，不重复）。`,
       '已知线索：',
       ...lines.map((l, i) => `${i + 1}) ${l.text}`),
       '',
       '请推理出每个人的位置和卡片颜色。',
       '只输出一个 JSON 对象，键为姓名，值为 {"position": 位置编号, "color": "颜色"}：',
-      `{"${facts.names[0]}":{"position":1,"color":"<颜色>"},"${facts.names[1]}":{"position":2,"color":"<颜色>"},"${facts.names[2]}":{"position":3,"color":"<颜色>"},"${facts.names[3]}":{"position":4,"color":"<颜色>"}}`,
+      // 示例里的 position 必须是占位符：若写成 1/2/3/4，它恰好等于真实名次（白送 C1 的 3 分）
+      `{"${facts.names[0]}":{"position":"<位置>","color":"<颜色>"},"${facts.names[1]}":{"position":"<位置>","color":"<颜色>"}}`,
       '（上面只示范 JSON 结构，位置和颜色都要按线索自己推，不要照抄。）',
     ].join('\n');
     return {

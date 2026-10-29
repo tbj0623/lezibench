@@ -9,8 +9,8 @@ import data from './items/data.mjs';
 import correction from './items/correction.mjs';
 import { sha256Hex } from './rng.mjs';
 
-export const EXAM_VERSION = '1.0.0';
-export const GRADER_VERSION = '1.0.0';
+export const EXAM_VERSION = '1.2.0';
+export const GRADER_VERSION = '1.2.0';
 export const SCORING_CONTRACT_VERSION = '1.0.0';
 
 export const DIMENSIONS = [
@@ -104,18 +104,55 @@ export function assertCatalogIntegrity() {
   return true;
 }
 
-/** 内容指纹：只包含与判分行为相关的稳定字段 */
+/**
+ * 内容指纹 = 决定「两次成绩能不能比」的全部信息。
+ *
+ * 为什么不能只哈希 criteria：
+ *   实测过同一个 seed 下，题面明显改了（R02 的依赖关系），但只哈希 criteria 的指纹**完全没变**。
+ *   那样报告里「请只与同题库版本比较」这句话就是空的 —— 用户看到相同指纹，会以为卷子一样。
+ *
+ * 做法：对「题面 + 评分条件 + 分值结构」全部取哈希。
+ *   题面用多个固定探针 seed 采样（不能只用一个：那样随机性变化会被漏掉），
+ *   四个探针足以覆盖各个随机分支，且完全确定（同源码必得同指纹）。
+ *   改任何一个字的题面、任何一个条件的文本或分值，指纹立刻变。
+ */
+const FINGERPRINT_PROBES = ['fp-probe-1', 'fp-probe-2'];
+
+let _fpCache = null;
+
 export function catalogFingerprint() {
-  const payload = ITEMS.map((it) => ({
+  if (_fpCache) return _fpCache;
+  const payload = ITEMS.map((it) => {
+    const probes = FINGERPRINT_PROBES.map((seed) => {
+      const g = it.generate(seed);
+      return { prompt: g.prompt, criteria: g.publicCriteria };
+    });
+    return {
+      id: it.id,
+      dimension: it.dimension,
+      difficulty: it.difficulty,
+      points: it.points,
+      batch: it.batch,
+      criteria: criteriaOf(it).map((c) => ({ id: c.id, points: c.points, text: c.text })),
+      probes,
+    };
+  });
+  _fpCache = sha256Hex(JSON.stringify(payload));
+  return _fpCache;
+}
+
+/** 分项指纹：便于报告里说清「到底哪一部分变了」 */
+export function fingerprintBreakdown() {
+  const critOnly = sha256Hex(JSON.stringify(ITEMS.map((it) => ({
     id: it.id,
-    dimension: it.dimension,
-    dimensionLabel: DIMENSIONS.find((d) => d.key === it.dimension)?.label || it.dimension,
-    difficulty: it.difficulty,
     points: it.points,
-    batch: it.batch,
     criteria: criteriaOf(it).map((c) => ({ id: c.id, points: c.points, text: c.text })),
-  }));
-  return sha256Hex(JSON.stringify(payload));
+  }))));
+  const promptOnly = sha256Hex(JSON.stringify(ITEMS.map((it) => ({
+    id: it.id,
+    probes: FINGERPRINT_PROBES.map((seed) => it.generate(seed).prompt),
+  }))));
+  return { full: catalogFingerprint(), criteria: critOnly, prompts: promptOnly, probes: FINGERPRINT_PROBES };
 }
 
 export function getLevel(score) {

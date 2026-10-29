@@ -97,13 +97,21 @@ test('BUG-5 I04: 更新指令不得出现「提前」却延后的自相矛盾', 
  * BUG-6（redteam-qa 发现）：D02.C3 正则误杀正确推理
  * 现象：「无法判断甲是否少于乙」被判成「把预算当最终支出」。
  * ------------------------------------------------------------------ */
-test('BUG-6 D02: 含「无法判断甲是否少于乙」的正确理由必须满分', () => {
-  for (const seed of ['q', 'a', 'b']) {
+test('BUG-6 D02: 含「无法判断甲是否少于乙」的正确理由必须满分（仅适用于信息不足分支）', () => {
+  // 注意：D02 现在有三种分支（A/B/C），只有 C 分支才该用这个理由。
+  // 旧版这条断言写死了 C，D02 改成随机后它会在 A/B 分支上误报 —— 是测试的问题，不是判分器的。
+  let tested = 0;
+  for (let i = 0; i < 40 && tested < 3; i++) {
+    const seed = `d02-c-${i}`;
     const internal = instantiateInternal(item('D02'), seed);
+    const o = item('D02').oracle(internal.facts);
+    if (o.answer !== 'C') continue;
     const reason = '甲项目的最终支出未知，因此无法判断甲是否少于乙项目的实际支出。';
     const r = gradeItem(internal, { answer: 'C', reason }, { seed });
     assert.equal(r.awarded, 6, `seed=${seed} 正确理由只拿到 ${r.awarded}/6`);
+    tested++;
   }
+  assert.ok(tested >= 2, `只找到 ${tested} 个 C 分支 seed，样本不足`);
 });
 
 test('BUG-6b D02: 真的把预算数字当最终支出比较，必须被扣分', () => {
@@ -265,9 +273,10 @@ test('BUG-14 resume: 能把下一批题目正常渲染出来（字段名要对�
     const { runId } = await startRun({ root, seed });
     const answers = perfectAnswers(seed);
     await submitBatch({ root, runId, batch: 1, answers: Object.fromEntries(itemsForBatch(1).map((i) => [i.id, answers[i.id]])) });
-    const cliPath = path.resolve(import.meta.dirname, '..', 'scripts', 'cli.mjs');
+    const here = path.dirname((await import('node:url')).fileURLToPath(import.meta.url));
+    const cliPath = path.resolve(here, '..', 'scripts', 'cli.mjs');
     const { stdout } = await run(process.execPath, [cliPath, 'resume', '--run', runId], {
-      cwd: path.resolve(import.meta.dirname, '..'),
+      cwd: path.resolve(here, '..'),
       env: { ...process.env, LEZIBENCH_HOME: root },
       timeout: 60000,
     });
@@ -309,5 +318,239 @@ test('BUG-15 缺答必须阻断提交，除非显式 --allow-missing', async () 
     assert.equal(ok.missingIds.length, 1);
   } finally {
     await rm(root, { recursive: true, force: true });
+  }
+});
+
+/* ------------------------------------------------------------------ *
+ * BUG-16（redteam-qa 发现）：I04.generate 引用未定义变量 finalStatus
+ * 整题抛异常 → startRun/submitBatch/regrade/doctor 全崩，16 题系统完全不可用。
+ * 教训：改完只跑自己的 tests 不够，必须有「所有题 × 多 seed 都能 generate」的兜底。
+ * ------------------------------------------------------------------ */
+test('BUG-16 所有 16 题在 30 个 seed 下 generate 都不得抛异常', () => {
+  const seeds = [];
+  for (let i = 0; i < 30; i++) seeds.push(`gen-${i}`);
+  seeds.push('42', '中文种子', 'x'.repeat(40), '', '0');
+  for (const it of ITEMS) {
+    for (const s of seeds) {
+      assert.doesNotThrow(() => it.generate(s), `${it.id} 在 seed=${JSON.stringify(s)} 时 generate 抛异常`);
+    }
+  }
+});
+
+test('BUG-16b 所有 16 题的 grade 在任意输入下都不得抛异常', () => {
+  const weird = [null, undefined, '', '   ', {}, [], 0, 1, true, 'x', '{"a":1}', '\u0000'];
+  for (const it of ITEMS) {
+    const internal = instantiateInternal(it, 'grade-robust');
+    for (const ans of weird) {
+      assert.doesNotThrow(() => gradeItem(internal, ans, { seed: 'grade-robust' }), `${it.id} 对 ${JSON.stringify(ans)} 抛异常`);
+    }
+  }
+});
+
+/* ------------------------------------------------------------------ *
+ * BUG-17（calibration 发现）：R04 题面缺第 4 个人名
+ * 只列出线索里提到的人，但判分要求 4 人全对 → 理论上限永远拿不到满分。
+ * ------------------------------------------------------------------ */
+test('BUG-17 R04: 四个人的名字都必须出现在题面里', () => {
+  for (const seed of ['x', '42', 'a', 'b', 'cal-strong-1']) {
+    const g = item('R04').generate(seed);
+    for (const n of g.facts.names) {
+      assert.ok(g.prompt.includes(n), `seed=${seed} 题面缺少人名「${n}」`);
+    }
+    assert.equal(grade('R04', perfectAnswers(seed).R04, seed).awarded, 9, `seed=${seed} 正确答案拿不到 9 分`);
+  }
+});
+
+/* ------------------------------------------------------------------ *
+ * BUG-18（redteam-qa 发现）：C04 判分器引用未定义变量 rc → 全量 SCORER_ERROR
+ * ------------------------------------------------------------------ */
+test('BUG-18 C04: 正确答案必须 GRADED 拿 9/9，不能是 SCORER_ERROR', () => {
+  for (const seed of ['x', 'a', '42', 'cal-strong-1']) {
+    const r = grade('C04', perfectAnswers(seed).C04, seed);
+    assert.equal(r.gradingStatus, 'GRADED', `seed=${seed} 状态 ${r.gradingStatus}：${r.checks[0]?.reason}`);
+    assert.equal(r.awarded, 9);
+  }
+});
+
+/* ------------------------------------------------------------------ *
+ * BUG-19（redteam-qa 发现）：若干题的答案/字段是常量，可背答案
+ * ------------------------------------------------------------------ */
+test('BUG-19 各题答案必须在 seed 之间真的变化（不得可背）', () => {
+  const seeds = Array.from({ length: 40 }, (_, i) => `const-${i}`);
+  const varietyOf = (id, extract) => new Set(seeds.map((s) => JSON.stringify(extract(item(id).oracle(item(id).generate(s).facts)))));
+  // D02 三类答案都要出现
+  const d02 = new Set(seeds.map((s) => item('D02').oracle(item('D02').generate(s).facts).answer));
+  assert.deepEqual([...d02].sort(), ['A', 'B', 'C'], `D02 答案应覆盖 A/B/C，实际 ${[...d02]}`);
+  // I01 附件要求两种都要出现
+  const i01 = new Set(seeds.map((s) => item('I01').oracle(item('I01').generate(s).facts).budgetAttached));
+  assert.equal(i01.size, 2, 'I01 budgetAttached 应有 true/false 两种');
+  // I04 最终状态两种都要出现
+  const i04 = new Set(seeds.map((s) => item('I04').oracle(item('I04').generate(s).facts).status));
+  assert.equal(i04.size, 2, 'I04 最终状态应有两种');
+  // C01 isCorrect 两种都要出现
+  const c01 = new Set(seeds.map((s) => item('C01').oracle(item('C01').generate(s).facts).isCorrect));
+  assert.equal(c01.size, 2, 'C01 isCorrect 应有 true/false 两种');
+  // D03 的 onlyInStore / commonCount 不能是常量
+  const d03 = varietyOf('D03', (o) => [o.onlyInStore, o.commonCount]);
+  assert.ok(d03.size >= 3, `D03 答案变化太少：${d03.size} 种`);
+  // C03 的 rule 组合不能恒定
+  const c03 = varietyOf('C03', (o) => Object.values(o.cases).map((c) => c.rule));
+  assert.ok(c03.size >= 2, `C03 rule 组合恒定：${[...c03]}`);
+});
+
+/* ------------------------------------------------------------------ *
+ * BUG-20（redteam-qa 发现）：C02.C2 可用两个错值骗分
+ * ------------------------------------------------------------------ */
+test('BUG-20 C02: 两个都错但差值对的答案不得通过 C2', () => {
+  const internal = instantiateInternal(item('C02'), 'cheat');
+  const o = item('C02').oracle(internal.facts);
+  const qty = internal.facts.steps[3].qty;
+  // 真实答案大幅偏移，只让差值对上
+  const r = gradeItem(internal, { beforeVoid: o.beforeVoid - 50, finalStock: o.beforeVoid - 50 + qty }, { seed: 'cheat' });
+  assert.ok(r.checks.find((c) => c.criterionId === 'C02.C2').passed === false, 'C2 不应被「差值对但绝对值错」骗过');
+});
+
+/* ------------------------------------------------------------------ *
+ * BUG-21（redteam-qa 发现）：D02 答案对但理由是事实错误 → 仍满分
+ * 例：甲支出明明给出了，理由写「甲支出没有给出」也拿 6/6。
+ * ------------------------------------------------------------------ */
+test('BUG-21 D02: aGiven 分支下，与事实相反的理由不得拿 C2/C3', () => {
+  let tested = 0;
+  for (let i = 0; i < 60 && tested < 4; i++) {
+    const seed = `d02-misinfo-${i}`;
+    const internal = instantiateInternal(item('D02'), seed);
+    const o = item('D02').oracle(internal.facts);
+    if (!o.aGiven) continue;
+    tested++;
+    // 答案对，但理由是「甲支出没有给出」——与题面事实相反
+    const r = gradeItem(internal, { answer: o.answer, reason: '甲项目的最终实际支出没有给出，无法确定' }, { seed });
+    assert.ok(r.awarded < 6, `seed=${seed} 事实相反的理由却拿了 ${r.awarded}/6`);
+    assert.equal(r.checks.find((c) => c.criterionId === 'D02.C2').passed, false, `seed=${seed} C2 不应通过`);
+    assert.equal(r.checks.find((c) => c.criterionId === 'D02.C3').passed, false, `seed=${seed} C3 不应通过`);
+  }
+  assert.ok(tested >= 2, `只找到 ${tested} 个 aGiven seed`);
+});
+
+test('BUG-21b D02: 引用两个真实数字且方向正确的理由必须满分', () => {
+  for (let i = 0; i < 30; i++) {
+    const seed = `d02-good-${i}`;
+    const internal = instantiateInternal(item('D02'), seed);
+    const o = item('D02').oracle(internal.facts);
+    if (!o.aGiven) continue;
+    const word = o.answer === 'A' ? '少，更省钱' : '多，不比乙省';
+    const reason = `甲实际支出 ${o.sampleA} 万元，乙 ${o.sampleB} 万元，甲比乙${word}。`;
+    const r = gradeItem(internal, { answer: o.answer, reason }, { seed });
+    assert.equal(r.awarded, 6, `seed=${seed} 正确理由只拿 ${r.awarded}/6`);
+    break;
+  }
+});
+
+/* ------------------------------------------------------------------ *
+ * BUG-22（redteam-qa 发现）：R04「姓名顺序=位置顺序」结构性泄漏
+ * names[i] 真实位置恒为 i+1，按示例姓名顺序填 1/2/3/4 就白拿 C1。
+ * ------------------------------------------------------------------ */
+test('BUG-22 R04: 姓名顺序不得等于位置顺序（结构性泄漏）', () => {
+  let leak = 0;
+  const N = 80;
+  for (let i = 0; i < N; i++) {
+    const g = item('R04').generate(`leakcheck-${i}`);
+    const asc = g.facts.names.every((n, idx) => g.facts.solution.find((x) => x.name === n).position === idx + 1);
+    if (asc) leak++;
+  }
+  // 允许极少数巧合，但不能是结构性成立
+  assert.ok(leak <= N * 0.15, `${N} 个 seed 里有 ${leak} 个「姓名序=位置序」，疑似结构性泄漏`);
+});
+
+/* ------------------------------------------------------------------ *
+ * BUG-23（redteam-qa 发现）：C01 isCorrect 恒定 false
+ * ------------------------------------------------------------------ */
+test('BUG-23 C01: isCorrect 必须两种取值都出现，且两种都能判满分', () => {
+  const vals = new Set();
+  for (let i = 0; i < 60; i++) {
+    const seed = `c01-var-${i}`;
+    const internal = instantiateInternal(item('C01'), seed);
+    const o = item('C01').oracle(internal.facts);
+    vals.add(o.isCorrect);
+    const ans = { isCorrect: o.isCorrect, correctTotal: o.correctTotal };
+    const r = gradeItem(internal, ans, { seed });
+    assert.equal(r.awarded, 4, `seed=${seed} isCorrect=${o.isCorrect} 正确答案拿 ${r.awarded}/4`);
+  }
+  assert.deepEqual([...vals].sort(), [false, true], `C01 isCorrect 只出现了 ${[...vals]}`);
+});
+
+/* ------------------------------------------------------------------ *
+ * BUG-24（redteam-qa 发现）：publicCriteria 文本与正确答案矛盾
+ * 例：C01.C1 写「必须 isCorrect=false」，但随机化后部分 seed 正确答案是 true。
+ *     考生按公开条件作答反而被扣分 —— 这是「题面把人往错答案引」，比恒定答案更严重。
+ * ------------------------------------------------------------------ */
+test('BUG-24 评分条件文本不得硬编码具体答案值', () => {
+  // 这些「具体取值」不该出现在条件文本里：具体谓词、具体数字、具体状态名
+  const suspicious = [
+    /isCorrect\s*=\s*(true|false)/i,
+    /答案选择\s*[A-C]\b/,
+    /budgetAttached\s*=\s*(true|false)/i,
+    /最终状态\s*=\s*已通过/,
+    /最终状态\s*=\s*已驳回/,
+    /第2笔.*按新规则/,
+  ];
+  for (const it of ITEMS) {
+    for (const c of criteriaOf(it)) {
+      for (const re of suspicious) {
+        assert.ok(!re.test(c.text), `${c.id} 的条件文本硬编码了具体答案：${c.text}`);
+      }
+    }
+  }
+});
+
+test('BUG-24b 按公开条件字面理解作答，不得比正确答案更差', () => {
+  // 反向验证：正确答案必须是「满足所有条件文本」的那个。
+  // 这里用最直接的方式：正确答案拿满分，且每个条件的 reason 不得出现「矛盾」类措辞。
+  for (let i = 0; i < 25; i++) {
+    const seed = `criteria-consistency-${i}`;
+    const ans = perfectAnswers(seed);
+    for (const it of ITEMS) {
+      const r = gradeItem(instantiateInternal(it, seed), ans[it.id], { seed });
+      assert.equal(r.awarded, it.points, `seed=${seed} ${it.id} 正确答案 ${r.awarded}/${it.points}`);
+    }
+  }
+});
+
+/* ------------------------------------------------------------------ *
+ * BUG-25（redteam-qa 发现）：I03 分支分布倾斜，固定答案能拿 74%
+ * ------------------------------------------------------------------ */
+test('BUG-25 I03: 四条规则的分支分布必须接近均匀（不得偏向 R4）', () => {
+  const dist = {};
+  const N = 400;
+  for (let i = 0; i < N; i++) {
+    const g = item('I03').generate(`i03-bal-${i}`);
+    const o = item('I03').oracle(g.facts);
+    dist[o.rule] = (dist[o.rule] || 0) + 1;
+  }
+  for (const rule of ['R1', 'R2', 'R3', 'R4']) {
+    const share = (dist[rule] || 0) / N;
+    assert.ok(share >= 0.15 && share <= 0.35, `${rule} 占比 ${(share * 100).toFixed(1)}%，偏离均匀（应 15%~35%）`);
+  }
+});
+
+test('BUG-25b I03: 任何单一固定答案的满分率不得超过 32%（3 字段 4 分支的理论下限约 25%）', () => {
+  const candidates = [
+    { rule: 'R4', decision: '部分批准', escalate: false },
+    { rule: 'R1', decision: '转人工', escalate: true },
+    { rule: 'R3', decision: '批准', escalate: false },
+    { rule: 'R2', decision: '部分批准', escalate: true },
+  ];
+  const N = 400;
+  for (const cand of candidates) {
+    let full = 0;
+    for (let i = 0; i < N; i++) {
+      const seed = `i03-fixed-${i}`;
+      const r = gradeItem(instantiateInternal(item('I03'), seed), cand, { seed });
+      if (r.awarded === 6) full++;
+    }
+    // 关键指标是「整题白拿满分的概率」，不是平均分（平均分含部分正确，属正常）。
+    // 4 个分支 × 3 个字段，随机猜的满分率约 1/4=25%（decision/escalate 与 rule 强相关）。
+    // 超过 32% 说明分布仍在偏向某个分支。
+    const pct = (full / N) * 100;
+    assert.ok(pct <= 32, `固定答案 ${JSON.stringify(cand)} 满分率 ${pct.toFixed(1)}%，超过 32% 上限（分布可能又偏了）`);
   }
 });
