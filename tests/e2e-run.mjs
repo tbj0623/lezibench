@@ -13,6 +13,7 @@ import { pathToFileURL } from 'node:url';
 import { startRun, submitBatch, buildReport, writeReport, regradeRun, statusRun, loadState } from '../src/runner.mjs';
 import { perfectAnswers } from '../scripts/oracle-answers.mjs';
 import { ITEMS, itemsForBatch, BATCHES, instantiateInternal } from '../src/exam/manifest.mjs';
+import { gradeItem } from '../src/grading/grade.mjs';
 import { readFile } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 
@@ -65,40 +66,86 @@ console.log('\n[1] 满分卷：oracle 答案必须拿到 100 分');
 console.log('\n[2] 全错卷：所有题都答错，必须得 0 分');
 {
   const seed = 'e2e-zero-1';
+  /**
+   * 构造一份「结构合法、但每一题都得 0 分」的答卷。
+   *
+   * 为什么要 schema 无关：原实现按题写死字段名（veg/chicken/beef、startCode…），
+   * 题目一改（R03 变 6 种模块）答案就变成 UNPARSEABLE，
+   * 「全错卷」于是被记成系统故障（PARTIAL）而不是「答错」（COMPLETED 0 分），
+   * 段位也随之变成 null，CI 直接红。
+   *
+   * 现在的做法：从标准答案出发，**逐个字段改坏并实时判分**，
+   * 一旦该题归零就停手。这样无论题目结构怎么变都不用改这里。
+   */
+  const leafPaths = (node, prefix = [], out = []) => {
+    if (Array.isArray(node)) {
+      if (node.length === 0) out.push(prefix);
+      else node.forEach((v, i) => leafPaths(v, [...prefix, i], out));
+      return out;
+    }
+    if (node && typeof node === 'object') {
+      const keys = Object.keys(node);
+      if (keys.length === 0) out.push(prefix);
+      else for (const k of keys) leafPaths(node[k], [...prefix, k], out);
+      return out;
+    }
+    out.push(prefix);
+    return out;
+  };
+  /**
+   * 数值有几种「改坏方向」，必须逐个试：
+   *   把数字改**大** —— 对「满足下限」类条件无效（改大反而仍然满足下限）；
+   *   把数字改**负** —— 能同时违反「满足下限」与「不超上限」两类条件。
+   * 实测 R03：全改大仍得 2 分（C1「满足件数与指标下限」照样成立），必须用负数才归零。
+   */
+  const NUMBER_MODES = [(v) => v + 997, (v) => -Math.abs(v) - 3, (v) => 0];
+  const badScalar = (v, numMode) => {
+    if (typeof v === 'number') return numMode(v);
+    if (typeof v === 'boolean') return !v;
+    if (typeof v === 'string') {
+      if (/^[A-Z]$/.test(v)) return v === 'Z' ? 'Y' : 'Z';
+      if (/^\d+$/.test(v)) return String(Number(v) + 97);
+      return '错误值';
+    }
+    return v;
+  };
+
+  /** 按给定的数值改坏方式，把所有叶子改坏 */
+  const corruptAll = (correct, numMode) => {
+    const clone = JSON.parse(JSON.stringify(correct));
+    for (const path of leafPaths(clone)) {
+      let node = clone;
+      for (let i = 0; i < path.length - 1; i++) node = node[path[i]];
+      const key = path[path.length - 1];
+      node[key] = badScalar(node[key], numMode);
+    }
+    return clone;
+  };
+
   const wrong = (s) => {
     const good = perfectAnswers(s);
     const out = {};
     for (const it of ITEMS) {
-      const a = good[it.id];
-      // 逐题构造「结构合法但值错误」的答案。
-      // 注意：部分题的答案会随 seed 变化（I01 的附件要求、C01 的原式对错、D02 的 A/B/C），
-      // 所以这里必须**根据本题的实际 oracle 取反**，不能写死常量 —— 否则碰上对应 seed 就会误判为「答对」。
       const internal = instantiateInternal(it, s);
-      const o = it.oracle(internal.facts);
-      switch (it.id) {
-        case 'I01': out[it.id] = { deadline: '周五下午5点', budgetAttached: !o.budgetAttached }; break;
-        case 'I02': out[it.id] = { selected: ['S99'], rejected: ['S98'] }; break;
-        case 'I03': out[it.id] = {
-          // 必须三项都与 oracle 相反，否则「碰巧答对两项」会拿部分分，破坏「全错卷=0」的前提
-          rule: o.rule === 'R1' ? 'R2' : 'R1',
-          decision: o.decision === '批准' ? '转人工' : '批准',
-          escalate: !o.escalate,
-        }; break;
-        case 'I04': out[it.id] = { status: o.status === '已通过' ? '已驳回' : '已通过', owner: '错误的人', deadline: '周日' }; break;
-        case 'R01': out[it.id] = { subtotal: 1, total: 1 }; break;
-        case 'R02': out[it.id] = { order: ['E', 'D', 'C', 'B', 'A'], first: 'E', last: 'A' }; break;
-        case 'R03': out[it.id] = { veg: 0, chicken: 0, beef: 0 }; break;
-        case 'R04': out[it.id] = Object.fromEntries(['甲', '乙', '丙', '丁'].map((n, i) => [n, { position: i + 1, color: '红' }])); break;
-        case 'D01': out[it.id] = { list: ['错误城市'] }; break;
-        case 'D02': out[it.id] = { answer: o.answer === 'A' ? 'B' : 'A', reason: '甲预算更少所以更省。' }; break;
-        case 'D03': out[it.id] = { lossMaking: ['Z-999'], onlyInStore: ['Z-998'], commonCount: 99 }; break;
-        case 'D04': out[it.id] = { levels: { 甲: '金牌' }, counts: { gold: 6, silver: 0, normal: 0 } }; break;
-        case 'C01': out[it.id] = { isCorrect: !o.isCorrect, correctTotal: o.correctTotal + 7 }; break;
-        case 'C02': out[it.id] = { beforeVoid: 1, finalStock: 2 }; break;
-        case 'C03': out[it.id] = Object.fromEntries(['a1', 'a2', 'a3', 'a4'].map((k) => [k, { rule: '新', needManual: true }])); break;
-        case 'C04': out[it.id] = { rootCause: '单价用错', fixedSubtotal: o.fixedSubtotal + 3, fixedTotal: o.fixedTotal + 3 }; break;
-        default: out[it.id] = {};
+      const correct = good[it.id];
+      let chosen = null;
+      let bestAwarded = Infinity;
+      for (const numMode of NUMBER_MODES) {
+        const cand = corruptAll(correct, numMode);
+        const awarded = gradeItem(internal, cand, { seed: s }).awarded;
+        if (awarded === 0) {
+          chosen = cand;
+          break;
+        }
+        if (awarded < bestAwarded) {
+          bestAwarded = awarded;
+          chosen = cand;
+        }
       }
+      if (bestAwarded !== 0 && gradeItem(internal, chosen, { seed: s }).awarded !== 0) {
+        throw new Error(`${it.id}@${s}：三种改坏方式都无法归零（最少仍得 ${bestAwarded} 分）`);
+      }
+      out[it.id] = chosen;
     }
     return out;
   };
