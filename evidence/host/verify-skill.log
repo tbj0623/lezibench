@@ -1,0 +1,48 @@
+
+=== <workspace>\.agents\skills\lezi-bench ===
+  ✔ frontmatter 可解析：YAML 顶层 key/value 解析成功
+  ✔ name 存在：name=lezi-bench
+  ✔ name 长度 ≤64：10 字符
+  ✔ name 字符集合规：仅小写字母/数字/单连字符
+  ✔ name == 父目录名：都是 lezi-bench
+  ✔ description 存在：189 字符
+  ✔ description ≤1024：189 字符
+  ✔ description 含触发词：命中 4/4：跑分 / 评测 / LeziBench / 能力体检
+  ✔ license 存在：MIT
+  ✔ compatibility ≤500：112 字符
+  ✔ allowed-tools 写法：未声明（合法，本 Skill 不限制工具）
+  ✔ 模型侧可见：未禁用模型调用
+  ✔ 用户可 /lezibench 调用：默认允许
+  ✔ 正文非空：152 行 / 4446 字符
+  ✔ 正文覆盖全部子命令与异常态：全部命中
+  ✔ scripts/ 与 SKILL.md 同层：存在
+  ✔ src/ 与 SKILL.md 同层：存在
+  ✔ scripts/cli.mjs 存在：<workspace>\.agents\skills\lezi-bench\scripts\cli.mjs
+  ✔ 与仓库根 SKILL.md 逐字节一致：9374 字节完全相同
+  ✔ node scripts/cli.mjs doctor 退出码 0：exit=0，860ms
+  → 通过
+
+=== <home>\.agents\skills\lezi-bench ===
+  ✔ frontmatter 可解析：YAML 顶层 key/value 解析成功
+  ✔ name 存在：name=lezi-bench
+  ✔ name 长度 ≤64：10 字符
+  ✔ name 字符集合规：仅小写字母/数字/单连字符
+  ✔ name == 父目录名：都是 lezi-bench
+  ✔ description 存在：189 字符
+  ✔ description ≤1024：189 字符
+  ✔ description 含触发词：命中 4/4：跑分 / 评测 / LeziBench / 能力体检
+  ✔ license 存在：MIT
+  ✔ compatibility ≤500：112 字符
+  ✔ allowed-tools 写法：未声明（合法，本 Skill 不限制工具）
+  ✔ 模型侧可见：未禁用模型调用
+  ✔ 用户可 /lezibench 调用：默认允许
+  ✔ 正文非空：152 行 / 4446 字符
+  ✔ 正文覆盖全部子命令与异常态：全部命中
+  ✔ scripts/ 与 SKILL.md 同层：存在
+  ✔ src/ 与 SKILL.md 同层：存在
+  ✔ scripts/cli.mjs 存在：<home>\.agents\skills\lezi-bench\scripts\cli.mjs
+  ✔ 与仓库根 SKILL.md 逐字节一致：9374 字节完全相同
+  ✔ node scripts/cli.mjs doctor 退出码 0：exit=0，1105ms
+  → 通过
+
+总体：全部通过

@@ -61,14 +61,14 @@
   --line-soft: #e7e3db;
   --fg: #15171c;
   --fg-dim: #4e5561;
-  --fg-faint: #6d7480;
-  --amber: #a8640a;
-  --amber-soft: #8d5307;
+  --fg-faint: #626974;
+  --amber: #9e5d08;
+  --amber-soft: #8a4f04;
   --amber-ink: #fff8ec;
   --pass: #1f7a4d;
   --fail: #b3402f;
   --warn: #8a6a10;
-  --focus: #a8640a;
+  --focus: #9e5d08;
 }
 
 /* ---------- reset ---------- */
@@ -189,6 +189,12 @@ hr {
   font-weight: 650;
 }
 .skip:focus { left: 1rem; top: 1rem; }
+/* .skip 是琥珀底 + 深色字，但全局 a:hover 会把文字刷成琥珀色 → 琥珀底上琥珀字，完全看不见。
+   这里把 hover/focus/visited 三态都钉死。 */
+.skip,
+.skip:hover,
+.skip:focus,
+.skip:visited { color: var(--amber-ink); background: var(--amber); text-decoration: none; }
 
 /* ---------- nav ---------- */
 .site-head {
@@ -276,7 +282,7 @@ hr {
   border-radius: var(--radius);
   color: var(--fg-dim);
   font-family: var(--mono);
-  font-size: 0.68rem;
+  font-size: 0.6875rem;
   letter-spacing: 0.06em;
   padding: 0.34rem 0.5rem;
   cursor: pointer;
@@ -444,7 +450,7 @@ hr {
   border-bottom: 1px solid var(--line-soft);
   background: color-mix(in srgb, var(--panel-3) 55%, transparent);
   font-family: var(--mono);
-  font-size: 0.66rem;
+  font-size: 0.6875rem;
   letter-spacing: 0.09em;
   text-transform: uppercase;
   color: var(--fg-faint);
@@ -456,7 +462,7 @@ hr {
   align-items: center;
   gap: 0.3rem;
   font-family: var(--mono);
-  font-size: 0.64rem;
+  font-size: 0.6875rem;
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: none;
@@ -555,7 +561,7 @@ hr {
   padding-top: 0.75rem;
   border-top: 1px solid var(--line-soft);
   font-family: var(--mono);
-  font-size: 0.66rem;
+  font-size: 0.6875rem;
   color: var(--fg-faint);
   letter-spacing: 0.01em;
 }
@@ -649,7 +655,7 @@ table.grid td {
 }
 table.grid thead th {
   font-family: var(--mono);
-  font-size: 0.68rem;
+  font-size: 0.6875rem;
   font-weight: 600;
   letter-spacing: 0.07em;
   text-transform: uppercase;
@@ -675,7 +681,7 @@ table.grid tr.total td {
 table.grid .dimcell { display: inline-flex; align-items: center; gap: 0.55rem; font-weight: 600; }
 table.grid .dimcell .k {
   font-family: var(--mono);
-  font-size: 0.66rem;
+  font-size: 0.6875rem;
   color: var(--fg-faint);
   letter-spacing: 0.05em;
   font-weight: 500;
@@ -732,7 +738,7 @@ table.grid .pts { color: var(--amber); font-weight: 650; }
   display: inline-block;
   margin-top: 0.6rem;
   font-family: var(--mono);
-  font-size: 0.68rem;
+  font-size: 0.6875rem;
   color: var(--fg-faint);
   border: 1px solid var(--line);
   border-radius: 2px;
@@ -779,7 +785,7 @@ table.grid .pts { color: var(--amber); font-weight: 650; }
   align-items: center;
   gap: 0.3rem;
   font-family: var(--mono);
-  font-size: 0.66rem;
+  font-size: 0.6875rem;
   font-weight: 600;
   letter-spacing: 0.06em;
   padding: 0.14rem 0.42rem;
@@ -829,14 +835,17 @@ table.grid .pts { color: var(--amber); font-weight: 650; }
   gap: 2rem;
 }
 .foot-brand p { margin: 0.7rem 0 0; max-width: 34ch; line-height: 1.65; }
-.foot-col h4 {
+/* 页脚列标题用 h2（页脚是独立 landmark，标题层级不该从 h1 跳到 h4），
+   但视觉上要小、要像标签，所以单独覆盖成等宽小字。 */
+.site-foot .foot-col h2 {
   font-family: var(--mono);
-  font-size: 0.66rem;
+  font-size: 0.6875rem;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--fg-faint);
-  margin-bottom: 0.6rem;
+  margin: 0 0 0.6rem;
   font-weight: 600;
+  line-height: 1.4;
 }
 .foot-col ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.32rem; }
 .foot-col a { color: var(--fg-dim); }
@@ -884,7 +893,7 @@ table.grid .pts { color: var(--amber); font-weight: 650; }
 }
 .toc h2 {
   font-family: var(--mono);
-  font-size: 0.66rem;
+  font-size: 0.6875rem;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--fg-faint);
@@ -969,7 +978,7 @@ pre .a { color: var(--amber); }
 .item-title { font-weight: 650; font-size: 1rem; flex: 1 1 auto; min-width: 12ch; }
 .item-meta {
   font-family: var(--mono);
-  font-size: 0.66rem;
+  font-size: 0.6875rem;
   color: var(--fg-faint);
   letter-spacing: 0.03em;
   display: inline-flex;
@@ -1006,7 +1015,7 @@ pre .a { color: var(--amber); }
 .crit-group-head h3 { margin: 0; font-size: 1.02rem; }
 .crit-group-head .k {
   font-family: var(--mono);
-  font-size: 0.62rem;
+  font-size: 0.6875rem;
   letter-spacing: 0.08em;
   color: var(--fg-faint);
   font-weight: 500;
@@ -1031,16 +1040,17 @@ pre .a { color: var(--amber); }
 }
 .callout > :first-child { margin-top: 0; }
 .callout > :last-child { margin-bottom: 0; }
-.callout h4 {
+.callout .callout-h {
   font-family: var(--mono);
-  font-size: 0.68rem;
+  font-size: 0.6875rem;
+  font-weight: 650;
   letter-spacing: 0.07em;
-  text-transform: uppercase;
   color: var(--fg-faint);
-  margin-bottom: 0.45rem;
+  margin: 0 0 0.45rem;
+  max-width: none;
 }
 .callout--warn { border-color: color-mix(in srgb, var(--warn) 34%, var(--line)); background: color-mix(in srgb, var(--warn) 4%, var(--panel)); }
-.callout--warn h4 { color: var(--warn); }
+.callout--warn .callout-h { color: var(--warn); }
 
 /* ---------- 步骤 ---------- */
 .steps { margin: 0; padding: 0; list-style: none; display: grid; gap: 1.5rem; counter-reset: s; }
@@ -1128,7 +1138,7 @@ pre .a { color: var(--amber); }
 }
 .demo-banner .tag {
   font-family: var(--mono);
-  font-size: 0.68rem;
+  font-size: 0.6875rem;
   font-weight: 700;
   letter-spacing: 0.1em;
   border: 1px solid color-mix(in srgb, var(--amber-ink) 45%, transparent);
@@ -1212,7 +1222,7 @@ pre .a { color: var(--amber); }
 
 .tag-inline {
   font-family: var(--mono);
-  font-size: 0.68rem;
+  font-size: 0.6875rem;
   letter-spacing: 0.04em;
   color: var(--fg-faint);
   border: 1px solid var(--line);
@@ -1267,8 +1277,8 @@ pre .a { color: var(--amber); }
   .nav { order: 3; width: 100%; margin-left: 0; padding-bottom: 0.1rem; }
   .head-tools { margin-left: auto; }
   .wordmark .en { display: none; }
-  .report-top { padding: 0.55rem 0.8rem; gap: 0.45rem; font-size: 0.6rem; flex-wrap: wrap; row-gap: 0.3rem; }
-  .report-top .rid { margin-left: 0; width: 100%; font-size: 0.58rem; opacity: 0.75; }
+  .report-top { padding: 0.55rem 0.8rem; gap: 0.45rem; font-size: 0.6875rem; flex-wrap: wrap; row-gap: 0.3rem; }
+  .report-top .rid { margin-left: 0; width: 100%; font-size: 0.6875rem; opacity: 0.75; }
   .report-body { padding: 1.1rem 1rem 0.9rem; }
   .report-score .num { font-size: 3.4rem; }
   .dim { grid-template-columns: 6.5em 1fr 3.2em; gap: 0.5rem; }

@@ -1,7 +1,7 @@
 # DSH（DeepSeek​ Harness）适配说明 — **VERIFIED**
 
 > 证据：本机 Windows 11 + Node v24.20.0 + DSH 桌面端，2026-10-29T23:55Z ~ 2026-10-30T00:10Z。
-> 完整命令流水与输出见 `qa/host/HOST_TRIAL.md`；结构校验见 `qa/host/verify-skill.log`。
+> 完整命令流水与输出见 `evidence/host/HOST_TRIAL.md`；结构校验见 `evidence/host/verify-skill.log`。
 
 ## 1. 扫描根与优先级（已核实）
 
@@ -26,7 +26,7 @@
 3. 目录包里的 `scripts/`、`src/`、`references/` 改动**不触发**目录刷新；改 `SKILL.md` 或增删包才会。
 4. 坏 frontmatter / 非法 `name` / 非法布尔值 → **静默跳过 + 一条 warning**，模型端无法区分“不存在”和“存在但非法”。
 
-**所以装完必须自己验一遍**：`node qa/host/verify-skill.mjs`。
+**所以装完必须自己验一遍**：`node evidence/host/verify-skill.mjs`。
 
 ## 3. 安装（三条命令，全部实测）
 

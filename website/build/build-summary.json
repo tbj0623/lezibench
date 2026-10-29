@@ -1,7 +1,7 @@
 {
   "examVersion": "1.2.0",
   "graderVersion": "1.2.0",
-  "catalogFingerprint": "539fd88d6f1d3f5040db5c4e8d74cfe0f8309795533259b08157319b346f44bf",
+  "catalogFingerprint": "4fa6c87169d69155c130e71c99d5d70b5639b1f64fad15a35069d47f9fa78330",
   "criteriaInjected": {
     "items": 16,
     "criteria": 44
@@ -17,12 +17,12 @@
   },
   "metaReplacedIn": 0,
   "demo": {
-    "runId": "run-20261029-173349-1b6ba9",
+    "runId": "run-20261029-180439-6e07b5",
     "seed": "lezi-demo-2026",
     "total": 77,
     "level": "良好",
     "status": "COMPLETED",
-    "durationMs": 2501,
+    "durationMs": 1285,
     "dims": [
       {
         "key": "instruction",

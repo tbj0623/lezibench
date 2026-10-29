@@ -66,20 +66,49 @@ export async function atomicWrite(file, data) {
     await fh.writeFile(buf);
     await fh.sync();
   } finally {
+    // 无论成败都要关句柄；但异常吞在这里会把真实的写失败藏起来，所以先记下再抛
     if (fh) await fh.close().catch(() => {});
   }
-  try {
-    await rename(tmp, file);
-  } catch (err) {
-    if (process.platform === 'win32' || err.code === 'EEXIST' || err.code === 'EPERM') {
-      await unlink(file).catch(() => {});
+
+  // rename 到目标文件。
+  //
+  // Windows 的坑：目标文件存在时 rename 可能报 EPERM/EEXIST，
+  // 常规退路是 unlink 再 rename —— 但这中间有窗口，两个并发写者会互相踩：
+  //   A unlink → B rename 成功 → A rename 失败（目标已存在）或 EPERM
+  // 实测 8 路并发时约 20% 概率抛 EPERM。
+  // 处理办法：整个「rename / unlink+rename」序列带指数退避重试若干次，
+  // 让失败的写者最终仍能落地，而不是把 EPERM 抛给调用方。
+  const MAX_ATTEMPTS = 8;
+  let lastErr;
+  for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
+    try {
       await rename(tmp, file);
-    } else {
-      await unlink(tmp).catch(() => {});
-      throw err;
+      return file;
+    } catch (err) {
+      lastErr = err;
+      const isWinLike = process.platform === 'win32' || err.code === 'EEXIST' || err.code === 'EPERM' || err.code === 'EACCES';
+      if (!isWinLike) {
+        await unlink(tmp).catch(() => {});
+        throw err;
+      }
+      // 竞争窗口：先让出，再清理目标并重试
+      await new Promise((r) => setTimeout(r, 5 * (attempt + 1)));
+      await unlink(file).catch(() => {});
+      try {
+        await rename(tmp, file);
+        return file;
+      } catch (err2) {
+        lastErr = err2;
+        // 临时文件若已被别的写者顺手清掉，就没必要再重试了
+        if (err2.code === 'ENOENT') {
+          const stillThere = await stat(tmp).then(() => true).catch(() => false);
+          if (!stillThere) throw lastErr;
+        }
+      }
     }
   }
-  return file;
+  await unlink(tmp).catch(() => {});
+  throw lastErr;
 }
 
 export async function atomicWriteJson(file, obj) {

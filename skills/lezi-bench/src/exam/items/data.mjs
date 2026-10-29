@@ -191,11 +191,14 @@ const D02 = {
   grade(parsed, facts) {
     const o = D02.oracle(facts);
     const rawAnswer = parsed.fields.answer ? squash(parsed.fields.answer).toUpperCase() : null;
-    // 严格：只认可 C / 选项原文；不接受含糊的「可能是」或把预算当作答案
-    const isInsufficient = /信息不足|无法确定|不能确定|不确定|unknown|insufficient|^C/i.test(rawAnswer || '');
+    // 严格：先归一成 A/B/C 单个字母，**剥离括号补充后必须恰好是那一个字母**。
+    // 旧实现用 `^A` 前缀匹配，导致「A__乱码」「AA」也能通过（M-12 子串污染）。
+    const letterMatch = rawAnswer ? rawAnswer.match(/^([ABC])(?:[（(【\[][^）)】\]]*[）)】\]])?$/) : null;
+    const letter = letterMatch ? letterMatch[1] : null;
+    const isInsufficient = /信息不足|无法确定|不能确定|不确定|unknown|insufficient/.test(rawAnswer || '');
     const ansOk = o.answer === 'C'
-      ? rawAnswer !== null && isInsufficient
-      : rawAnswer !== null && new RegExp(`^${o.answer}`).test(rawAnswer) && !isInsufficient;
+      ? (letter === 'C' || (letter === null && isInsufficient))
+      : letter === o.answer;
     // 若答案里同时出现 A/B 与 C，视为自相矛盾，不算通过
     const contradictory = rawAnswer !== null && (/[AB]/.test(rawAnswer) && /C/.test(rawAnswer));
     const reason = parsed.fields.reason ? squash(parsed.fields.reason) : '';

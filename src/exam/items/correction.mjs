@@ -408,7 +408,8 @@ const C04 = {
       '2) 修复后的正确小计（round 前的小计，即单价×正确数量）；',
       '3) 修复后的正确应付总额（保留两位小数）。',
       '只输出一个 JSON 对象：',
-      '{"rootCause":"数量用错","fixedSubtotal":200,"fixedTotal":180}',
+      '{"rootCause":"<数量用错|单价用错|折扣漏乘|四舍五入>","fixedSubtotal":<正确小计>,"fixedTotal":<正确应付>}',
+      '（上面只示范结构，四个选项自己判断，数字自己算。）',
     ].join('\n');
     return {
       prompt,

@@ -1,6 +1,6 @@
 # INSTALL — 把 LeziBench 装成 Agent Skill
 
-> 本页所有“实测”标注都来自本机 Windows 11 + Node v24.20.0 + DSH 桌面端的真实执行，日志在 `qa/host/HOST_TRIAL.md`。
+> 本页所有“实测”标注都来自本机 Windows 11 + Node v24.20.0 + DSH 桌面端的真实执行，日志在 `evidence/host/HOST_TRIAL.md`。
 > 证据口径见 `docs/COMPATIBILITY.md`。**未实测的写法一律不会出现在本页。**
 
 ## 0. 先看这条（最容易踩的坑）
@@ -137,7 +137,7 @@ bash ./install/install.sh --uninstall
 ### 4.1 结构验证（不依赖宿主）
 
 ```bash
-node qa/host/verify-skill.mjs
+node evidence/host/verify-skill.mjs
 ```
 
 它会检查：frontmatter 合法、`name == 父目录名`、`description` 长度与触发词、`license`、`compatibility ≤500`、`allowed-tools` 不是 YAML 列表、没有 `disable-model-invocation: true`、正文非空且覆盖全部子命令、`scripts/` 与 `src/` 同层、与仓库根 `SKILL.md` 逐字节一致、`doctor` 退出码 0。
@@ -166,7 +166,7 @@ node scripts/cli.mjs doctor
 node scripts/cli.mjs start --mode standard --json     # 看一眼第 1 批题目就够
 ```
 
-> 想彻底验证跑通一局，见 `qa/host/HOST_TRIAL.md` 的完整命令流水。
+> 想彻底验证跑通一局，见 `evidence/host/HOST_TRIAL.md` 的完整命令流水。
 
 ## 5. 数据目录
 
@@ -190,7 +190,7 @@ $env:LEZIBENCH_HOME="D:\lezi"; node scripts/cli.mjs doctor    # Windows PowerShe
 
 | 现象 | 原因 | 处理 |
 |---|---|---|
-| skill 目录里看不到它 | 目录名 ≠ `name`，或 frontmatter 非法 | 跑 `node qa/host/verify-skill.mjs`；DSH 对非法 skill 是**静默跳过**，只留一条 warning |
+| skill 目录里看不到它 | 目录名 ≠ `name`，或 frontmatter 非法 | 跑 `node evidence/host/verify-skill.mjs`；DSH 对非法 skill 是**静默跳过**，只留一条 warning |
 | `/lezi-bench` 报 unknown | 同上；或名字写成了 `/lezibench` | 确认目录叫 `lezi-bench`、`name: lezi-bench` |
 | `doctor` 报数据目录不可写 | 数据目录权限 / 磁盘只读 | 用 `LEZIBENCH_HOME` 指到一个可写目录再试 |
 | `doctor` 报 Node 版本 | Node < 18 | 升级 Node |

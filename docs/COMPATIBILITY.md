@@ -1,7 +1,7 @@
 # COMPATIBILITY — 各宿主兼容性（证据分级）
 
 > 本页只记录**有证据**的结论。证据来源全部写在 `research/PLATFORM_NOTES.md`（该文件对每条结论标注了【已核实】/【未核实】及原始 URL / 本机实测时间）。
-> 采集时间：2026-10-29T23:42Z ~ 23:50Z 与 2026-10-30 的真机安装/考试（见 `qa/host/HOST_TRIAL.md`）。
+> 采集时间：2026-10-29T23:42Z ~ 23:50Z 与 2026-10-30 的真机安装/考试（见 `evidence/host/HOST_TRIAL.md`）。
 
 ## 0. 证据等级定义
 
@@ -35,7 +35,7 @@
 | 5 | 非法 frontmatter 静默跳过 | 是 | 同上；本机 `paofen`（`disable-model-invocation: true`）物理存在却不进模型目录，是行为级反证 |
 | 6 | 模型侧调用 `skill` 工具 | 可用 | 本次会话使用 `lezi-bench`（精确名）作为可用 skill 条目 |
 | 7 | 用户侧 `/lezi-bench` | 允许 | `user-invocable` 未设 → 默认允许；DSH 识别“空白分隔的 `/name` token”（文档已核实） |
-| 8 | 完整考试链路 | 通过 | `doctor` → `start` → `submit` ×4 → `report`（html/json/summary），全部退出码 0，见 `qa/host/HOST_TRIAL.md` |
+| 8 | 完整考试链路 | 通过 | `doctor` → `start` → `submit` ×4 → `report`（html/json/summary），全部退出码 0，见 `evidence/host/HOST_TRIAL.md` |
 
 ### 2.2 已验证可用的安装位置
 

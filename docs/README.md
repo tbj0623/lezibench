@@ -22,7 +22,7 @@
 | 有具体疑问 | [FAQ.md](FAQ.md) | 按「最容易被误解的排前面」排序 |
 | 想贡献一道题 / 改判分器 | [../CONTRIBUTING.md](../CONTRIBUTING.md) | 七项必交材料 + 零容忍红线 + commit/PR 约定 |
 | 想报安全漏洞 | [../SECURITY.md](../SECURITY.md) | 走 GitHub Security Advisory；含已知风险清单与诚实边界 |
-| 想知道这一版有什么、缺什么 | [../CHANGELOG.md](../CHANGELOG.md) | `0.1.0` 的功能清单与已知限制 |
+| 想知道这一版有什么、缺什么 | [../CHANGELOG.md](../CHANGELOG.md) | `0.2.0` 的功能清单与已知限制 |
 | 参与讨论的行为底线 | [../CODE_OF_CONDUCT.md](../CODE_OF_CONDUCT.md) | Contributor Covenant 2.1 精简版 |
 | 各宿主适配的说明 | [../adapters/README.md](../adapters/README.md) | 适配层文档入口 |
 
@@ -62,9 +62,10 @@
 | 文件 | 内容 |
 |---|---|
 | [../../research/COMPETITOR_TRIAL.md](../../research/COMPETITOR_TRIAL.md) | 虾跑分（`paofen.cocoloop.cn`）竞品实测报告：时间线、三态核实表、可复现问题清单 |
-| [../../qa/host/HOST_TRIAL.md](../../qa/host/HOST_TRIAL.md) | DSH 宿主真机安装与完整考试记录 |
+| [../evidence/host/HOST_TRIAL.md](../evidence/host/HOST_TRIAL.md) | DSH 宿主真机安装与完整考试记录 |
 
-> 注意：`research/` 与 `qa/` 是**研究记录**，其中的结论按「已核实 / 官网声明 / 未核实」三态标注。
+> 注意：`evidence/` 是**真实运行记录**，其中的结论按「已核实 / 未核实」标注；
+> 竞品调研记录在仓库外的 `research/` 目录，不属于本发行包。
 > 引用时必须带上状态标记，不能当成已证实的结论。
 
 ---

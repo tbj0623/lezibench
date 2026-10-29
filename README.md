@@ -41,7 +41,7 @@ LeziBench 换了个交付方式：
 > **实测于 2026-10-29**：我们对虾跑分（paofen.cocoloop.cn）做了一次匿名黑盒走查。
 > `finish` 接口正常返回了 `reportUrl`，但该 URL 连续三次（502 / 超时 / 502）都打不开，
 > 而同一域名下 `/api/*` 和首页都是 200。
-> 完整记录与证据见 [`research/COMPETITOR_TRIAL.md`](research/COMPETITOR_TRIAL.md)。
+> 完整记录与证据见 [`evidence/research/COMPETITOR_TRIAL.md`](evidence/research/COMPETITOR_TRIAL.md)。
 > 这不构成对对方整体产品的判断 —— 只记录我们在那个窗口里实际看到的东西。
 
 ---
@@ -182,7 +182,7 @@ D02  区分事实、推断与信息不足   0/6
 | **Codex** | `NOT_TESTED` | 未取得任何一手证据，不写「读某个目录」这类未经验证的说法 |
 
 > `NOT_TESTED` 的意思只是**我们没验证过**，不是断言它不能用。
-> 核实记录见 [`research/PLATFORM_NOTES.md`](research/PLATFORM_NOTES.md)，逐宿主说明见 [docs/COMPATIBILITY.md](docs/COMPATIBILITY.md)。
+> 核实记录见 [`evidence/research/PLATFORM_NOTES.md`](evidence/research/PLATFORM_NOTES.md)，逐宿主说明见 [docs/COMPATIBILITY.md](docs/COMPATIBILITY.md)。
 
 ---
 
@@ -237,7 +237,7 @@ grep -rnE "fetch\(|node:(http|https|net|dgram)" src/ scripts/   # 无输出
 **这份试卷不是一个固定答案表，作答必须逐题读当轮题面。**
 
 > 同一份记录里还有多轮**未满分**的运行（包括早期因 R04 题面欠定而只拿到 3/9 的轮次）。
-> 失败轮一并留档：完整 7 轮、种子与指纹见 [`qa/host/HOST_TRIAL.md` §6](qa/host/HOST_TRIAL.md)。
+> 失败轮一并留档：完整 7 轮、种子与指纹见 [`evidence/host/HOST_TRIAL.md` §6](evidence/host/HOST_TRIAL.md)。
 >
 > 这些数字只说明「这套流程能跑通、判分结果可复现」，**不构成对任何模型能力的评价**。
 > 全部为本地公开题库自测，非认证，不防作弊。
@@ -278,7 +278,7 @@ grep -rnE "fetch\(|node:(http|https|net|dgram)" src/ scripts/   # 无输出
 三条「我们学它的」：逐题 `details` 的思路、统一的中文错误文案、skill 驱动的简单交互模型。
 一条「明确不学」：用提示词强制 Agent「必须展示链接」。
 
-证据与完整分析：**[`research/COMPETITOR_TRIAL.md`](research/COMPETITOR_TRIAL.md)**。
+证据与完整分析：**[`evidence/research/COMPETITOR_TRIAL.md`](evidence/research/COMPETITOR_TRIAL.md)**。
 
 ---
 
