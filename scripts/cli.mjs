@@ -20,6 +20,7 @@ import path from 'node:path';
 const HELP = `乐子跑分 LeziBench v${EXAM_VERSION} — 本地、可解释的 Agent 能力自测
 
 用法：
+  node scripts/cli.mjs install [--target <技能根目录>] [--force] [--uninstall] [--json]
   node scripts/cli.mjs doctor
   node scripts/cli.mjs start --mode standard [--seed 1234] [--json]
   node scripts/cli.mjs submit --run RUN_ID --batch 1 --answers-file answers.json [--json]
@@ -64,6 +65,12 @@ export async function main(argv = process.argv.slice(2)) {
     return 0;
   }
   let parsed;
+  // install 有自己的参数集（--target/--force/--uninstall），
+  // 必须在通用 parseArgs 之前分流，否则会被当成未知参数拒掉。
+  if (cmd === 'install') {
+    const { runInstallCli } = await import('./install.mjs');
+    return runInstallCli(argv.slice(1));
+  }
   try {
     parsed = parseArgs({
       args: argv.slice(1),
@@ -136,7 +143,8 @@ export async function main(argv = process.argv.slice(2)) {
         const res = await submitBatch({ root: ctx.root, runId: o.run, batch: Number(o.batch), answers, allowMissing: o['allow-missing'] === true });
         if (o.json) { jsonOut(res); return 0; }
         if (res.idempotent) out(`第 ${res.batch} 批此前已用相同答案提交过，本次按幂等处理，未重复计分。`);
-        out(`第 ${res.batch} 批判分完成：本批 ${res.batchAwarded}/${res.batchMax} 分`);
+        out(`第 ${res.batch} 批判分完成：本批 ${res.batchAwarded}/${res.batchMax} 分；`
+          + `累计 ${res.cumulativeAwarded}/${res.cumulativeMax} 分（满分 ${res.totalMax}）`);
         for (const g of res.graded) {
           out(`  ${g.id}  ${String(g.awarded).padStart(2)}/${g.maxPoints}  ${g.gradingStatus}${g.failedChecks.length ? '' : ''}`);
           for (const f of g.failedChecks) out(`      ✘ ${f.id} ${f.reason}`);

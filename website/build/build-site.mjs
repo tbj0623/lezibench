@@ -293,7 +293,14 @@ async function injectMeta() {
     const p = path.join(SITE, f);
     let html = await readFile(p, 'utf8');
     const before = html;
-    html = html.replace(/<span data-meta="versions">[^<]*<\/span>/g, `<span>exam v${versions.exam} · grader v${versions.grader}</span>`);
+    // ⚠️ v1.4 修复：这些 replace 必须**保留自己的 data-meta 锚点**。
+    //    旧版把 `<span data-meta="versions">…</span>` 换成不带锚点的 `<span>…</span>`，
+    //    于是第二次构建就再也匹配不上 —— 版本号会停在第一次注入的值上悄悄过期。
+    //    （真实事故：页脚长期停在 exam v1.2.0，而实际已是 1.3.0/1.4.0。）
+    html = html.replace(
+      /<span data-meta="versions">[^<]*<\/span>/g,
+      `<span data-meta="versions">exam v${versions.exam} · grader v${versions.grader}</span>`,
+    );
     html = html.replace(/data-meta="exam">—<\/span>/g, `data-meta="exam">${versions.exam}</span>`);
     html = html.replace(/data-meta="grader">—<\/span>/g, `data-meta="grader">${versions.grader}</span>`);
     html = html.replace(/data-meta="contract">—<\/span>/g, `data-meta="contract">${versions.contract}</span>`);

@@ -1,6 +1,6 @@
 {
   "name": "lezi-bench",
-  "version": "1.2.0",
+  "version": "1.4.0",
   "description": "乐子跑分 LeziBench — 本地、可解释、零依赖的 AI Agent 能力自测 Skill。名字轻松，成绩认真。",
   "type": "module",
   "license": "MIT",
@@ -24,6 +24,7 @@
     "SKILL.md",
     "scripts/",
     "src/",
+    "install/",
     "README.md",
     "LICENSE"
   ],

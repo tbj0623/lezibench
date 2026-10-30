@@ -38,11 +38,23 @@ function bar(pct, cls = '') {
   return `<div class="bar ${cls}"><span style="width:${Math.max(0, Math.min(100, pct)).toFixed(1)}%"></span></div>`;
 }
 
+/**
+ * 渲染时间戳。
+ *
+ * 关键：必须**指定时区**，不能用 toLocaleString 的默认本地时区。
+ * 否则同一份报告在 Windows（UTC+8）和 Linux CI（UTC）渲染出的字符串不同，
+ * `build-site.mjs --check` 在 CI 上会误判为「产物漂移」。
+ *
+ * 用 UTC 而不是 Asia/Shanghai：报告是可复现的产物，不该取决于运行机器的时区。
+ * 界面上同时标注 UTC，避免读者误读成本地时间。
+ */
 function fmtTime(iso) {
   if (!iso) return '—';
   try {
     const d = new Date(iso);
-    return d.toLocaleString('zh-CN', { hour12: false });
+    if (Number.isNaN(d.getTime())) return esc(iso);
+    const s = d.toLocaleString('zh-CN', { hour12: false, timeZone: 'UTC' });
+    return `${s} UTC`;
   } catch {
     return esc(iso);
   }

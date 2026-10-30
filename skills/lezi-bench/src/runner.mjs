@@ -19,12 +19,33 @@ import { renderHtml, renderSummaryText } from './report/html.mjs';
 
 export const STATE_FILE = 'state.json';
 
-export function environmentInfo() {
+/**
+ * 运行环境描述。
+ *
+ * DEMO 模式下返回固定串：否则 Linux CI 与 Windows 本机会产出不同的
+ * demo-report.*，`build-site.mjs --check` 在 CI 上必然失败（真实运行不受影响）。
+ */
+export const DEMO_FIXED_ENV = 'node (demo) · (demo)/(demo)';
+
+export function environmentInfo(demo = false) {
+  if (demo) return DEMO_FIXED_ENV;
   return `node ${process.version} · ${process.platform}/${process.arch}`;
 }
 
-function nowIso() {
-  return new Date().toISOString();
+/**
+ * 固定时间戳（仅 DEMO 用）。
+ *
+ * 为什么需要：`website/build/build-site.mjs` 每次构建都会现场跑一局 DEMO 来生成
+ * 演示报告。如果时间戳取真实墙钟，产出的 demo-report.* 每次都不同 →
+ * 构建不幂等、git 永远 dirty、也没法用 --check 判断产物是否漂移。
+ *
+ * DEMO 报告本来就带 `demo: true` 标记，用固定时间戳不会让人误以为是真实运行。
+ * 真实运行（非 demo）完全不受影响，仍然用墙钟。
+ */
+const DEMO_FIXED_ISO = '2026-01-01T00:00:00.000Z';
+
+function nowIso(demo = false) {
+  return demo ? DEMO_FIXED_ISO : new Date().toISOString();
 }
 
 function runPaths(root, runId) {
@@ -42,10 +63,22 @@ function runPaths(root, runId) {
 function publicBatchView(state, batch) {
   const instanceSeed = state.seed;
   const items = itemsForBatch(batch).map((it) => instantiate(it, instanceSeed));
+  // 批次分母的唯一真源：不同批次题数与分值不同（16/24/24/36），
+  // 文档与 Skill 一律引用这两个字段，不要自己算 4×25。
+  const batchMax = items.reduce((s, it) => s + it.points, 0);
+  let cumulativeMax = 0;
+  for (const b of BATCHES) {
+    cumulativeMax += itemsForBatch(b).reduce((s, it) => s + it.points, 0);
+    if (b >= batch) break;
+  }
   return {
     runId: state.runId,
     batch,
     totalBatches: BATCHES.length,
+    batchMax,
+    cumulativeMax,
+    cumulativeAwarded: state.gradedItems.reduce((s, g) => s + g.awarded, 0),
+    totalMax: ITEMS.reduce((s, it) => s + it.points, 0),
     answeredCount: state.gradedItems.length,
     totalQuestions: ITEMS.length,
     progress: `第 ${batch}/${BATCHES.length} 批 · 已完成 ${state.gradedItems.length}/${ITEMS.length} 题`,
@@ -95,20 +128,20 @@ export async function startRun(opts = {}) {
     graderVersion: GRADER_VERSION,
     contractVersion: SCORING_CONTRACT_VERSION,
     catalogFingerprint: catalogFingerprint(),
-    createdAt: nowIso(),
-    updatedAt: nowIso(),
+    createdAt: nowIso(opts.demo === true),
+    updatedAt: nowIso(opts.demo === true),
     status: 'in_progress',
     currentBatch: 1,
     gradedItems: [],
     batches: {},
-    environment: environmentInfo(),
+    environment: environmentInfo(opts.demo === true),
     demo: opts.demo === true,
   };
   await atomicWriteJson(paths.state, state);
   return { runId, root, state, batch: publicBatchView(state, 1) };
 }
 
-export async function loadState(root, runId) {
+export async function loadState(root, runId, opts = {}) {
   const paths = runPaths(root, runId);
   let state;
   try {
@@ -118,10 +151,44 @@ export async function loadState(root, runId) {
     throw new Error(`找不到运行记录：${runId}（数据目录 ${root}）`);
   }
   if (!state) throw new Error(`找不到运行记录：${runId}（数据目录 ${root}）`);
-  if (state.examVersion !== EXAM_VERSION) {
-    throw new Error(`本次运行使用 exam v${state.examVersion}，当前安装的是 v${EXAM_VERSION}；跨版本不能继续，请重新 start。`);
-  }
+  assertRunCompatible(state, opts);
   return { state, paths };
+}
+
+/**
+ * 跨版本隔离。
+ *
+ * v1.4 修复：旧实现只比对 `examVersion`，于是「题库指纹变了但版本号忘了升」
+ * 或「由旧 grader 判过的运行」会被新代码静默接着跑、静默重判 —— 成绩不可比却看不出来。
+ *
+ * 分级处理（不是一刀切）：
+ *  - examVersion 或 catalogFingerprint 不一致 → **任何**命令都拒绝。
+ *    题面/事实变了，旧答案已不对应新题目，继续跑只会得到假成绩。
+ *  - graderVersion 不一致 → resume/submit 拒绝（不能拿新判分器续旧局）；
+ *    但 `regrade --grader X` 是用户**显式**要求重判，允许，且会先归档旧状态。
+ */
+export function assertRunCompatible(state, { allowGraderMismatch = false, fingerprint } = {}) {
+  if (state.examVersion !== EXAM_VERSION) {
+    throw new Error(
+      `本次运行使用 exam v${state.examVersion}，当前安装的是 v${EXAM_VERSION}；`
+      + '跨版本不能继续（题目已变，旧答案不再对应），请重新 start。',
+    );
+  }
+  const curFp = fingerprint || catalogFingerprint();
+  if (state.catalogFingerprint && state.catalogFingerprint !== curFp) {
+    throw new Error(
+      '本次运行的题库指纹与当前安装不一致（题目内容改过但版本号没升？）；'
+      + '继续跑会得到不可比的成绩，已拒绝。请重新 start。\n'
+      + `  运行记录：${state.catalogFingerprint.slice(0, 16)}…  当前：${curFp.slice(0, 16)}…`,
+    );
+  }
+  if (!allowGraderMismatch && state.graderVersion !== GRADER_VERSION) {
+    throw new Error(
+      `本次运行由 grader v${state.graderVersion} 判过，当前安装的是 v${GRADER_VERSION}；`
+      + '不能混用两版判分器续跑。要继续请用 regrade 显式重判，或重新 start。',
+    );
+  }
+  return true;
 }
 
 export async function statusRun(opts = {}) {
@@ -219,7 +286,7 @@ export async function submitBatch(opts = {}) {
     await atomicWriteJson(path.join(paths.answers, `${batch}-${item.id}.json`), {
       itemId: item.id,
       batch,
-      submittedAt: nowIso(),
+      submittedAt: nowIso(state.demo === true),
       rawAnswerSha256: sha256Hex(typeof raw === 'string' ? raw : JSON.stringify(raw ?? null)),
       rawAnswer: raw,
     });
@@ -228,7 +295,7 @@ export async function submitBatch(opts = {}) {
   state.gradedItems = state.gradedItems.filter((it) => !expectedIds.includes(it.id)).concat(results);
   state.batches[batch] = {
     status: 'graded',
-    submittedAt: nowIso(),
+    submittedAt: nowIso(state.demo === true),
     payloadHash,
     itemIds: expectedIds,
     missingIds: missing,
@@ -238,7 +305,7 @@ export async function submitBatch(opts = {}) {
   const allDone = BATCHES.every((b) => state.batches[b]?.status === 'graded');
   state.currentBatch = allDone ? 4 : Math.min(...BATCHES.filter((b) => state.batches[b]?.status !== 'graded'));
   state.status = allDone ? 'completed' : 'in_progress';
-  state.updatedAt = nowIso();
+  state.updatedAt = nowIso(state.demo === true);
   await atomicWriteJson(paths.state, state);
 
   const next = allDone ? null : publicBatchView(state, state.currentBatch);
@@ -254,11 +321,27 @@ export async function submitBatch(opts = {}) {
     })),
     batchAwarded: state.batches[batch].awarded,
     batchMax: state.batches[batch].max,
+    // 累计分母（v1.4 新增，唯一真源）：
+    // 真实批次满分是 16/24/24/36，所以累计是 16/40/64/100 —— 不是 4×25 的 25/50/75/100。
+    // SKILL.md / 文档 / 网站一律读这两个字段，禁止再写死数字。
+    cumulativeAwarded: cumulativeOf(state, batch, 'awarded'),
+    cumulativeMax: cumulativeOf(state, batch, 'max'),
+    totalMax: ITEMS.reduce((s, it) => s + it.points, 0),
     missingIds: missing,
     progress: `${state.gradedItems.length}/${ITEMS.length}`,
     next,
     finished: allDone,
   };
+}
+
+/** 累计某个字段：只累加「到 batch 为止」已完成判分的批次 */
+function cumulativeOf(state, batch, field) {
+  let sum = 0;
+  for (const b of BATCHES) {
+    if (b > batch) break;
+    sum += state.batches[b]?.[field] ?? 0;
+  }
+  return sum;
 }
 
 function nextAfter(state, batch) {
@@ -342,7 +425,8 @@ async function atomicWriteFileEnsured(file, content) {
 /** 重新判分：只改判分器版本，绝不改原答案 */
 export async function regradeRun(opts = {}) {
   const root = opts.root || resolveDataRoot();
-  const { state, paths } = await loadState(root, opts.runId);
+  // 显式重判：允许 grader 版本不一致（这正是 regrade 的用途），但 examVersion/指纹仍必须一致
+  const { state, paths } = await loadState(root, opts.runId, { allowGraderMismatch: true });
   const graderVersion = opts.grader || GRADER_VERSION;
   const archived = path.join(paths.evidence, `regrade-${Date.now()}`);
   await ensureDir(archived);
@@ -375,7 +459,7 @@ export async function regradeRun(opts = {}) {
   }
   state.gradedItems = newResults;
   state.graderVersion = graderVersion;
-  state.updatedAt = nowIso();
+  state.updatedAt = nowIso(state.demo === true);
   await atomicWriteJson(paths.state, state);
   const after = newResults.map((g) => ({ id: g.id, awarded: g.awarded }));
   const diffs = before
@@ -387,8 +471,14 @@ export async function regradeRun(opts = {}) {
 /** 环境自检 */
 export async function doctor(opts = {}) {
   const checks = [];
-  const nodeMajor = Number(process.versions.node.split('.')[0]);
-  checks.push({ name: 'Node.js 版本', ok: nodeMajor >= 18, detail: `v${process.versions.node}（要求 ≥18）` });
+  // 最低版本必须与 package.json 的 engines.node 完全一致（v1.4 统一口径为 >=18.17.0）
+  const [nMajor, nMinor] = process.versions.node.split('.').map(Number);
+  const nodeOk = nMajor > 18 || (nMajor === 18 && nMinor >= 17);
+  checks.push({
+    name: 'Node.js 版本',
+    ok: nodeOk,
+    detail: `v${process.versions.node}（要求 ≥18.17.0；与 package.json engines 一致）`,
+  });
   checks.push({ name: '操作系统', ok: true, detail: `${process.platform} ${process.arch}` });
   try {
     assertCatalogIntegrity();

@@ -9,9 +9,9 @@ import data from './items/data.mjs';
 import correction from './items/correction.mjs';
 import { sha256Hex } from './rng.mjs';
 
-export const EXAM_VERSION = '1.3.0';
-export const GRADER_VERSION = '1.3.0';
-export const SCORING_CONTRACT_VERSION = '1.0.0';
+export const EXAM_VERSION = '1.4.0';
+export const GRADER_VERSION = '1.4.0';
+export const SCORING_CONTRACT_VERSION = '1.1.0';
 
 export const DIMENSIONS = [
   { key: 'instruction', label: '指令理解', points: 25 },
@@ -93,13 +93,21 @@ export function assertCatalogIntegrity() {
     const pts = ITEMS.filter((i) => i.dimension === dim.key).map((i) => i.points).sort((a, b) => a - b);
     if (JSON.stringify(pts) !== JSON.stringify([4, 6, 6, 9])) errs.push(`维度 ${dim.key} 分值结构应为 [4,6,6,9]，实际 ${pts}`);
   }
-  // 0–100 每个整数都必须可达（按 1 分子块计）
+  // 抽象分值组合覆盖（子集和）。
+  //
+  // ⚠️ 口径务必准确（v1.4 修正）：这里证明的只是「0–100 的每个整数都能由
+  //    **某些评分条件的分值子集**拼出来」，即**分值集合层面**可达。
+  //    它**不等于**「存在一份合法的真实答卷能拿到该分数」——
+  //    因为同一题的多个条件之间存在逻辑依赖（例如 R02 的 C2/C3 以 C1 为前提，
+  //    不可能出现「C1 不过但 C2 过」这种组合）。
+  //    所以对外只能表述为「所有整数分在抽象分值组合上可达」，
+  //    不得宣传成「0–100 分分可达」。要宣称后者必须逐分给出合法答卷见证。
   const weights = ITEMS.flatMap((i) => criteriaOf(i).map((c) => c.points));
   const reachable = new Set([0]);
   for (const w of weights) for (const n of [...reachable]) reachable.add(n + w);
   const missing = [];
   for (let n = 0; n <= 100; n++) if (!reachable.has(n)) missing.push(n);
-  if (missing.length) errs.push(`存在不可达整数分数：${missing.join(',')}`);
+  if (missing.length) errs.push(`存在「抽象分值组合」不可达的整数分数：${missing.join(',')}`);
   if (errs.length) throw new Error(`题库契约校验失败：\n- ${errs.join('\n- ')}`);
   return true;
 }

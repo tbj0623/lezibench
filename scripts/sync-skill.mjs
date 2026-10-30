@@ -25,7 +25,9 @@ export const SKILL_NAME = 'lezi-bench';
 const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
 // 需要进入安装包的内容（顺序即复制顺序）
-const PAYLOAD = ['SKILL.md', 'package.json', 'scripts', 'src'];
+// adapters/ 也要带上：SKILL.md 第 6 节引用了「各宿主适配说明 adapters/」，
+// 不带的话装完就是死链（v1.4 修正）。
+const PAYLOAD = ['SKILL.md', 'package.json', 'scripts', 'src', 'adapters'];
 
 function sha(buf) {
   return createHash('sha256').update(buf).digest('hex');

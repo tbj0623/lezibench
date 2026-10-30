@@ -68,6 +68,7 @@
           <li><a href="#timing">耗时不是能力指标</a></li>
           <li><a href="#judge">确定性判分的代价</a></li>
           <li><a href="#v1">为什么上一版会被「轻松考满分」</a></li>
+          <li><a href="#v14">v1.4.0 我们自己的实测结果</a></li>
           <li><a href="#v1-limits">V1 版本的具体边界</a></li>
           <li><a href="#exploit">背答案能拿多少分</a></li>
         </ol>
@@ -128,7 +129,7 @@
               <tbody>
                 <tr>
                   <th scope="row">长上下文</th>
-                  <td>单题材料最长约 1200 字（v1.3.0 最长的 D04）。真实场景里「两万字文档里找一处矛盾」这类能力，这里没有对应题目。</td>
+                  <td>单题材料最长约 1200 字（当前最长的 D04）。真实场景里「两万字文档里找一处矛盾」这类能力，这里没有对应题目。</td>
                 </tr>
                 <tr>
                   <th scope="row">多轮工具调用</th>
@@ -156,7 +157,7 @@
                 </tr>
                 <tr>
                   <th scope="row">推理深度上限</th>
-                  <td>最难的一题是四元素排列约束求解，规模很小。它不区分「能做」和「能做得很深」。</td>
+                  <td>最难的一题是 R04（六人六色座位推理，线索全部是关系型/否定型，不允许直述）。搜索空间是 6! 量级，<strong>不需要</strong>多步搜索、也不需要写代码求解；它不区分「能做」和「能做得很深」。</td>
                 </tr>
               </tbody>
             </table>
@@ -281,6 +282,32 @@
             <strong>但加固效果不由我们自己验收。</strong>
             我们保留了一条硬标准：<strong>如果某个模型拿到满分、且全程没有任何一个评分条件失败过，
             那说明题目还是太浅</strong>，请提 issue 告诉我们。这个项目的价值在于可复核，不在于给个好分数。
+          </p>
+
+          <h3 id="v14">v1.4.0：我们自己的实测，结果一半「难看」</h3>
+          <p>
+            v1.4.0 修的不是难度，是<strong>评分诚实性</strong>（公开条件与代码不一致、跨链/链内划分对答题者不可知、
+            判分器返回不合契约的结果照样被当成可信成绩）。修完之后我们用同一个模型跑了两个 seed：
+          </p>
+          <div class="table-wrap">
+            <table>
+              <caption class="visually-hidden">v1.4.0 两局真实考试</caption>
+              <thead><tr><th scope="col">运行</th><th scope="col">总分</th><th scope="col">失分题</th><th scope="col">说明</th></tr></thead>
+              <tbody>
+                <tr><th scope="row">Run A</th><td class="num">96 / 100</td><td>D02 2/6</td><td>漏看了「实际支出为空、66 万只是预计未入账」，误判为「甲更省」；正确结论是「信息不足」</td></tr>
+                <tr><th scope="row">Run B</th><td class="num">100 / 100</td><td>无</td><td><strong>全程 48 条评分条件无一失败</strong></td></tr>
+              </tbody>
+            </table>
+          </div>
+          <p>
+            <strong>按我们自己的标准，Run B 这一局说明：题目对当前这一档模型仍然偏浅。</strong>
+            我们<strong>没有</strong>为了把分数压低去改判分标准、加难度或加题 —— 这条就如实挂在这里。
+          </p>
+          <p>
+            另外，这两局是<strong>同一个模型的两个 seed</strong>，只能说明「同一模型跑两次会波动 4 分」，
+            <strong>不能证明有跨模型区分度</strong>。跨模型区分度需要 3 档模型 × 每档 3 seed，本轮没有这个资源，
+            状态标记为 <code>PENDING_INDEPENDENT_CALIBRATION</code>。验收协议见仓库
+            <code>docs/VALIDITY.md</code>，原始报告见 <code>evidence/host/V14_REAL_RUNS.md</code>。
           </p>
         </section>
 
@@ -418,7 +445,7 @@
     </div>
     <div class="foot-legal">
       <span>© 2026 LeziBench contributors</span>
-      <span>exam v1.2.0 · grader v1.2.0</span>
+      <span data-meta="versions">exam v1.4.0 · grader v1.4.0</span>
       <span>本站无 Cookie、无分析脚本、无外部字体</span>
       <span class="spacer">本地规则核验 · 非认证成绩</span>
     </div>

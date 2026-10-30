@@ -16,6 +16,8 @@ import path from 'node:path';
 import os from 'node:os';
 import { mkdir, rm } from 'node:fs/promises';
 import { startRun, submitBatch, buildReport, writeReport } from '../src/runner.mjs';
+import { perfectAnswers } from './oracle-answers.mjs';
+import { gradeItem } from '../src/grading/grade.mjs';
 import { renderHtml, renderSummaryText } from '../src/report/html.mjs';
 import { itemsForBatch, BATCHES, ITEMS } from '../src/exam/manifest.mjs';
 import { instantiateInternal } from '../src/exam/manifest.mjs';
@@ -45,81 +47,86 @@ const DEMO_PLAN = {
   C04: 'partial',      // 根因对、金额错
 };
 
+/**
+ * 生成演示用答案。
+ *
+ * 设计原则：**不硬编码任何一道题的字段形状**。
+ * 「标准答案」直接取 oracle-answers 的 perfectAnswers（随题目实现同步维护），
+ * 再用通用降级逻辑制造「部分正确 / 全错」的效果。
+ *
+ * 为什么值得这样改：原实现对每道题各写死一次答案字段，
+ * 题目一改（R03 从 3 种餐盒变成 6 种模块）演示报告就立刻崩成
+ * UNPARSEABLE → 整场 PARTIAL → 段位 null，而测试完全没覆盖这条路径。
+ */
+function leafPaths(node, prefix = [], out = []) {
+  if (Array.isArray(node)) {
+    if (node.length === 0) out.push(prefix);
+    else node.forEach((v, i) => leafPaths(v, [...prefix, i], out));
+    return out;
+  }
+  if (node && typeof node === 'object') {
+    const keys = Object.keys(node);
+    if (keys.length === 0) out.push(prefix);
+    else for (const k of keys) leafPaths(node[k], [...prefix, k], out);
+    return out;
+  }
+  out.push(prefix);
+  return out;
+}
+
+/** 把一个标量改成「结构合法但值错」的值 */
+function badScalar(v) {
+  if (typeof v === 'number') return v + 1;
+  if (typeof v === 'boolean') return !v;
+  if (typeof v === 'string') {
+    if (/^[A-Z]$/.test(v)) return v === 'A' ? 'B' : 'A';
+    if (/^\d+$/.test(v)) return String(Number(v) + 1);
+    return '错误值';
+  }
+  return v;
+}
+
+function cloneWithCorruptions(answer, indices) {
+  const clone = JSON.parse(JSON.stringify(answer));
+  const paths = leafPaths(answer);
+  for (const idx of indices) {
+    const path = paths[idx];
+    if (!path || path.length === 0) continue;
+    let node = clone;
+    for (let i = 0; i < path.length - 1; i++) node = node[path[i]];
+    if (node === undefined || node === null) continue;
+    const last = path[path.length - 1];
+    node[last] = badScalar(node[last]);
+  }
+  return clone;
+}
+
 function makeDemoAnswer(item, mode, seed) {
-  const internal = instantiateInternal(item, seed);
-  const o = item.oracle(internal.facts);
-  const correct = correctAnswerFor(item.id, o);
+  const correct = perfectAnswers(seed)[item.id];
   if (mode === 'correct') return correct;
-  if (mode === 'wrong') return wrongAnswerFor(item.id, o, internal);
-  return partialAnswerFor(item.id, o, correct, internal);
-}
 
-function correctAnswerFor(id, o) {
-  switch (id) {
-    case 'I01': return { deadline: `${o.day}${o.text}`, budgetAttached: o.budgetAttached };
-    case 'I02': return { selected: o.selected, rejected: o.rejected };
-    case 'I03': return { rule: o.rule, decision: o.decision, escalate: o.escalate };
-    case 'I04': return { status: o.status, owner: o.owner, deadline: o.deadline };
-    case 'R01': return { subtotal: o.subtotal, total: o.total };
-    case 'R02': { const order = o.validOrders[0]; return { order, first: order[0], last: order[order.length - 1] }; }
-    case 'R03': return { veg: o.best.veg, chicken: o.best.chicken, beef: o.best.beef };
-    case 'R04': return o.answer;
-    case 'D01': return { list: o.unique };
-    case 'D02': return { answer: 'C', reason: '甲项目的最终实际支出这一栏是空的，无法与乙比较。' };
-    case 'D03': return { lossMaking: o.lossMaking, onlyInStore: o.onlyInStore, commonCount: o.commonCount };
-    case 'D04': return { levels: o.levels, counts: o.counts };
-    case 'C01': return { isCorrect: o.isCorrect, correctTotal: o.correctTotal };
-    case 'C02': return { beforeVoid: o.beforeVoid, finalStock: o.finalStock };
-    case 'C03': { const out = {}; for (const [k, v] of Object.entries(o.cases)) out[k] = { rule: v.rule, needManual: v.needManual }; return out; }
-    case 'C04': return { rootCause: o.rootCause, fixedSubtotal: o.fixedSubtotal, fixedTotal: o.fixedTotal };
-    default: throw new Error(id);
-  }
-}
+  const internal = instantiateInternal(item, seed);
+  const paths = leafPaths(correct);
+  const score = (ans) => gradeItem(internal, ans, { seed }).awarded;
 
-function wrongAnswerFor(id, o, internal) {
-  switch (id) {
-    case 'I03': return { rule: 'R1', decision: '转人工', escalate: true };
-    case 'R04': {
-      // 一个看起来合理但错的座位表
-      const names = internal.facts.names;
-      return Object.fromEntries(names.map((n, i) => [n, { position: i + 1, color: ['红', '蓝', '绿', '黄'][(i + 1) % 4] }]));
+  if (mode === 'wrong') {
+    const all = paths.map((_, i) => i);
+    const cand = cloneWithCorruptions(correct, all);
+    if (score(cand) === 0) return cand;
+    for (let i = 0; i < paths.length; i++) {
+      const c = cloneWithCorruptions(correct, [i]);
+      if (score(c) === 0) return c;
     }
-    default: return {};
+    return cand;
   }
-}
 
-function partialAnswerFor(id, o, correct, internal) {
-  switch (id) {
-    case 'I02': {
-      // 漏掉那个「例外」商品
-      const missing = o.selected[o.selected.length - 1];
-      return { selected: o.selected.filter((x) => x !== missing), rejected: o.rejected };
-    }
-    case 'R03': {
-      // 满足下限但不是最低价：在最优解上多加一份素盒
-      return { veg: o.best.veg + 1, chicken: o.best.chicken, beef: o.best.beef };
-    }
-    case 'C03': {
-      const out = {};
-      for (const [k, v] of Object.entries(o.cases)) out[k] = { rule: v.rule, needManual: v.needManual };
-      out.a3 = { rule: '旧', needManual: false }; // 错一笔
-      return out;
-    }
-    case 'I04': {
-      // 状态和截止时间对，负责人没跟上最后一条更新
-      const steps = internal.facts.steps;
-      return { status: o.status, owner: internal.facts.init.owner, deadline: o.deadline };
-    }
-    case 'D04': {
-      // 等级判对，但统计数错
-      return { levels: o.levels, counts: { gold: o.counts.gold, silver: o.counts.silver + 1, normal: o.counts.normal - 1 } };
-    }
-    case 'C04': {
-      // 根因对，但金额没乘折扣
-      return { rootCause: o.rootCause, fixedSubtotal: o.fixedSubtotal, fixedTotal: o.fixedSubtotal };
-    }
-    default: return correct;
+  // partial：制造一个「真的掉分但没归零」的答案
+  for (let i = 0; i < paths.length; i++) {
+    const cand = cloneWithCorruptions(correct, [i]);
+    const got = score(cand);
+    if (got > 0 && got < item.points) return cand;
   }
+  return cloneWithCorruptions(correct, paths.map((_, i) => i));
 }
 
 export async function generateDemo(outDir) {
