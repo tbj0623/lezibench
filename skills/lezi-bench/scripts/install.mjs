@@ -173,7 +173,55 @@ export async function install({ target, force = false, cwd = process.cwd(), env 
 
   await pruneBackups(root, logs);
 
-  return { code: EXIT.OK, dest, root, backup, logs };
+  // ── 影子安装检测（v1.4 实测踩到的坑）──────────────────────────────────
+  //
+  // 真实事故：我从仓库里 `install`（落到了 ~/.agents/skills），
+  // 但工作区里还有一个更早装的 `<workspace>/.agents/skills/lezi-bench`（v1.3.0）。
+  // DSH 按 rank 从高到低扫技能根，工作区级（rank 200）**赢过**用户级（rank 500），
+  // 于是「刚装好的新版」被一个旧副本盖住 —— 用户以为在跑 1.4.0，实际跑的是 1.3.0。
+  // 这种错误不会报错，只会安静地给出旧版结果，所以必须在安装时就提示出来。
+  const shadows = [];
+  // 候选根（含祖先目录）：DSH 的 projectRoot 是「最近的含 .git 的祖先」，
+  // 所以工作区根可能在本仓库的**上级目录**。只在检测影子安装时看祖先，
+  // 不把它当成安装目标（否则从仓库里装会莫名其妙写到上级目录去）。
+  const scanRoots = [...candidateSkillRoots(cwd, env)];
+  {
+    let dir = path.resolve(cwd);
+    for (let depth = 0; depth < 4; depth++) {
+      const parent = path.dirname(dir);
+      if (parent === dir) break;
+      dir = parent;
+      scanRoots.push({ dir: path.join(dir, '.agents', 'skills'), label: `祖先级 ${dir}/.agents/skills` });
+      scanRoots.push({ dir: path.join(dir, '.dsh', 'skills'), label: `祖先级 ${dir}/.dsh/skills` });
+    }
+  }
+  const seen = new Set([path.resolve(dest)]);
+  for (const c of scanRoots) {
+    const dir = path.join(c.dir, SKILL_NAME);
+    const key = path.resolve(dir);
+    if (seen.has(key)) continue;
+    seen.add(key);
+    if (!existsSync(dir)) continue;
+    let version = null;
+    try {
+      version = JSON.parse(readFileSync(path.join(dir, 'package.json'), 'utf8')).version ?? null;
+    } catch { /* 读不出来就当未知 */ }
+    shadows.push({ dir, version, label: c.label });
+  }
+  for (const s of shadows) {
+    if (s.version === EXAM_VERSION) {
+      logs.push(`ℹ 另一处已装同版本：${s.dir}（v${s.version}）`);
+    } else {
+      logs.push(`⚠️ 另一处还装着 lezi-bench：${s.dir}（v${s.version ?? '未知'}，当前是 v${EXAM_VERSION}）`);
+    }
+  }
+  if (shadows.some((s) => s.version !== EXAM_VERSION)) {
+    logs.push('⚠️ 宿主按技能根的 rank 顺序取**第一个**命中的副本，旧副本可能把刚装好的新版盖住。');
+    logs.push('   建议一并对齐（把 <技能根> 换成上面那条路径的父目录）：');
+    logs.push('     node scripts/cli.mjs install --target "<技能根>"');
+  }
+
+  return { code: EXIT.OK, dest, root, backup, logs, version: EXAM_VERSION, shadows };
 }
 
 /** 卸载：只删 lezi-bench/，备份保留（可回滚） */
