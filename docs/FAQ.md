@@ -242,7 +242,7 @@ grep -rnE "fetch\(|node:(http|https|net|dgram)" src/ scripts/
 
 2026-10-29 我们对它做过一次匿名、隔离、限量的黑盒实测（23 次 HTTP 请求，未登录、未上传任何数据、
 未复制对方题库），目的是搞清楚「哪些设计值得学、哪些坑必须避开」。
-完整记录见 [`research/COMPETITOR_TRIAL.md`](../research/COMPETITOR_TRIAL.md)。
+完整记录见 [`research/COMPETITOR_TRIAL.md`](../evidence/research/COMPETITOR_TRIAL.md)。
 
 ### Q25. 最关键的差别是什么？
 
@@ -254,7 +254,7 @@ grep -rnE "fetch\(|node:(http|https|net|dgram)" src/ scripts/
 
 LeziBench 的报告是本地文件，路径打印出来，双击就能看，断网也能看。只要磁盘还在，报告就还在。
 
-证据：[`COMPETITOR_TRIAL.md` §5 P1](../research/COMPETITOR_TRIAL.md#p1--报告页-502跑分能算完但用户打不开报告-最高优先级)。
+证据：[`COMPETITOR_TRIAL.md` §5 P1](../evidence/research/COMPETITOR_TRIAL.md#p1--报告页-502跑分能算完但用户打不开报告-最高优先级)。
 
 ### Q26. 还改掉了哪些具体问题？
 
