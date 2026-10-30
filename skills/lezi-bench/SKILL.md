@@ -2,7 +2,7 @@
 name: lezi-bench
 description: 乐子跑分 LeziBench —— 本地离线、零依赖的 Agent 能力跑分与能力体检。当用户说"跑个分""测测我的 Agent""做个评测""能力体检"，或直接输入 /lezi-bench 时使用。16 道题、100 分、4 个维度（指令理解 / 逻辑推理 / 信息整理 / 状态追踪与纠错），分 4 批作答，本地判分并生成自包含 HTML 报告，全程不联网、不上传任何答案。
 license: MIT
-compatibility: 需要 Node.js >= 18（本机实测 v24 通过）；无需网络、无需安装任何 npm 依赖；数据默认写入系统本地数据目录，可用 LEZIBENCH_HOME 覆盖；支持 Windows / macOS / Linux。
+compatibility: 需要 Node.js >= 18.17.0（本机实测 v24 通过）；无需网络、无需安装任何 npm 依赖；数据默认写入系统本地数据目录，可用 LEZIBENCH_HOME 覆盖；Windows 与 Linux 已实测，macOS 未真机验证。
 ---
 
 # 乐子跑分 LeziBench · Agent 操作规程
@@ -48,8 +48,13 @@ node scripts/cli.mjs doctor
 node scripts/cli.mjs start --mode standard --json
 ```
 
-返回 JSON：`runId`、`dataRoot`、`batch`（=1）、`progress`、`items[4]`。
+返回 JSON：`runId`、`dataRoot`、`batch`（=1）、`progress`、`items[4]`，
+以及本批分母 `batchMax`、累计分母 `cumulativeMax`、总分母 `totalMax`。
 **记下 `runId`**（后续每条命令都要用）。若用户没指定 seed 就不要传 `--seed`。
+
+> ⚠️ 批次分母不是均分的：4 批满分分别是 **16 / 24 / 24 / 36**（各批题目分值构成不同），
+> 累计满分是 **16 / 40 / 64 / 100**。**永远不要自己按「每批 25 分」推算**，
+> 一律直接读 CLI 返回的 `batchMax` / `cumulativeMax`。
 
 ### 第 2 步 · 认真作答本批 4 题
 
@@ -59,18 +64,31 @@ node scripts/cli.mjs start --mode standard --json
 - 注意题面里的**更新/覆盖/例外**语义：后发的通知覆盖先发的，例外优先于通用规则。
 - 4 题都答完再提交，一次提交一批。
 
-把 4 题答案写进**一个临时 JSON 文件**，格式二选一（推荐带 `answers` 外层）：
+**答案文件的键必须是「当前这一批」的真实题号**（就是 CLI 返回的 `items[].id`）。
+四批的题号是固定的，但**不要凭记忆写**，每次都以 CLI 输出为准：
+
+| 批 | 真实题号 | 本批满分 |
+|---|---|---|
+| 1 | I01 / R01 / D01 / C01 | 16 |
+| 2 | I02 / R02 / D02 / C02 | 24 |
+| 3 | I03 / R03 / D03 / C03 | 24 |
+| 4 | I04 / R04 / D04 / C04 | 36 |
+
+把 4 题答案写进**一个临时 JSON 文件**，格式二选一（推荐带 `answers` 外层）。
+下面是**第 1 批**的示例——键名是真实的，尖括号是占位，**请填你自己算出的值**：
 
 ```json
 {
   "answers": {
-    "I01": { "deadline": "周三上午10点", "budgetAttached": false },
-    "I02": { "selected": ["S01", "S03"], "rejected": ["S02"] },
-    "I03": { "rule": "R3", "decision": "批准", "escalate": false },
-    "I04": { "status": "已通过", "owner": "小周", "deadline": "周三" }
+    "I01": { "deadline": "<日期+时间>", "budgetAttached": "<true 或 false>" },
+    "R01": { "subtotal": "<数字>", "afterPromo": "<数字>", "couponCut": "<数字>", "total": "<数字>" },
+    "D01": { "list": ["<正式名称>", "<正式名称>"] },
+    "C01": { "isCorrect": "<true 或 false>", "errorKind": "<运算优先级|符号|进位|无>", "correctTotal": "<数字>" }
   }
 }
 ```
+
+> 换到第 2/3/4 批时，键名与字段结构**都不一样**，必须按那一批 `items[].id` 与题面末尾给出的 JSON 模板来写。
 
 - 键必须是本批题目的真实 `id`；不要写别的批次题目，否则 CLI 会报错。
 - 值可以是 JSON 对象，也可以是 JSON 字符串；系统会做等价归一化。
@@ -82,7 +100,8 @@ node scripts/cli.mjs start --mode standard --json
 node scripts/cli.mjs submit --run <RUN_ID> --batch 1 --answers-file answers-batch1.json
 ```
 
-输出会给出：本批得分 `x/25`、逐题得分与失败条件、`progress`（如 `4/16`），以及**下一批的 4 道题**。
+输出会给出：本批得分 `batchAwarded/batchMax`、累计 `cumulativeAwarded/cumulativeMax`、
+逐题得分与失败条件、`progress`（如 `4/16`），以及**下一批的 4 道题**。
 - 终止条件：`finished: true`（文本模式下直接打印总分摘要）说明 4 批已全部完成。
 - 若提示 `idempotent`：说明这批已用**相同答案**提交过，本次未重复计分，属正常。
 
@@ -90,9 +109,10 @@ node scripts/cli.mjs submit --run <RUN_ID> --batch 1 --answers-file answers-batc
 
 对第 2、3、4 批重复「作答 → 写 JSON → submit」。每条命令都带上同一个 `<RUN_ID>`，`--batch` 依次为 2、3、4。
 
-**每批结束后，向用户报一句进度**，例如：
-`已完成 2/4 批，累计 38/50 分（当前第 3 批）`。
-进度数字直接取 CLI 返回的 `progress` 与 `batchAwarded`，不要自己算错。
+**每批结束后，向用户报一句进度**，格式：
+`已完成 <已判批数>/4 批，累计 <cumulativeAwarded>/<cumulativeMax> 分（当前第 <下一批> 批）`。
+括号里的四个数字**全部直接取 CLI 返回值**（`cumulativeAwarded`、`cumulativeMax`、批次号、`progress`），
+不要自己按 25 分一档去推算——批次分母不相等。
 
 ### 第 5 步 · 出报告
 

@@ -30,6 +30,72 @@ function normalizeAnswer(raw) {
 }
 
 /**
+ * 严格校验 `item.grade()` 的返回值是否满足公开评分契约。
+ *
+ * 契约（对外承诺，见 docs/SCORING.md）：
+ *   - 返回必须是数组，长度恰好等于 publicCriteria 的条数；
+ *   - 每个 criterionId 恰好出现一次：不许缺、不许重复、不许出现公开条件之外的 ID；
+ *   - points 必须是整数，且与公开分值**完全相等**（防篡改）；
+ *   - passed 必须就是 `true` 或 `false` 两个布尔字面量（不接受 'true' / 1 / 0 / undefined）；
+ *   - reason 必须是非空、可读的字符串（报告要能逐条复核，空理由等于没有证据）。
+ *
+ * @returns {string[]} 问题列表；空数组表示合规
+ */
+export function validateGradingChecks(checks, criteria) {
+  const problems = [];
+
+  if (!Array.isArray(checks)) {
+    return [`判分结果必须是数组，实际是 ${checks === null ? 'null' : typeof checks}`];
+  }
+  if (checks.length !== criteria.length) {
+    problems.push(`判分条件条数不符：返回 ${checks.length} 条，公开条件 ${criteria.length} 条`);
+  }
+
+  const counts = new Map();
+  for (const c of checks) {
+    if (!c || typeof c !== 'object') {
+      problems.push('判分条件里混入了非对象元素');
+      continue;
+    }
+    const id = c.criterionId;
+    if (typeof id !== 'string' || id.trim() === '') {
+      problems.push('存在缺少 criterionId 的判分条件');
+      continue;
+    }
+    counts.set(id, (counts.get(id) || 0) + 1);
+  }
+
+  const known = new Set(criteria.map((c) => c.id));
+  for (const [id, n] of counts) {
+    if (n > 1) problems.push(`判分条件 ${id} 重复出现 ${n} 次`);
+    if (!known.has(id)) problems.push(`返回了公开条件之外的判分条件 ${id}`);
+  }
+  for (const c of criteria) {
+    if (!counts.has(c.id)) problems.push(`缺少公开条件 ${c.id}`);
+  }
+
+  for (const c of checks) {
+    if (!c || typeof c !== 'object') continue;
+    const id = typeof c.criterionId === 'string' ? c.criterionId : '(无 id)';
+    const expect = criteria.find((x) => x.id === c.criterionId);
+    if (!expect) continue; // 额外 ID 已经在上面报过，不再重复刷屏
+    if (!Number.isInteger(c.points)) {
+      problems.push(`条件 ${id} 的 points 不是整数：${JSON.stringify(c.points)}`);
+    } else if (c.points !== expect.points) {
+      problems.push(`条件 ${id} 分值被篡改：${c.points}≠${expect.points}`);
+    }
+    if (c.passed !== true && c.passed !== false) {
+      problems.push(`条件 ${id} 的 passed 不是布尔值：${JSON.stringify(c.passed)}`);
+    }
+    if (typeof c.reason !== 'string' || c.reason.trim() === '') {
+      problems.push(`条件 ${id} 缺少非空的可读理由`);
+    }
+  }
+
+  return problems;
+}
+
+/**
  * 判一道题。
  * @returns {{id, version, maxPoints, awarded, rawAnswerSha256, parsedAnswer, checks, gradingStatus, graderVersion, inputSeed, parseNotes}}
  */
@@ -130,16 +196,54 @@ export function gradeItem(internal, rawAnswer, deps = {}) {
     };
   }
 
-  // 结构校验：check 必须与题目的公开条件一一对应、分值一致
+  // ── 协议校验：item.grade() 的返回必须严格符合公开评分契约 ────────────────────
+  //
+  // 为什么这里「一个都不许宽容」（v1.4 修复的真实缺陷）：
+  //   旧实现是 `new Map(checks.map(c => [c.criterionId, c]))`，
+  //   于是 — 额外条件被静默忽略、重复条件后写覆盖先写、passed:'true' 被 `=== true`
+  //   悄悄折成 false、空 reason 也照收。结果：判分器内部的程序错误照样产出
+  //   GRADED 的「可信成绩」，报告上看起来一切正常。这是最危险的一类假阴性。
+  const protocolProblems = validateGradingChecks(checks, criteria);
+  if (protocolProblems.length > 0) {
+    return {
+      ...base,
+      awarded: 0,
+      parsedAnswer: redactParsed(parsed.fields),
+      checks: criteria.map((c) => ({
+        criterionId: c.id,
+        points: c.points,
+        passed: false,
+        reason: '本次不给分：判分器返回结果不符合评分契约，已转为系统异常，不构成正式成绩',
+      })),
+      gradingStatus: 'SCORER_ERROR',
+      parseNotes: [...(parsed.problems || []), ...protocolProblems.map((p) => `评分器协议错误：${p}`)],
+      scorerProblems: protocolProblems,
+    };
+  }
+
+  // 协议已校验通过 → 按公开条件顺序归一化输出（检查项的返回顺序不影响得分）
   const byId = new Map(checks.map((c) => [c.criterionId, c]));
   const normalizedChecks = criteria.map((c) => {
     const hit = byId.get(c.id);
-    if (!hit) throw new Error(`判分器未返回条件 ${c.id}`);
-    if (hit.points !== c.points) throw new Error(`条件 ${c.id} 分值不一致：${hit.points}≠${c.points}`);
-    return { criterionId: c.id, points: c.points, passed: hit.passed === true, reason: String(hit.reason || '') };
+    return {
+      criterionId: c.id,
+      points: c.points,
+      passed: hit.passed === true,
+      reason: String(hit.reason).trim(),
+    };
   });
   const awarded = normalizedChecks.reduce((s, c) => s + (c.passed ? c.points : 0), 0);
-  if (awarded < 0 || awarded > item.points) throw new Error(`条件 ${item.id} 给分越界：${awarded}/${item.points}`);
+  if (!Number.isInteger(awarded) || awarded < 0 || awarded > item.points) {
+    return {
+      ...base,
+      awarded: 0,
+      parsedAnswer: redactParsed(parsed.fields),
+      checks: criteria.map((c) => ({ criterionId: c.id, points: c.points, passed: false, reason: '本次不给分：给分越界，已转为系统异常' })),
+      gradingStatus: 'SCORER_ERROR',
+      parseNotes: [`评分器给分越界：${awarded}/${item.points}`],
+      scorerProblems: [`给分越界：${awarded}/${item.points}`],
+    };
+  }
 
   return {
     ...base,

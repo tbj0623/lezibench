@@ -21,7 +21,7 @@ Agent Skills 规范要求 frontmatter 的 `name` 必须与父目录名完全一�
 
 | 项 | 要求 | 说明 |
 |---|---|---|
-| Node.js | **>= 18** | 本机实测 v24.20.0；用 `node --version` 确认 |
+| Node.js | **>= 18.17.0** | 本机实测 v24.20.0；用 `node --version` 确认 |
 | npm 依赖 | **零** | 无 `node_modules`、无构建步骤，纯 ESM 源码 |
 | 网络 | **不需要** | 全程离线；判分与报告都在本地 |
 | 磁盘 | 约 1 MB | 题库 + 判分器 + 报告生成器 |
@@ -30,19 +30,26 @@ Agent Skills 规范要求 frontmatter 的 `name` 必须与父目录名完全一�
 检查 Node：
 
 ```bash
-node --version     # 应输出 v18.x 或更高
+node --version     # 应输出 v18.17.0 或更高（必须 >= 18.17.0，与 package.json engines 一致）
 ```
 
-## 2. 三种安装方式
+## 2. 四种安装方式
 
-### 2.1 方式 A（推荐，已实测）：用户级 `~/.agents/skills/`
+> **最省事的一种**：把 `docs/ONE_COMMAND.md` 里那段话整段复制给 Agent，它自己下载、校验、安装、开考。
+> 下面三种是"你自己动手敲一条命令"的版本。
 
-装到 DSH 的**用户级活根**（`research/PLATFORM_NOTES.md` §2.2，rank 500，本机实测生效）。一次安装，所有工作区可用。
+### 2.0 方式 0（推荐）：一句话交给 Agent
+
+见 **[docs/ONE_COMMAND.md](ONE_COMMAND.md)**。适合不想自己开终端的用户，也是首次体验的默认路径。
+
+### 2.1 方式 A：用户级 `~/.agents/skills/`（不带参数时的自动回落位置）
+
+装到 DSH 的**用户级活根**（rank 500）。一次安装，所有工作区可用。
 
 **Windows（PowerShell）**
 
 ```powershell
-cd "C:\path\to\乐子跑分"
+# 在解压出来的 LeziBench 目录里执行
 powershell -ExecutionPolicy Bypass -File .\install\install.ps1
 ```
 
@@ -51,11 +58,16 @@ powershell -ExecutionPolicy Bypass -File .\install\install.ps1
 **macOS / Linux（bash）**
 
 ```bash
-cd /path/to/乐子跑分
+cd /path/to/lezi-bench-unzipped
 bash ./install/install.sh
 ```
 
 默认写到 `~/.agents/skills/lezi-bench/`。
+
+> **实测结果（v1.4.0，Windows 11 + Node v24.20.0 + PowerShell 5.1 / Git-Bash）**：
+> 两条脚本都真实执行成功，装完自动 doctor 通过，重复执行会备份旧版本（保留最近 2 份）。
+> 目标位置若是**别的项目的同名目录**，脚本会拒绝（退出码 2）而不是覆盖。
+> Linux / macOS 上的同一脚本**本轮未在真机执行**，见 `docs/COMPATIBILITY.md` 的状态标注。
 
 **装后自检（两种系统通用）**
 
@@ -111,14 +123,28 @@ powershell -File .\install\install.ps1 -TargetDir "D:\some\skills"
 
 ## 3. 安装器都做了什么
 
-`install/install.ps1` 与 `install/install.sh` 行为一致：
+**只有一份实现**：`scripts/install.mjs`。
+`install/install.sh`（bash）与 `install/install.ps1`（PowerShell）都是**薄包装**，
+只负责找到 `node`、把参数转过去 —— 所以不存在"两种平台两套行为"的漂移。
 
-1. **先校验源**：`lezibench/` 存在、4 项 payload 齐全、`SKILL.md` 的 `name` 与目标目录名一致 → 任一不满足就直接失败，不留半装状态。
-2. **Node 预检**：`node --version` 主版本 < 18 → 直接失败并说明。
-3. **备份旧版本**：目标已存在 → 改名为 `lezi-bench.bak-<时间戳>`，只保留最近 2 份。
-4. **全量复制**：`SKILL.md` + `package.json` + `scripts/` + `src/` 一起拷（**不是只拷 SKILL.md**）。
-5. **逐文件哈希比对**：装完立刻比对源与目标，任何不一致都报错。
-6. **真跑 doctor**：用临时 `LEZIBENCH_HOME`（不污染你的默认数据目录）执行 `node scripts/cli.mjs doctor`，必须输出「全部通过」。
+```
+node scripts/cli.mjs install [--target <技能根目录>] [--force] [--uninstall] [--json]
+```
+
+1. **选技能根**：不传 `--target` 时，按顺序找第一个**已存在且可写**的：
+   `<cwd>/.agents/skills` → `<cwd>/.dsh/skills` → `$DSH_HOME/skills` → `~/.agents/skills`；
+   全都不存在时回落到用户级 `~/.agents/skills`（不会往你当前项目里乱建目录）。
+2. **目录名固定为 `lezi-bench`**（写错宿主会静默跳过）。
+3. **幂等 + 安全**：
+   - 目标不存在 → 直接装；
+   - 目标是本 skill（`package.json` 的 `name === "lezi-bench"`）→ 先备份成 `lezi-bench.bak-<UTC时间戳>`（只留最近 2 份）再替换；
+   - 目标存在但**不是**本 skill → **拒绝**，退出码 2，一个文件都不动；确认要覆盖才加 `--force`。
+4. **全量复制并逐文件哈希比对**：`SKILL.md` + `package.json` + `scripts/` + `src/` + `adapters/`，
+   装完立刻比对源与目标的每个文件哈希，不一致就失败。
+5. **真跑 doctor**：用临时 `LEZIBENCH_HOME`（不污染你的默认数据目录）执行一次 `doctor`，
+   必须输出「全部通过」，否则退出码 3 —— **装失败不会谎报成功**。
+
+**退出码**：`0` 成功 / `1` 用法错 / `2` 拒绝覆盖别人的同名目录 / `3` 装完校验失败 / `4` 找不到可写技能根。
 
 **不会做的事**：不联网、不改 `PATH`、不写注册表、不装 npm 包、不碰你没有通过参数指定的路径。
 
@@ -129,15 +155,17 @@ powershell -ExecutionPolicy Bypass -File .\install\install.ps1 -Uninstall
 ```
 ```bash
 bash ./install/install.sh --uninstall
+# 或者跨平台通用：
+node scripts/cli.mjs install --uninstall
 ```
-加 `-TargetDir` / `--target` 可卸载自定义位置。备份目录 `lezi-bench.bak-*` 不会被自动删除，需要的话手动删。
+加 `-TargetDir` / `--target` 可卸载自定义位置。**只删 `lezi-bench/`，备份 `lezi-bench.bak-*` 保留**（可回滚）。
 
 ## 4. 验证安装成功
 
 ### 4.1 结构验证（不依赖宿主）
 
 ```bash
-node evidence/host/verify-skill.mjs
+node scripts/sync-skill.mjs --check
 ```
 
 它会检查：frontmatter 合法、`name == 父目录名`、`description` 长度与触发词、`license`、`compatibility ≤500`、`allowed-tools` 不是 YAML 列表、没有 `disable-model-invocation: true`、正文非空且覆盖全部子命令、`scripts/` 与 `src/` 同层、与仓库根 `SKILL.md` 逐字节一致、`doctor` 退出码 0。
@@ -190,10 +218,10 @@ $env:LEZIBENCH_HOME="D:\lezi"; node scripts/cli.mjs doctor    # Windows PowerShe
 
 | 现象 | 原因 | 处理 |
 |---|---|---|
-| skill 目录里看不到它 | 目录名 ≠ `name`，或 frontmatter 非法 | 跑 `node evidence/host/verify-skill.mjs`；DSH 对非法 skill 是**静默跳过**，只留一条 warning |
+| skill 目录里看不到它 | 目录名 ≠ `name`，或 frontmatter 非法 | 跑 `node scripts/sync-skill.mjs --check`；DSH 对非法 skill 是**静默跳过**，只留一条 warning |
 | `/lezi-bench` 报 unknown | 同上；或名字写成了 `/lezibench` | 确认目录叫 `lezi-bench`、`name: lezi-bench` |
 | `doctor` 报数据目录不可写 | 数据目录权限 / 磁盘只读 | 用 `LEZIBENCH_HOME` 指到一个可写目录再试 |
-| `doctor` 报 Node 版本 | Node < 18 | 升级 Node |
+| `doctor` 报 Node 版本 | Node < 18.17.0 | 升级到 Node >= 18.17.0 |
 | 安装器说 name 不一致 | `SKILL.md` 被改过 | 不要改 `name` 字段；它必须恒等于 `lezi-bench` |
 | 改了 `src/` 但行为没变 | 只更新了仓库、没重装 | 重新跑一次安装器（它是全量复制 + 哈希校验） |
 

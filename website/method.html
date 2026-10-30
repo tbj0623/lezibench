@@ -292,7 +292,7 @@
           <p>
             每局还会记录一个 <code>catalogFingerprint</code>：由 16 道题的 id、维度、难度、分值、批次，
             每条子条件的 id / 分值 / 文本，<strong>以及两个固定探针 seed 下的题面</strong>共同算出的 SHA-256。当前值以
-            <code>doctor</code> 输出为准（本仓库当前是 <code data-fp>6e24cad28bd6…</code>）。
+            <code>doctor</code> 输出为准（本仓库当前是 <code data-fp>565c66061221…</code>）。
           </p>
           <p>
             指纹的作用是「发现题库被改过」：两份报告如果版本都相同、但指纹不同，
@@ -411,9 +411,9 @@
                 <span class="item-meta"><span>标准</span><span>第 2 批</span><span class="p">6 分</span></span>
               </div>
               <ul class="crit">
-                <li><span class="cid">R02.C1</span><span class="cp">2 分</span><span class="ct">顺序包含全部工序代号各一次，数量与题面一致</span></li>
-                <li><span class="cid">R02.C2</span><span class="cp">2 分</span><span class="ct">满足题面列出的全部先后依赖</span></li>
-                <li><span class="cid">R02.C3</span><span class="cp">2 分</span><span class="ct">顺序同时满足两条独立工序链各自的内部次序</span></li>
+                <li><span class="cid">R02.C1</span><span class="cp">2 分</span><span class="ct">order 恰好包含题面列出的全部工序代号各一次：不缺、不重复、无多余。本项只看代号集合，完全不看先后顺序。</span></li>
+                <li><span class="cid">R02.C2</span><span class="cp">2 分</span><span class="ct">【前提：本组第一项条件（代号集合完整）通过】题面「跨链要求」列出的每一条链间先后都满足；本项只考跨链，不考链内。</span></li>
+                <li><span class="cid">R02.C3</span><span class="cp">2 分</span><span class="ct">【前提：本组第一项条件（代号集合完整）通过】链 P 与链 Q 各自的内部次序全部正确；本项只考链内，不考跨链。</span></li>
               </ul>
             </article>
             <article class="item">
@@ -599,7 +599,7 @@
     </div>
     <div class="foot-legal">
       <span>© 2026 LeziBench contributors</span>
-      <span>exam v1.2.0 · grader v1.2.0</span>
+      <span data-meta="versions">exam v1.4.0 · grader v1.4.0</span>
       <span>本站无 Cookie、无分析脚本、无外部字体</span>
       <span class="spacer">本地规则核验 · 非认证成绩</span>
     </div>

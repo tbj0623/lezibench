@@ -42,7 +42,8 @@ function answerFor(id, o, internal) {
       return { order, first: o.first ?? order[0], last: o.last ?? order[order.length - 1] };
     }
     case 'R03':
-      return { veg: o.best.veg, chicken: o.best.chicken, beef: o.best.beef };
+      // 新版 R03 是 6 种模块（a~f）的背包，答案键与 facts.types[].key 一一对应。
+      return { ...o.best.counts };
     case 'R04':
       return o.answer;
     case 'D01':

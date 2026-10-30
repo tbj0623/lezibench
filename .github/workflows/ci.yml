@@ -122,6 +122,49 @@ jobs:
       - name: 单元 / 契约 / 回归测试
         run: node --test tests/*.test.mjs
 
+      # v1.4 新增：在真实 Linux / macOS runner 上跑一遍**安装器**，
+      # 让 docs/COMPATIBILITY.md 里"Linux / macOS 安装链路"有 CI 证据，
+      # 而不是只靠 Windows 本机结果外推。
+      - name: 安装器冒烟（install → 幂等重装 → doctor → 卸载）
+        shell: bash
+        run: |
+          set -euo pipefail
+          ROOT="$RUNNER_TEMP/lezi-skill-root"
+          rm -rf "$ROOT"
+          mkdir -p "$ROOT"
+
+          echo "--- 1) 首次安装 ---"
+          bash ./install/install.sh --target "$ROOT"
+          test -f "$ROOT/lezi-bench/SKILL.md"
+          test -f "$ROOT/lezi-bench/scripts/cli.mjs"
+          test -d "$ROOT/lezi-bench/src"
+
+          echo "--- 2) 幂等重装（应产生备份） ---"
+          bash ./install/install.sh --target "$ROOT"
+          ls -d "$ROOT"/lezi-bench.bak-* >/dev/null || { echo "重装未产生备份"; exit 1; }
+
+          echo "--- 3) 装出来的包必须 doctor 通过 ---"
+          LEZIBENCH_HOME="$RUNNER_TEMP/lezi-ci-home" \
+            node "$ROOT/lezi-bench/scripts/cli.mjs" doctor
+
+          echo "--- 4) 拒绝覆盖别人的同名目录（必须退出码 2） ---"
+          FOREIGN="$RUNNER_TEMP/lezi-foreign"
+          rm -rf "$FOREIGN"; mkdir -p "$FOREIGN/lezi-bench"
+          echo '{"name":"someone-else"}' > "$FOREIGN/lezi-bench/package.json"
+          set +e
+          bash ./install/install.sh --target "$FOREIGN" >/dev/null 2>&1
+          rc=$?
+          set -e
+          test "$rc" -eq 2 || { echo "覆盖保护失效：退出码 $rc（应为 2）"; exit 1; }
+          test -f "$FOREIGN/lezi-bench/package.json" || { echo "别人的文件被删了"; exit 1; }
+
+          echo "--- 5) 卸载（skill 删掉、备份保留） ---"
+          bash ./install/install.sh --target "$ROOT" --uninstall
+          test ! -d "$ROOT/lezi-bench" || { echo "卸载后目录还在"; exit 1; }
+          ls -d "$ROOT"/lezi-bench.bak-* >/dev/null || { echo "卸载把备份也删了"; exit 1; }
+
+          echo "安装器冒烟通过：安装 / 幂等 / doctor / 冲突保护 / 卸载 全部符合预期"
+
   # ------------------------------------------------------------------
   # 敏感信息扫描：防止把真实 token / 私钥误提交
   # ------------------------------------------------------------------

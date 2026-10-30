@@ -1,7 +1,7 @@
 {
-  "examVersion": "1.3.0",
-  "graderVersion": "1.3.0",
-  "catalogFingerprint": "6e24cad28bd680c47433fc562d61ac0d17ba87ec05e0754a26f1b6463f602ed0",
+  "examVersion": "1.4.0",
+  "graderVersion": "1.4.0",
+  "catalogFingerprint": "565c660612218e0bf2e424cf058e2e50559b97345220a9777b4fddfd5ce03ab8",
   "criteriaInjected": {
     "items": 16,
     "criteria": 44
@@ -125,7 +125,7 @@
         "reason": "7/8 笔人工审批判断正确"
       }
     ],
-    "examVersion": "1.3.0",
-    "graderVersion": "1.3.0"
+    "examVersion": "1.4.0",
+    "graderVersion": "1.4.0"
   }
 }

@@ -608,7 +608,7 @@ const D03 = {
       criterionId: 'D03.C3',
       points: 2,
       passed: ccOk,
-      reason: cc === undefined ? '未解析出 commonCount' : ccOk ? '共同 SKU 数量正确' : `共同数量应为 ${o.commonCount}，实际为 ${cc}`,
+      reason: cc === undefined || cc === null ? '未提供 commonCount 字段，按不通过处理' : ccOk ? '共同 SKU 数量正确' : `共同数量应为 ${o.commonCount}，实际为 ${cc}`,
     });
     return checks;
   },

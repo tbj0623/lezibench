@@ -306,9 +306,25 @@ test('3b. 手算夹具 R02 / seed=hand-1（10 步双链）', () => {
   const r = grade('R02', 'hand-1', WANT);
   assert.equal(r.awarded, 6, `手算序列 ${WANT.order.join('')} 只得 ${r.awarded}/6`);
 
-  // 反向：完全倒序必须 0 分
+  // ── v1.4 P0-B 契约变更（此处旧断言曾经是错的，保留说明以防被"改回去"）──
+  // 旧版这里断言「完全倒序必须 0 分」。但那其实是在给一条**未公开的隐藏条件**背书：
+  // 公开条件 R02.C1 只承诺「代号各出现一次」，倒序的代号集合是完整的，C1 就该给分。
+  // 旧实现把链内次序塞进了 C1，才让倒序连 C1 都拿不到 —— 这是评分与公开条件不符。
+  // 现在 C1=集合、C2=跨链、C3=链内，三者不重叠；倒序正确的结果是「只拿 C1 的 2 分」。
   const rev = [...WANT.order].reverse();
-  assert.equal(grade('R02', 'hand-1', { order: rev }).awarded, 0, '倒序竟然得分');
+  const rr = grade('R02', 'hand-1', { order: rev });
+  const byId = Object.fromEntries(rr.checks.map((c) => [c.criterionId, c]));
+  assert.equal(byId['R02.C1'].passed, true, '倒序的代号集合完整，C1 必须给分（公开条件只看集合）');
+  assert.equal(byId['R02.C2'].passed, false, '倒序必然违反跨链要求，C2 必须失分');
+  assert.equal(byId['R02.C3'].passed, false, '倒序必然违反链内次序，C3 必须失分');
+  assert.equal(rr.awarded, 2, `倒序应只剩 C1 的 2 分，实际 ${rr.awarded}/6`);
+
+  // C1 真正该管的事：缺代号必须失分
+  const dropped = grade('R02', 'hand-1', { order: WANT.order.slice(1) });
+  assert.equal(
+    dropped.checks.find((c) => c.criterionId === 'R02.C1').passed, false,
+    '缺代号时 C1 必须失分',
+  );
 });
 
 test('3c. 手算夹具 R03 / seed=hand-1（独立 DP 算出的最小花费常量）', () => {

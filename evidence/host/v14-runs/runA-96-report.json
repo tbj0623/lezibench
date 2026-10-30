@@ -1,0 +1,783 @@
+{
+  "runId": "run-20261030-043736-07711c",
+  "seed": "exam-run-A-2026",
+  "startedAt": "2026-10-30T04:37:36.952Z",
+  "finishedAt": "2026-10-30T04:42:08.747Z",
+  "durationMs": 271795,
+  "environment": "node v24.20.0 · win32/x64",
+  "demo": false,
+  "summary": {
+    "examVersion": "1.4.0",
+    "graderVersion": "1.4.0",
+    "contractVersion": "1.1.0",
+    "catalogFingerprint": "565c660612218e0bf2e424cf058e2e50559b97345220a9777b4fddfd5ce03ab8",
+    "total": 96,
+    "maxTotal": 100,
+    "status": "COMPLETED",
+    "completed": true,
+    "level": "卓越",
+    "levelEn": "Outstanding",
+    "dimensions": [
+      {
+        "key": "instruction",
+        "label": "指令理解",
+        "awarded": 25,
+        "max": 25,
+        "items": 4
+      },
+      {
+        "key": "reasoning",
+        "label": "逻辑推理",
+        "awarded": 25,
+        "max": 25,
+        "items": 4
+      },
+      {
+        "key": "data",
+        "label": "信息整理",
+        "awarded": 21,
+        "max": 25,
+        "items": 4
+      },
+      {
+        "key": "correction",
+        "label": "状态追踪与纠错",
+        "awarded": 25,
+        "max": 25,
+        "items": 4
+      }
+    ],
+    "itemCount": 16,
+    "expectedItems": 16,
+    "pendingCount": 0,
+    "pendingIds": []
+  },
+  "items": [
+    {
+      "id": "I01",
+      "version": "easy",
+      "maxPoints": 4,
+      "rawAnswerSha256": "c392ac9a59b300ee35e4612cbe6a696046771a616fa8da76e4bd50dd50784aca",
+      "inputSeed": "1d787c58865cc58042c7132483cee038a48d1479c8a68fd1244e2f0fd5db59d5",
+      "graderVersion": "1.4.0",
+      "dimension": "instruction",
+      "title": "多条通知互相作废后的最终要求",
+      "awarded": 4,
+      "parsedAnswer": {
+        "deadline": "周五下午4点",
+        "budgetAttached": true
+      },
+      "checks": [
+        {
+          "criterionId": "I01.C1",
+          "points": 1,
+          "passed": true,
+          "reason": "截止时间正确：周五下午4点"
+        },
+        {
+          "criterionId": "I01.C2",
+          "points": 3,
+          "passed": true,
+          "reason": "正确表示需要附预算表"
+        }
+      ],
+      "gradingStatus": "GRADED",
+      "parseNotes": [],
+      "parseSource": "object"
+    },
+    {
+      "id": "I02",
+      "version": "standard",
+      "maxPoints": 6,
+      "rawAnswerSha256": "1f9b24dec2299d41294ee257355f4f05463d1fbbfd629bcd9bfe234426a0a540",
+      "inputSeed": "6fd17a8704c772b38746b5bed742a8ec457a74598bd3e052e2079296c6dafebf",
+      "graderVersion": "1.4.0",
+      "dimension": "instruction",
+      "title": "多豁免条款与条款更正",
+      "awarded": 6,
+      "parsedAnswer": {
+        "selected": [
+          "S03",
+          "S05",
+          "S07",
+          "S13",
+          "S16",
+          "S20",
+          "S22"
+        ],
+        "rejected": [
+          "S01",
+          "S02",
+          "S04",
+          "S06",
+          "S08",
+          "S09",
+          "S10",
+          "S11",
+          "S12",
+          "S14",
+          "S15",
+          "S17",
+          "S18",
+          "S19",
+          "S21",
+          "S23",
+          "S24"
+        ]
+      },
+      "checks": [
+        {
+          "criterionId": "I02.C1",
+          "points": 2,
+          "passed": true,
+          "reason": "应上架商品全部命中"
+        },
+        {
+          "criterionId": "I02.C2",
+          "points": 2,
+          "passed": true,
+          "reason": "没有多放商品"
+        },
+        {
+          "criterionId": "I02.C3",
+          "points": 2,
+          "passed": true,
+          "reason": "不上架组与补集完全一致"
+        }
+      ],
+      "gradingStatus": "GRADED",
+      "parseNotes": [],
+      "parseSource": "object"
+    },
+    {
+      "id": "I03",
+      "version": "standard",
+      "maxPoints": 6,
+      "rawAnswerSha256": "e56403991ec3953a4d4812e3d89496499ec9beaf1a04d4fc4893269135050b89",
+      "inputSeed": "529192b03587cff00b59fe912a49c480af32e0424723d138e62ef1ca1c13f59c",
+      "graderVersion": "1.4.0",
+      "dimension": "instruction",
+      "title": "多条件优先级、阈值下调与净额口径",
+      "awarded": 6,
+      "parsedAnswer": {
+        "rule": "R3",
+        "decision": "批准",
+        "escalate": false
+      },
+      "checks": [
+        {
+          "criterionId": "I03.C1",
+          "points": 2,
+          "passed": true,
+          "reason": "适用规则正确：R3"
+        },
+        {
+          "criterionId": "I03.C2",
+          "points": 2,
+          "passed": true,
+          "reason": "审批结论正确：批准"
+        },
+        {
+          "criterionId": "I03.C3",
+          "points": 2,
+          "passed": true,
+          "reason": "转人工判断正确：false"
+        }
+      ],
+      "gradingStatus": "GRADED",
+      "parseNotes": [],
+      "parseSource": "object"
+    },
+    {
+      "id": "I04",
+      "version": "challenge",
+      "maxPoints": 9,
+      "rawAnswerSha256": "08b96158b1eb71d268c8f5a5cb49b31d9f0c4ce26bd301e4fc3b5fc148245af3",
+      "inputSeed": "e1e55a2643557e83561ac1dfd0d7ae3f251e0ab07da9ff18ba10691d3de74e82",
+      "graderVersion": "1.4.0",
+      "dimension": "instruction",
+      "title": "检查点回滚与条件指令后的最终状态",
+      "awarded": 9,
+      "parsedAnswer": {
+        "status": "已通过",
+        "owner": "小林",
+        "deadline": "周三"
+      },
+      "checks": [
+        {
+          "criterionId": "I04.C1",
+          "points": 3,
+          "passed": true,
+          "reason": "最终状态正确"
+        },
+        {
+          "criterionId": "I04.C2",
+          "points": 3,
+          "passed": true,
+          "reason": "最终负责人正确"
+        },
+        {
+          "criterionId": "I04.C3",
+          "points": 3,
+          "passed": true,
+          "reason": "最终截止时间正确"
+        }
+      ],
+      "gradingStatus": "GRADED",
+      "parseNotes": [],
+      "parseSource": "object"
+    },
+    {
+      "id": "R01",
+      "version": "easy",
+      "maxPoints": 4,
+      "rawAnswerSha256": "53035d66e6b38a66858dd15e87d4d52252202ea54349421afddb53847a89a77f",
+      "inputSeed": "352cce372b857923e8f82067421ad942c468f3346546f920c9a7b1589a693e5a",
+      "graderVersion": "1.4.0",
+      "dimension": "reasoning",
+      "title": "购物小票的真实合计",
+      "awarded": 4,
+      "parsedAnswer": {
+        "subtotal": 644,
+        "afterPromo": 578.5,
+        "couponCut": 18,
+        "total": 560.5
+      },
+      "checks": [
+        {
+          "criterionId": "R01.C1",
+          "points": 1,
+          "passed": true,
+          "reason": "活动前原价合计正确：644"
+        },
+        {
+          "criterionId": "R01.C2",
+          "points": 3,
+          "passed": true,
+          "reason": "最终应付款正确：560.5"
+        }
+      ],
+      "gradingStatus": "GRADED",
+      "parseNotes": [],
+      "parseSource": "object"
+    },
+    {
+      "id": "R02",
+      "version": "standard",
+      "maxPoints": 6,
+      "rawAnswerSha256": "6615c8b43b5fc814257287d9c92e9ac13eff4cd5424a51b7a28244b54c3a9d22",
+      "inputSeed": "86c27708a04095aeeeb7b78643e4937e5b07669b45023c468ef1890d7b00ba2d",
+      "graderVersion": "1.4.0",
+      "dimension": "reasoning",
+      "title": "依赖关系与可行顺序",
+      "awarded": 6,
+      "parsedAnswer": {
+        "order": [
+          "K",
+          "J",
+          "D",
+          "I",
+          "A",
+          "C",
+          "B",
+          "F",
+          "E",
+          "G",
+          "H"
+        ]
+      },
+      "checks": [
+        {
+          "criterionId": "R02.C1",
+          "points": 2,
+          "passed": true,
+          "reason": "恰好包含题面的 11 个工序代号各一次（本项不校验先后）"
+        },
+        {
+          "criterionId": "R02.C2",
+          "points": 2,
+          "passed": true,
+          "reason": "题面列出的 3 条跨链要求全部满足"
+        },
+        {
+          "criterionId": "R02.C3",
+          "points": 2,
+          "passed": true,
+          "reason": "链 P 与链 Q 的内部次序均正确"
+        }
+      ],
+      "gradingStatus": "GRADED",
+      "parseNotes": [],
+      "parseSource": "object"
+    },
+    {
+      "id": "R03",
+      "version": "standard",
+      "maxPoints": 6,
+      "rawAnswerSha256": "c71b1a27e6382afafeff4b375226fb8541de84f20b0881c8f5474d5e731d3b16",
+      "inputSeed": "b478328e84a26bdb804252a5f0e6600901b3d02d8613ce2dcf83e82500db4a66",
+      "graderVersion": "1.4.0",
+      "dimension": "reasoning",
+      "title": "满足多条件的最低成本方案",
+      "awarded": 6,
+      "parsedAnswer": {
+        "b": 1,
+        "a": 0,
+        "d": 0,
+        "e": 6,
+        "c": 24,
+        "f": 0
+      },
+      "checks": [
+        {
+          "criterionId": "R03.C1",
+          "points": 2,
+          "passed": true,
+          "reason": "件数 31（需 ≥14），指标 334（需 ≥334）"
+        },
+        {
+          "criterionId": "R03.C2",
+          "points": 2,
+          "passed": true,
+          "reason": "各模块采购量均在上限之内"
+        },
+        {
+          "criterionId": "R03.C3",
+          "points": 2,
+          "passed": true,
+          "reason": "总花费 1237 元，理论最低 1237 元"
+        }
+      ],
+      "gradingStatus": "GRADED",
+      "parseNotes": [],
+      "parseSource": "object"
+    },
+    {
+      "id": "R04",
+      "version": "challenge",
+      "maxPoints": 9,
+      "rawAnswerSha256": "00aa1a9801b4f4ed004ec94a5a226e7fb9d69bb6d2128d2e080940b6b694e84f",
+      "inputSeed": "378578de13d2e3abf3d5bd159a018fa2ed2c944ecaa130c1e9ec6c335be3e5ec",
+      "graderVersion": "1.4.0",
+      "dimension": "reasoning",
+      "title": "多人多色座位推理（唯一解）",
+      "awarded": 9,
+      "parsedAnswer": {
+        "seats": {
+          "阿海": {
+            "position": 3,
+            "color": "绿"
+          },
+          "阿布": {
+            "position": 6,
+            "color": "黄"
+          },
+          "阿金": {
+            "position": 4,
+            "color": "蓝"
+          },
+          "阿蓝": {
+            "position": 1,
+            "color": "红"
+          },
+          "阿芙": {
+            "position": 5,
+            "color": "紫"
+          },
+          "阿澈": {
+            "position": 2,
+            "color": "橙"
+          }
+        }
+      },
+      "checks": [
+        {
+          "criterionId": "R04.C1",
+          "points": 3,
+          "passed": true,
+          "reason": "6 个人的位置全部正确"
+        },
+        {
+          "criterionId": "R04.C2",
+          "points": 3,
+          "passed": true,
+          "reason": "6 个人的颜色全部正确"
+        },
+        {
+          "criterionId": "R04.C3",
+          "points": 3,
+          "passed": true,
+          "reason": "位置-颜色对应关系全部正确"
+        }
+      ],
+      "gradingStatus": "GRADED",
+      "parseNotes": [],
+      "parseSource": "personMap"
+    },
+    {
+      "id": "D01",
+      "version": "easy",
+      "maxPoints": 4,
+      "rawAnswerSha256": "39c396b775588a3b8c9866f989b549b8b3c0a9e59e553af7d5d3028c0e9cd82c",
+      "inputSeed": "9326b340d38bc025ec7784acf70e589b7ba98e2d39710872ed08b1af9062bcd3",
+      "graderVersion": "1.4.0",
+      "dimension": "data",
+      "title": "去重并按规定排序",
+      "awarded": 4,
+      "parsedAnswer": {
+        "list": [
+          "Orchid 合肥店",
+          "Lumo 杭州店",
+          "Rune 无锡店",
+          "Pine 南京店",
+          "Vela 常州店"
+        ]
+      },
+      "checks": [
+        {
+          "criterionId": "D01.C1",
+          "points": 1,
+          "passed": true,
+          "reason": "去重正确，共 5 个不同摊位"
+        },
+        {
+          "criterionId": "D01.C2",
+          "points": 3,
+          "passed": true,
+          "reason": "排序与规定完全一致"
+        }
+      ],
+      "gradingStatus": "GRADED",
+      "parseNotes": [],
+      "parseSource": "object"
+    },
+    {
+      "id": "D02",
+      "version": "standard",
+      "maxPoints": 6,
+      "rawAnswerSha256": "13b088424e0bde44b6bf2a56e9842e3c4ccdfc506cc436df610eb8bdda7cd0aa",
+      "inputSeed": "ddee49d3439fa0bc1907b02e3883f17ee69b41d620f82b1d04acbad4f7ee3ae3",
+      "graderVersion": "1.4.0",
+      "dimension": "data",
+      "title": "区分事实、推断与信息不足",
+      "awarded": 2,
+      "parsedAnswer": {
+        "answer": "A",
+        "reason": "甲项目已入账实际支出合计 173 万元(44+44+42+43),乙项目合计 214 万元(41+43+41+42+47),甲确实更少;四月甲的实际支出栏为空白,备注的预计 66 万元尚未入账,不计入"
+      },
+      "checks": [
+        {
+          "criterionId": "D02.C1",
+          "points": 2,
+          "passed": false,
+          "reason": "答案应为 C，实际为「A」"
+        },
+        {
+          "criterionId": "D02.C2",
+          "points": 2,
+          "passed": true,
+          "reason": "理由明确指出「甲」有一行的实际支出缺口"
+        },
+        {
+          "criterionId": "D02.C3",
+          "points": 2,
+          "passed": false,
+          "reason": "结论本身错误，无法通过此项"
+        }
+      ],
+      "gradingStatus": "GRADED",
+      "parseNotes": [],
+      "parseSource": "object"
+    },
+    {
+      "id": "D03",
+      "version": "standard",
+      "maxPoints": 6,
+      "rawAnswerSha256": "9e87d1ec232e9312c90907a87fd8973fa0d464f3cb362e318d55a7f1f304a13c",
+      "inputSeed": "debca76e92a4137aa4eded256a0615906c667a881f708963d867b41cbe17ee09",
+      "graderVersion": "1.4.0",
+      "dimension": "data",
+      "title": "两表合并与冲突检测",
+      "awarded": 6,
+      "parsedAnswer": {
+        "lossMaking": [
+          "D-402",
+          "F-604",
+          "H-834"
+        ],
+        "onlyInStore": [
+          "B-207",
+          "E-581",
+          "H-843"
+        ],
+        "commonCount": 13
+      },
+      "checks": [
+        {
+          "criterionId": "D03.C1",
+          "points": 2,
+          "passed": true,
+          "reason": "亏本 SKU 完全正确"
+        },
+        {
+          "criterionId": "D03.C2",
+          "points": 2,
+          "passed": true,
+          "reason": "仅门店 SKU 完全正确"
+        },
+        {
+          "criterionId": "D03.C3",
+          "points": 2,
+          "passed": true,
+          "reason": "共同 SKU 数量正确"
+        }
+      ],
+      "gradingStatus": "GRADED",
+      "parseNotes": [],
+      "parseSource": "object"
+    },
+    {
+      "id": "D04",
+      "version": "challenge",
+      "maxPoints": 9,
+      "rawAnswerSha256": "189a92c9a6352bd8755effa2e83e849b3b329d90717258fab9519dcb7363eb40",
+      "inputSeed": "bea4ed6aad7f759f63818aa4236a001b731105df7d936d58099ac077dccd55f5",
+      "graderVersion": "1.4.0",
+      "dimension": "data",
+      "title": "规则化条件匹配与例外",
+      "awarded": 9,
+      "parsedAnswer": {
+        "levels": {
+          "甲": "钻石",
+          "己": "白金",
+          "丑": "金牌",
+          "卯": "白金",
+          "辛": "金牌",
+          "丙": "银牌",
+          "壬": "银牌",
+          "庚": "银牌",
+          "子": "普通",
+          "乙": "普通",
+          "戊": "普通",
+          "寅": "银牌",
+          "丁": "普通",
+          "癸": "银牌"
+        },
+        "counts": {
+          "diamond": 1,
+          "platinum": 2,
+          "gold": 2,
+          "silver": 5,
+          "normal": 4
+        }
+      },
+      "checks": [
+        {
+          "criterionId": "D04.C1",
+          "points": 3,
+          "passed": true,
+          "reason": "14 人等级全部正确"
+        },
+        {
+          "criterionId": "D04.C2",
+          "points": 3,
+          "passed": true,
+          "reason": "钻石 1 人、白金 2 人、金牌 2 人、银牌 5 人，统计正确"
+        },
+        {
+          "criterionId": "D04.C3",
+          "points": 3,
+          "passed": true,
+          "reason": "普通 4 人，五项合计 14 人，与总人数自洽"
+        }
+      ],
+      "gradingStatus": "GRADED",
+      "parseNotes": [],
+      "parseSource": "nestedMaps"
+    },
+    {
+      "id": "C01",
+      "version": "easy",
+      "maxPoints": 4,
+      "rawAnswerSha256": "a6d0c4ba734fe7eea85d35bb5c837273253e12f1183bb6fc8d6d8efc4031c0dc",
+      "inputSeed": "e7af806bd80ca96e1b2aaabea693841c54a2033dcd588d94c766af0529e9625e",
+      "graderVersion": "1.4.0",
+      "dimension": "correction",
+      "title": "指出算式的错误类别并给出正确结果",
+      "awarded": 4,
+      "parsedAnswer": {
+        "isCorrect": false,
+        "errorKind": "运算优先级",
+        "correctTotal": 314
+      },
+      "checks": [
+        {
+          "criterionId": "C01.C1",
+          "points": 1,
+          "passed": true,
+          "reason": "正确指出她写的结果有误；错误类别「运算优先级」正确"
+        },
+        {
+          "criterionId": "C01.C2",
+          "points": 3,
+          "passed": true,
+          "reason": "正确值：314"
+        }
+      ],
+      "gradingStatus": "GRADED",
+      "parseNotes": [],
+      "parseSource": "object"
+    },
+    {
+      "id": "C02",
+      "version": "standard",
+      "maxPoints": 6,
+      "rawAnswerSha256": "aa0c2e1643a819fc21fdffeab699ca5d0d82fa50c86acb09ef0b8bfed1a724f6",
+      "inputSeed": "c7c9ceed041231c7692f220b73ecbb3e8964932ba85438025a7504afcd01fede",
+      "graderVersion": "1.4.0",
+      "dimension": "correction",
+      "title": "十步台账后的最新库存状态",
+      "awarded": 6,
+      "parsedAnswer": {
+        "beforeVoid": 494,
+        "finalStock": 513
+      },
+      "checks": [
+        {
+          "criterionId": "C02.C1",
+          "points": 2,
+          "passed": true,
+          "reason": "第一次作废前的合计库存正确：494"
+        },
+        {
+          "criterionId": "C02.C2",
+          "points": 2,
+          "passed": true,
+          "reason": "起始 494 → 最终 513，变化量 19 正确（第 2 步作废冲回、第 5 步作废后反悔抵销、调拨不改变合计）"
+        },
+        {
+          "criterionId": "C02.C3",
+          "points": 2,
+          "passed": true,
+          "reason": "最终合计库存正确：513"
+        }
+      ],
+      "gradingStatus": "GRADED",
+      "parseNotes": [],
+      "parseSource": "object"
+    },
+    {
+      "id": "C03",
+      "version": "standard",
+      "maxPoints": 6,
+      "rawAnswerSha256": "48af09291205960a974e0643d557122989cfa56a5adc72ab06a8627bc1358c0f",
+      "inputSeed": "d43d053b9a638daf9eb5b6c9d08ef5822fb18d71e2143ad4af7139c8d315e32f",
+      "graderVersion": "1.4.0",
+      "dimension": "correction",
+      "title": "三版规则更迭后的合法操作",
+      "awarded": 6,
+      "parsedAnswer": {
+        "a1": {
+          "rule": "新",
+          "needManual": false
+        },
+        "a2": {
+          "rule": "旧",
+          "needManual": true
+        },
+        "a3": {
+          "rule": "新",
+          "needManual": false
+        },
+        "a4": {
+          "rule": "新",
+          "needManual": false
+        },
+        "a5": {
+          "rule": "修订",
+          "needManual": true
+        },
+        "a6": {
+          "rule": "新",
+          "needManual": true
+        },
+        "a7": {
+          "rule": "旧",
+          "needManual": true
+        },
+        "a8": {
+          "rule": "修订",
+          "needManual": false
+        }
+      },
+      "checks": [
+        {
+          "criterionId": "C03.C1",
+          "points": 2,
+          "passed": true,
+          "reason": "八笔申请的规则版本全部正确"
+        },
+        {
+          "criterionId": "C03.C2",
+          "points": 2,
+          "passed": true,
+          "reason": "八笔申请的人工审批判断全部正确"
+        },
+        {
+          "criterionId": "C03.C3",
+          "points": 2,
+          "passed": true,
+          "reason": "追溯改判与过渡期例外的申请判定全部正确"
+        }
+      ],
+      "gradingStatus": "GRADED",
+      "parseNotes": [],
+      "parseSource": "nestedMaps"
+    },
+    {
+      "id": "C04",
+      "version": "challenge",
+      "maxPoints": 9,
+      "rawAnswerSha256": "2debf3c6c827c6ea817145e6f020e831d96bb07a46a71a6d65c875422ca3855d",
+      "inputSeed": "eab4f188bea7a1a9588c517f8ba9e78420105eb4d522911e38609b6d91ac59b9",
+      "graderVersion": "1.4.0",
+      "dimension": "correction",
+      "title": "找出两处互相掩盖的错误并算出修复后的结果",
+      "awarded": 9,
+      "parsedAnswer": {
+        "rootCause": "单价用错+折扣漏乘",
+        "fixedSubtotal": 91.5,
+        "fixedTotal": 82.35
+      },
+      "checks": [
+        {
+          "criterionId": "C04.C1",
+          "points": 3,
+          "passed": true,
+          "reason": "两处错误都指对了：单价用错 + 折扣漏乘"
+        },
+        {
+          "criterionId": "C04.C2",
+          "points": 3,
+          "passed": true,
+          "reason": "修复后小计正确：91.5"
+        },
+        {
+          "criterionId": "C04.C3",
+          "points": 3,
+          "passed": true,
+          "reason": "修复后应付正确：82.35"
+        }
+      ],
+      "gradingStatus": "GRADED",
+      "parseNotes": [],
+      "parseSource": "object"
+    }
+  ],
+  "meta": {
+    "examVersion": "1.4.0",
+    "graderVersion": "1.4.0",
+    "contractVersion": "1.1.0",
+    "catalogFingerprint": "565c660612218e0bf2e424cf058e2e50559b97345220a9777b4fddfd5ce03ab8"
+  }
+}

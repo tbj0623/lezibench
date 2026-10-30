@@ -232,17 +232,30 @@ const I01 = {
           ? `截止时间正确：${dl}`
           : `截止时间与最终生效的要求不一致（实际为「${dl}」）`,
     });
-    const b = toBool(parsed.fields.budgetAttached);
+    // ⚠️ v1.4 修复：toBool() 对「缺失」和「无法识别」都返回 null，**不返回 undefined**。
+    //    旧代码用 `b === undefined` 判断缺失，那是个永远不会成立的分支，
+    //    于是理由会输出自相矛盾的「应为 不附，实际为 不附」（其实字段根本没给）。
+    const rawB = parsed.fields.budgetAttached;
+    const b = toBool(rawB);
     const expectedAttach = o.budgetAttached;
+    const bMissing = rawB === undefined || rawB === null
+      || (typeof rawB === 'string' && rawB.trim() === '');
+    // 用户确实写了这个字段、但值没法识别成 true/false —— 解析层会把它记进 problems。
+    // 这种情况不能说成「未提供」（那是把责任推给用户），要如实说是「写了但看不懂」。
+    const bProblem = (parsed.problems || []).find((p) => /budgetAttached/.test(String(p)));
     checks.push({
       criterionId: 'I01.C2',
       points: 3,
       passed: b === expectedAttach,
-      reason: b === undefined
-        ? '未解析出 budgetAttached 字段'
-        : b === expectedAttach
-          ? (expectedAttach ? '正确表示需要附预算表' : '正确表示不附预算表')
-          : `附件要求判断错误：应为 ${expectedAttach ? '需要附' : '不附'}，实际为 ${b ? '需要附' : '不附'}`,
+      reason: bProblem
+        ? `${bProblem}（按不通过处理）`
+        : bMissing
+          ? '未提供 budgetAttached 字段，按不通过处理'
+          : b === null
+            ? `budgetAttached 无法判定为 true/false（原文「${String(rawB).slice(0, 40)}」），按不通过处理`
+            : b === expectedAttach
+              ? (expectedAttach ? '正确表示需要附预算表' : '正确表示不附预算表')
+              : `附件要求判断错误：应为 ${expectedAttach ? '需要附' : '不附'}，实际为 ${b ? '需要附' : '不附'}`,
     });
     return checks;
   },
@@ -568,12 +581,25 @@ const I03 = {
       passed: decOk,
       reason: !dec ? '未解析出 decision 字段' : decOk ? `审批结论正确：${o.decision}` : `审批结论应为「${o.decision}」，实际为「${dec}」`,
     });
-    const esc = toBool(parsed.fields.escalate);
+    // 同 I01.C2：toBool 缺失时返回 null，不是 undefined
+    const rawEsc = parsed.fields.escalate;
+    const esc = toBool(rawEsc);
+    const escMissing = rawEsc === undefined || rawEsc === null
+      || (typeof rawEsc === 'string' && rawEsc.trim() === '');
+    const escProblem = (parsed.problems || []).find((p) => /escalate/.test(String(p)));
     checks.push({
       criterionId: 'I03.C3',
       points: 2,
       passed: esc === o.escalate,
-      reason: esc === undefined ? '未解析出 escalate 字段' : esc === o.escalate ? `转人工判断正确：${o.escalate}` : `转人工应为 ${o.escalate}，实际为 ${esc}`,
+      reason: escProblem
+        ? `${escProblem}（按不通过处理）`
+        : escMissing
+          ? '未提供 escalate 字段，按不通过处理'
+          : esc === null
+            ? `escalate 无法判定为 true/false（原文「${String(rawEsc).slice(0, 40)}」），按不通过处理`
+            : esc === o.escalate
+              ? `转人工判断正确：${o.escalate}`
+              : `转人工应为 ${o.escalate}，实际为 ${esc}`,
     });
     return checks;
   },

@@ -21,6 +21,6 @@
       - C03.C1 7/8 笔规则版本正确；a2(应为旧/false，实际新/true)
       - C03.C2 7/8 笔人工审批判断正确
 
-题库 exam v1.3.0 · 判分器 grader v1.3.0 · 种子 lezi-demo-2026
+题库 exam v1.4.0 · 判分器 grader v1.4.0 · 种子 lezi-demo-2026
 实测耗时：0.0 秒
 成绩性质：本地规则核验 · 非认证成绩（LOCAL_SELF_TEST）

@@ -287,44 +287,55 @@ const R02 = {
       deps[qCodes[i]] = i === 0 ? [] : [qCodes[i - 1]];
     }
 
-    // 跨链约束：让两链必须交错。
-    //   X1: P 的第 3 步必须在 Q 的第 2 步之后  → Q 要早于 P 中段
-    //   X2: Q 的倒数第 2 步必须在 P 的第 2 步之后 → P 要早于 Q 后段
+    // 跨链约束：只决定「两链之间的相对先后」，不改变链内顺序。
+    // ⚠️ v1.4 修复的关键点：这些关系必须在题面里**明确标注为跨链**。
+    //    旧版把它们混进一张扁平的「谁等谁」清单里，于是 C2(跨链) / C3(链内)
+    //    的划分对答题者不可知 —— 那本身就是一条隐藏条件，评分不公平。
     const p3 = pCodes[2];
     const q2 = qCodes[1];
     const qNearEnd = qCodes[qCodes.length - 2];
     const p2 = pCodes[1];
-    deps[p3] = [...deps[p3], q2];       // P3 等 Q2
+    const pLast = pCodes[pCodes.length - 1];
+
+    const crossDeps = [];
+    deps[p3] = [...deps[p3], q2];            // P3 等 Q2
+    crossDeps.push({ task: p3, need: q2 });
     deps[qNearEnd] = [...deps[qNearEnd], p2]; // Q(n-1) 等 P2
-
-    // 再加一条「互斥式」跨链约束，增强约束传播：
-    //   Q 的第 3 步必须在 P 的最后一步之前（若 Q 足够长）
-    if (nQ >= 3) {
-      deps[pCodes[pCodes.length - 1]] = [...deps[pCodes[pCodes.length - 1]], qCodes[2]];
+    crossDeps.push({ task: qNearEnd, need: p2 });
+    if (nQ >= 3) {                            // P 的最后一步等 Q3
+      deps[pLast] = [...deps[pLast], qCodes[2]];
+      crossDeps.push({ task: pLast, need: qCodes[2] });
     }
 
-    const facts = { tasks, deps, total, pCodes, qCodes, chains: { P: pCodes, Q: qCodes } };
-
-    // 题面陈述：只给「谁必须等谁」，不给链内/链外的结构性提示
-    const depLines = [];
-    for (const t of tasks) {
-      const need = deps[t.code] || [];
-      if (need.length === 0) {
-        depLines.push(`${t.code}（${t.name}）：可以最先开始，没有前置步骤。`);
-      } else if (need.length === 1) {
-        depLines.push(`${t.code}（${t.name}）：必须等 ${need[0]} 完成后才能开始。`);
-      } else {
-        depLines.push(`${t.code}（${t.name}）：必须等 ${need.join(' 和 ')} 都完成后才能开始。`);
-      }
+    const nameOf = (code) => tasks.find((t) => t.code === code).name;
+    for (const rel of crossDeps) {
+      rel.taskName = nameOf(rel.task);
+      rel.needName = nameOf(rel.need);
     }
+
+    const facts = { tasks, deps, total, pCodes, qCodes, chains: { P: pCodes, Q: qCodes }, crossDeps };
+
+    // 题面：链内顺序 + 跨链要求**分开写**，让 C1/C2/C3 三项条件全部可从题面推导。
+    const chainLine = (label, role, codes) => [
+      `【${label}】${role}，共 ${codes.length} 步，链内必须严格按这个顺序做：`,
+      `  ${codes.map((c) => `${c}（${nameOf(c)}）`).join(' → ')}`,
+    ];
 
     const prompt = [
       `你是「云朵制衣」的车间调度员。今天要完成 ${total} 个工序，每个工序只做一次，且同一时刻只能做一道工序。`,
       '',
-      '工序与先后要求：',
-      ...depLines,
+      `${total} 个工序分属两条**互相独立**的工序链：链内顺序固定，两条链之间只需满足下面列出的跨链要求。`,
       '',
-      '请给出一个满足全部先后要求的完整执行顺序。',
+      ...chainLine('链 P · 缝制线', '按固定次序推进', pCodes),
+      '',
+      ...chainLine('链 Q · 面料线', '按固定次序推进', qCodes),
+      '',
+      `【跨链要求】除了各自的链内顺序，还必须满足以下 ${crossDeps.length} 条链间先后：`,
+      ...crossDeps.map((r) => `  · ${r.task}（${r.taskName}）必须在 ${r.need}（${r.needName}）完成之后`),
+      '',
+      '两条链的工序可以交错安排，只要不违反上面任何一条要求即可。',
+      '',
+      '请给出一个满足以上全部要求的完整执行顺序。',
       '只输出一个 JSON 对象：',
       `{"order": [${Array.from({ length: total }, () => '"<工序代号>"').join(', ')}]}`,
       `（order 必须恰好包含 ${total} 个工序代号，每个代号出现一次；上面只是占位，具体顺序请自己推。）`,
@@ -337,9 +348,21 @@ const R02 = {
         order: { type: 'list', aliases: ['order', '顺序', '执行顺序', 'sequence', '工序顺序'] },
       },
       publicCriteria: [
-        { id: 'R02.C1', points: 2, text: '顺序包含全部工序代号各一次，数量与题面一致' },
-        { id: 'R02.C2', points: 2, text: '满足题面列出的全部先后依赖' },
-        { id: 'R02.C3', points: 2, text: '顺序同时满足两条独立工序链各自的内部次序' },
+        {
+          id: 'R02.C1',
+          points: 2,
+          text: 'order 恰好包含题面列出的全部工序代号各一次：不缺、不重复、无多余。本项只看代号集合，完全不看先后顺序。',
+        },
+        {
+          id: 'R02.C2',
+          points: 2,
+          text: '【前提：本组第一项条件（代号集合完整）通过】题面「跨链要求」列出的每一条链间先后都满足；本项只考跨链，不考链内。',
+        },
+        {
+          id: 'R02.C3',
+          points: 2,
+          text: '【前提：本组第一项条件（代号集合完整）通过】链 P 与链 Q 各自的内部次序全部正确；本项只考链内，不考跨链。',
+        },
       ],
     };
   },
@@ -369,63 +392,60 @@ const R02 = {
     const order = rawOrder
       .map((x) => String(x).normalize('NFKC').toUpperCase().replace(/[^A-Z]/g, ''))
       .filter((x) => x.length === 1);
+    const pos = new Map(order.map((c, i) => [c, i]));
 
-    const allPresent = order.length === expected.length
-      && expected.every((c) => order.includes(c))
-      && new Set(order).size === order.length;
+    // ── C1 · 格式与覆盖：只看代号集合，完全不看顺序 ────────────────────────
+    // v1.4 修复：旧版 C1 里藏了一个 hasProgress（链内次序），
+    // 导致「代号齐全但整体倒序」连 C1 都拿不到 —— 而公开条件只承诺了「各一次」。
+    // 公开条件说什么就只判什么，多余的隐藏要求一律删掉。
+    const missing = expected.filter((c) => !pos.has(c));
+    const dup = [...new Set(order.filter((c, i) => order.indexOf(c) !== i))];
+    const extra = [...new Set(order.filter((c) => !expected.includes(c)))];
+    const setOk = missing.length === 0 && dup.length === 0 && extra.length === 0;
 
-    // C1：顺序本身有意义 —— 不能只「集齐代号」就白拿 2 分。
-    // 判定：集合正确 且 至少满足「每条第 1 个工序都在其链内后继之前」。
-    // 这样「倒序」「随机打乱」这类退化答案拿不到 C1。
-    const hasProgress = allPresent && (() => {
-      for (const codes of Object.values(facts.chains || {})) {
-        for (let i = 1; i < codes.length; i++) {
-          if (order.indexOf(codes[i - 1]) > order.indexOf(codes[i])) return false;
-        }
-      }
-      return true;
-    })();
     const checks = [];
     checks.push({
       criterionId: 'R02.C1',
       points: 2,
-      passed: allPresent && hasProgress,
+      passed: setOk,
       reason: order.length === 0
         ? '未解析出 order 数组'
-        : !allPresent
-          ? `工序集合不正确：得到 ${order.length} 项（应为 ${expected.length} 项且不重复）`
-          : hasProgress
-            ? `${expected.length} 个工序代号各出现一次，且链内次序成立`
-            : '工序代号齐全，但链内先后关系被打乱（例如整体倒序）',
+        : setOk
+          ? `恰好包含题面的 ${expected.length} 个工序代号各一次（本项不校验先后）`
+          : [
+              missing.length ? `缺少 ${missing.join('、')}` : '',
+              dup.length ? `重复 ${dup.join('、')}` : '',
+              extra.length ? `多出 ${extra.join('、')}` : '',
+            ].filter(Boolean).join('；') || `代号数量不符：得到 ${order.length} 项，应为 ${expected.length} 项`,
     });
 
-    // C2：全部依赖满足
-    const violations = [];
-    if (allPresent) {
-      for (const [task, ds] of Object.entries(facts.deps)) {
-        for (const d of ds) {
-          if (order.indexOf(d) > order.indexOf(task)) violations.push(`${task} 应在 ${d} 之后`);
+    // ── C2 · 跨链关系（前提：C1 通过）─────────────────────────────────────
+    const crossBad = [];
+    if (setOk) {
+      for (const rel of facts.crossDeps || []) {
+        if (pos.get(rel.need) > pos.get(rel.task)) {
+          crossBad.push(`${rel.task}（${rel.taskName}）应在 ${rel.need}（${rel.needName}）之后`);
         }
       }
     }
     checks.push({
       criterionId: 'R02.C2',
       points: 2,
-      passed: allPresent && violations.length === 0,
-      reason: !allPresent
-        ? '顺序不完整，无法校验依赖'
-        : violations.length === 0
-          ? '全部先后依赖满足'
-          : `违反依赖：${violations.slice(0, 3).join('；')}${violations.length > 3 ? ` 等 ${violations.length} 处` : ''}`,
+      passed: setOk && crossBad.length === 0,
+      reason: !setOk
+        ? '前提未满足（C1 未通过：代号集合不完整/有重复），无法校验跨链要求，本项不给分'
+        : crossBad.length === 0
+          ? `题面列出的 ${(facts.crossDeps || []).length} 条跨链要求全部满足`
+          : `违反跨链要求：${crossBad.slice(0, 3).join('；')}${crossBad.length > 3 ? ` 等 ${crossBad.length} 处` : ''}`,
     });
 
-    // C3：两条链各自内部次序正确（独立于 deps 再校验一次，防止只满足跨链约束）
-    const chainViolations = [];
-    if (allPresent) {
+    // ── C3 · 链内关系（前提：C1 通过）─────────────────────────────────────
+    const chainBad = [];
+    if (setOk) {
       for (const [chainName, codes] of Object.entries(facts.chains || {})) {
         for (let i = 1; i < codes.length; i++) {
-          if (order.indexOf(codes[i - 1]) > order.indexOf(codes[i])) {
-            chainViolations.push(`链 ${chainName} 内 ${codes[i - 1]} 应先于 ${codes[i]}`);
+          if (pos.get(codes[i - 1]) > pos.get(codes[i])) {
+            chainBad.push(`链 ${chainName} 内 ${codes[i - 1]} 应在 ${codes[i]} 之前`);
           }
         }
       }
@@ -433,12 +453,12 @@ const R02 = {
     checks.push({
       criterionId: 'R02.C3',
       points: 2,
-      passed: allPresent && chainViolations.length === 0,
-      reason: !allPresent
-        ? '顺序不完整，无法校验工序链次序'
-        : chainViolations.length === 0
-          ? '两条工序链的内部次序均正确'
-          : `工序链次序错误：${chainViolations.slice(0, 2).join('；')}`,
+      passed: setOk && chainBad.length === 0,
+      reason: !setOk
+        ? '前提未满足（C1 未通过：代号集合不完整/有重复），无法校验链内次序，本项不给分'
+        : chainBad.length === 0
+          ? '链 P 与链 Q 的内部次序均正确'
+          : `违反链内次序：${chainBad.slice(0, 3).join('；')}${chainBad.length > 3 ? ` 等 ${chainBad.length} 处` : ''}`,
     });
     return checks;
   },

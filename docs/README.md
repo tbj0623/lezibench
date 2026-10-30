@@ -13,6 +13,7 @@
 | 你想…… | 看这份 | 一句话 |
 |---|---|---|
 | 先搞清楚这是个什么东西 | [../README.md](../README.md) | 16 题、100 分、4 维、本地判分、全程不联网 |
+| 一句话交给 Agent 装好并开考 | [ONE_COMMAND.md](ONE_COMMAND.md) | **推荐**：把一段话复制给 Agent，它自己下载、校验、安装、开考 |
 | 把它装进 Agent | [INSTALL.md](INSTALL.md) | 三种安装方式，含最容易踩的坑（名字是 `lezi-bench` 不是 `lezibench`） |
 | 确认它在我这个平台上能不能用 | [COMPATIBILITY.md](COMPATIBILITY.md) | 三级证据：**VERIFIED / PARTIAL / NOT_TESTED**，未实测的明确标出来 |
 | 知道我这一分是怎么扣的 | [SCORING.md](SCORING.md) | 16 道题逐题的评分条件与分值 |

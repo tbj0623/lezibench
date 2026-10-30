@@ -237,16 +237,25 @@ export async function main(argv = process.argv.slice(2)) {
     return 2;
   }
   if (args.help) {
-    console.log('用法：node qa/host/verify-skill.mjs [--dir <skill 目录>]... [--source <SKILL.md>] [--json]');
+    console.log('用法：node evidence/host/verify-skill.mjs [--dir <skill 目录>]... [--source <SKILL.md>] [--json]');
     return 0;
   }
 
   if (args.dirs.length === 0) {
     const here = path.dirname(fileURLToPath(import.meta.url));
     const repo = path.resolve(here, '..', '..');
-    args.dirs.push(path.join(repo, '.agents', 'skills', 'lezi-bench'));
-    args.dirs.push(path.join(os.homedir(), '.agents', 'skills', 'lezi-bench'));
-    if (!args.source) args.source = path.join(repo, 'lezibench', 'SKILL.md');
+    // 只检查**真实存在**的安装点：工作区级 .agents/skills 是可选的，
+    // 没装过不该算「失败」（v1.4 修复：原来会把不存在的可选路径当失败项，导致总体永远不过）。
+    const candidates = [
+      path.join(repo, '.agents', 'skills', 'lezi-bench'),
+      path.join(os.homedir(), '.agents', 'skills', 'lezi-bench'),
+    ];
+    for (const c of candidates) if (existsSync(c)) args.dirs.push(c);
+    if (args.dirs.length === 0) args.dirs.push(path.join(os.homedir(), '.agents', 'skills', 'lezi-bench'));
+    // v1.4 修复：这里原本是 path.join(repo, 'lezibench', 'SKILL.md')。
+    // 本脚本位于 <repo>/evidence/host/，`repo` 已经是仓库根，
+    // 再拼一层 'lezibench' 就变成 <repo>/lezibench/SKILL.md —— 必然 ENOENT（假红）。
+    if (!args.source) args.source = path.join(repo, 'SKILL.md');
   }
 
   const results = [];

@@ -56,6 +56,22 @@
 
 ---
 
+## 2.5 安装器跨平台验证（v1.4 新增）
+
+安装器本身（`install/install.sh` / `install/install.ps1` / `node scripts/cli.mjs install`）
+在 CI 的 `ubuntu-latest` 与 `macos-latest` 上各跑一遍完整冒烟：
+
+| 步骤 | 断言 |
+|---|---|
+| 首次安装 | `lezi-bench/{SKILL.md,scripts/cli.mjs,src/}` 都出现 |
+| 幂等重装 | 产生 `lezi-bench.bak-*` 备份 |
+| 装出来的包 | 直接跑 `doctor` 必须「全部通过」 |
+| 冲突保护 | 目标是别人的同名目录 → **退出码 2**，且**别人的文件一个不少** |
+| 卸载 | `lezi-bench/` 删掉、备份保留 |
+
+> 这一步给的是 **Linux / macOS 上「安装链路」的证据**，不等于「装成 Skill 后被该平台宿主发现并跑完整局」。
+> 后者仍然只有 DSH + Windows 有真机证据 —— 两者不要混为一谈。
+
 ## 3. 通用 Agent Skills 宿主 — **PARTIAL**
 
 **已验证的部分**：包结构与 frontmatter 符合 <https://agentskills.io/specification>（HTTP 200，233,466 bytes，2026-10-29T15:49Z 抓取）：
